@@ -1,19 +1,15 @@
-# Progress
+# V2 progress
 
-Objective: deliver one publicly playable mobile-first Katamari-style map.
+Objective: release an endless procedural map, clean object cutouts, and sharp terrain.
+Progress: [#######---] 70% toward the updated public release.
 
-Progress: [##########] 100% — production build and public publication completed.
+- [x] Reconcile source, Git state, notes, and public Site.
+- [x] Diagnose and repair equal-cell sprite slicing using complete alpha silhouettes.
+- [x] Integrate original native-resolution repeating meadow/paving textures.
+- [x] Implement streaming, scale normalization, floating origin, exterior attachments, collision substeps, adaptive camera, and endless-first HUD.
+- [ ] Build once, push exact source, and package.
+- [ ] Save/deploy v2 and confirm terminal success.
 
-- [x] Scope and static deployment path established.
-- [x] Source scaffold created.
-- [x] Generate and integrate original game artwork.
-- [x] Implement rolling, pickups, growth, mobile controls, and one map.
-- [x] Run the production build once through Sites workflow.
-- [x] Publish publicly and receive successful deployment status.
-
-Current state: v1 published publicly at https://katamari-neighborhood.remriel.chatgpt.site. Native deployment status: succeeded. Source pushed to Sites and private GitHub; archive packaged. Blockers: none.
-Verification: one successful Vite production build, 7 modules transformed, completed in 1.20 seconds. Packaging checks required by Sites passed. Source commit: b91e1ba9c7de849b171ba45452904381db4d98b2. No tests, browser QA, or visual inspections requested.
-Non-blocking build warning: JavaScript bundle 503.59 kB minified (129.13 kB gzip), slightly above Vite's default 500 kB warning threshold.
-Saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_9510834aebfc8191b32ea028e471e7b6.
-Deployment: appgdep_6abd558a8ea4819197e53f330a23f378.
-Next steps: user manual acceptance on the public game. No additional validation or changes authorized in this release.
+Current state: implementation complete; v1 remains live until publication. Blockers: none.
+Verification: targeted original-art inspection diagnosed the reported defect; asset extraction/conversion completed. Meadow and paving each 1254 x 1254 at native resolution, repeated locally. No tests, browser QA, or device playtesting. No v2 production build yet.
+Next steps: one production build/push/package via Sites workflow, GitHub backup, save/deploy, confirm native success, record release, return URL.
