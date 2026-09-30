@@ -74,7 +74,6 @@ function resetVisuals(){
   for(const a of attachments){scene.remove(a.sprite);a.sprite.material.dispose();}attachments=[];
   for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
   for(const v of itemViews.values()){scene.remove(v.sprite,v.shadow);v.sprite.material.dispose();v.shadow.material.dispose();v.shadow.geometry.dispose();}itemViews.clear();
-  terrain.mesh.material.uniforms.tileSize.value=3;terrain.mesh.material.uniforms.blockSize.value=CHUNK_SIZE;
   ball.quaternion.identity();visualRadius=sim.diameter/2;viewSpan=6+sim.diameter*4.1;follow.set(sim.x,0,sim.z);yaw=targetYaw=0;createItemViews();
 }
 function start(free=true){
@@ -132,11 +131,12 @@ function tick(now){
   const dt=Math.min(.05,Math.max(0,(now-lastTime)/1000));lastTime=now;frame++;
   const aspect=world.clientWidth/Math.max(1,world.clientHeight);
   sim.setViewRadius(Math.ceil(viewSpan*Math.max(1,aspect)*.65/CHUNK_SIZE)+1);
+  sim.setVisibleRadius(viewSpan*Math.max(1,aspect)*1.3+sim.diameter*2);
   const result=sim.step(dt,input());
   const transform=result.transform;
   if(transform.scale!==1||transform.x!==0||transform.z!==0){
     follow.multiplyScalar(transform.scale);follow.x+=transform.x;follow.z+=transform.z;
-    visualRadius*=transform.scale;viewSpan*=transform.scale;terrain.rescale(transform.scale);
+    visualRadius*=transform.scale;viewSpan*=transform.scale;
     for(const a of attachments)a.size*=transform.scale;
     for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
   }
@@ -177,13 +177,13 @@ function tick(now){
   prince.scale.set(ph*ratio,ph,1);prince.position.set(sim.x-Math.sin(moveAngle)*(visualRadius+ph*.9),.035+(!reducedMotion&&result.distance>.002?Math.abs(Math.sin(now*.015))*ph*.09:0),sim.z-Math.cos(moveAngle)*(visualRadius+ph*.9));
   follow.lerp(new THREE.Vector3(sim.x,visualRadius*.25,sim.z),1-Math.exp(-dt*5));
   yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*5));
-  const desiredSpan=inMenu?16:Math.max(6+sim.diameter*4.1,sim.diameter*2.6/Math.max(.3,aspect));
+  const desiredSpan=inMenu?16:Math.max(6*2**(-Math.min(sim.level,32))+sim.diameter*4.1,sim.diameter*2.6/Math.max(.3,aspect));
   viewSpan+=(desiredSpan-viewSpan)*(1-Math.exp(-dt*4));
   const dist=Math.max(20,viewSpan*1.7);camera.position.set(follow.x+Math.sin(yaw)*dist,follow.y+dist*1.12,follow.z+Math.cos(yaw)*dist);camera.lookAt(follow);
   const cameraDistance=Math.hypot(dist,dist*1.12);camera.near=.05;camera.far=cameraDistance+viewSpan*4+40;
   camera.left=-viewSpan*aspect/2;camera.right=viewSpan*aspect/2;camera.top=viewSpan/2;camera.bottom=-viewSpan/2;camera.updateProjectionMatrix();camera.updateMatrixWorld();
   scene.fog.near=cameraDistance+viewSpan*.65;scene.fog.far=cameraDistance+viewSpan*2;
-  terrain.update(sim.x,sim.z,viewSpan,aspect,cameraDistance,dt);
+  terrain.update(sim.x,sim.z,viewSpan,aspect,cameraDistance,sim.world);
   const candidates=[],projection=new THREE.Vector3();
   for(const item of sim.items){
     const view=itemViews.get(item.id);if(!view)continue;

@@ -20,7 +20,7 @@ const floorHalf=n=>n>=0n?n/2n:(n-1n)/2n;
 function newSeed(){const values=new Uint32Array(1);if(globalThis.crypto?.getRandomValues){globalThis.crypto.getRandomValues(values);return values[0];}return(Math.random()*4294967296)>>>0;}
 
 class ProceduralWorld{
-  constructor(seed){this.seed=seed;this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.history=new Map();this.legacy=[];this.items=[];this.stamp='';this.generated=0;this.opening();}
+  constructor(seed){this.seed=seed;this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.history=new Map();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.generated=0;this.opening();}
   opening(){
     const random=seededRandom(this.seed);
     for(let i=0;i<92;i++){const angle=random()*Math.PI*2,r=.65+Math.sqrt(random())*5.8,type=i%6;
@@ -37,6 +37,11 @@ class ProceduralWorld{
     const themed=[[7,12,16,17],[3,5,7,13],[9,10,11,14,15],[1,2,7,12,16]][biome];
     const add=(type,x,z,slot)=>{
       const size=TYPES[type].size;
+      // A growth transition cannot populate the space already on screen.
+      // Remember skipped slots so unloading/reloading this block stays stable.
+      if(this.guards.some(guard=>Math.hypot(x-guard.x,z-guard.z)<guard.radius+size)){
+        chunk.mask|=1n<<BigInt(slot);return;
+      }
       // Keep clear lanes between blocks; old-scale pickups keep their positions.
       if(size>1&&Math.hypot(x,z)<6.5&&this.level===0&&this.originX===0n&&this.originZ===0n)return;
       if(this.level>0&&Math.hypot(x-player.x,z-player.z)<player.diameter*.65+size*.5)return;
@@ -63,7 +68,7 @@ class ProceduralWorld{
     for(let z=cz-radius;z<=cz+radius;z++)for(let x=cx-radius;x<=cx+radius;x++){
       const key=`${x}:${z}`;if(!this.chunks.has(key))this.chunks.set(key,this.generate(x,z,player));
     }
-    this.legacy=this.legacy.filter(item=>!item.collected&&Math.hypot(item.x-player.x,item.z-player.z)<CHUNK_SIZE*(radius+1));
+    this.legacy=this.legacy.filter(item=>!item.collected&&Math.hypot(item.x-player.x,item.z-player.z)<Math.max(CHUNK_SIZE*(radius+1),player.visibleRadius||0));
     this.items=[...this.legacy,...Array.from(this.chunks.values()).flatMap(chunk=>chunk.items)];
   }
   nearby(x,z,radius){
@@ -80,15 +85,26 @@ class ProceduralWorld{
     this.originX+=BigInt(sx);this.originZ+=BigInt(sz);
     const dx=sx*CHUNK_SIZE,dz=sz*CHUNK_SIZE;
     for(const item of this.items){item.x-=dx;item.z-=dz;}
+    for(const guard of this.guards){guard.x-=dx;guard.z-=dz;}
     const moved=new Map();for(const chunk of this.chunks.values()){chunk.cx-=sx;chunk.cz-=sz;moved.set(`${chunk.cx}:${chunk.cz}`,chunk);}this.chunks=moved;this.stamp='';
     return{dx,dz};
   }
   rescale(player){
     const ox=floorHalf(this.originX),oz=floorHalf(this.originZ);
     const shiftX=Number(this.originX-2n*ox)*CHUNK_SIZE/2,shiftZ=Number(this.originZ-2n*oz)*CHUNK_SIZE/2;
-    this.legacy=this.items.filter(item=>!item.collected).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z)).slice(0,512);
+    const retentionRadius=Math.max(player.visibleRadius||0,CHUNK_SIZE*(player.viewRadius+1));
+    // Retain the entire visible population, not just the closest 512 objects.
+    // Old tiny objects leave naturally as the player travels into fresh areas.
+    this.legacy=this.items.filter(item=>!item.collected&&Math.hypot(item.x-player.x,item.z-player.z)<retentionRadius)
+      .sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z));
+    const retainedVisible=this.legacy.filter(item=>Math.hypot(item.x-player.x,item.z-player.z)<(player.visibleRadius||0));
+    const visibleIds=new Set(retainedVisible.map(item=>item.id));
+    this.legacy=[...retainedVisible,...this.legacy.filter(item=>!visibleIds.has(item.id)).slice(0,Math.max(0,4096-retainedVisible.length))];
     for(const item of this.legacy){item.x=item.x/2+shiftX;item.z=item.z/2+shiftZ;item.size/=2;item.owner=null;}
     for(const chunk of this.chunks.values())this.remember(chunk);
+    for(const guard of this.guards){guard.x=guard.x/2+shiftX;guard.z=guard.z/2+shiftZ;guard.radius/=2;}
+    this.guards.push({x:player.x/2+shiftX,z:player.z/2+shiftZ,radius:retentionRadius/2});
+    this.guards=this.guards.slice(-8);
     this.originX=ox;this.originZ=oz;this.level++;this.chunks.clear();this.stamp='';this.items=this.legacy;
     return{shiftX,shiftZ};
   }
@@ -99,8 +115,9 @@ export class Simulation{
   constructor(){this.reset(true);this.mode='menu';}
   get items(){return this.world.items;}
   get level(){return this.world.level;}
-  reset(free=true){this.world=new ProceduralWorld(newSeed());this.x=0;this.z=0;this.vx=0;this.vz=0;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.free=free;this.mode='playing';this.milestone=0;this.won=false;this.combo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.world.sync(this,this.viewRadius);}
+  reset(free=true){this.world=new ProceduralWorld(newSeed());this.x=0;this.z=0;this.vx=0;this.vz=0;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.free=free;this.mode='playing';this.milestone=0;this.won=false;this.combo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;this.world.sync(this,this.viewRadius);}
   setViewRadius(radius){this.viewRadius=Math.max(2,Math.min(4,radius));}
+  setVisibleRadius(radius){this.visibleRadius=radius;}
   step(dt,input){
     if(this.mode!=='playing')return {pickups:[],distance:0,transform:{scale:1,x:0,z:0}};
     this.elapsed+=dt;
@@ -137,7 +154,7 @@ export class Simulation{
     // Normalize the simulation as size grows; numbers and camera precision stay
     // small while the logical Katamari size continues to increase without a cap.
     while(this.diameter>=8){
-      const offset=this.world.rescale(this);this.x=this.x/2+offset.shiftX;this.z=this.z/2+offset.shiftZ;this.vx/=2;this.vz/=2;this.diameter/=2;this.volume/=8;
+      const offset=this.world.rescale(this);this.x=this.x/2+offset.shiftX;this.z=this.z/2+offset.shiftZ;this.vx/=2;this.vz/=2;this.diameter/=2;this.volume/=8;this.visibleRadius/=2;
       dx/=2;dz/=2;transform.scale/=2;transform.x=transform.x/2+offset.shiftX;transform.z=transform.z/2+offset.shiftZ;
     }
     if(Math.abs(this.x)>CHUNK_SIZE*64||Math.abs(this.z)>CHUNK_SIZE*64){
