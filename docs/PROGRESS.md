@@ -1,16 +1,22 @@
 # V4 progress
 
 Objective: more varied pickups and genuinely larger collectibles beyond houses, preserving stable endless generation.
-Progress: [#######---] 70% toward the updated public release.
+Progress: [##########] 100% — production build and public publication completed.
 
 - [x] Reconcile source, Git state, notes, and public Site.
-- [x] Add 24 new original illustrated objects; 42 total collectible types.
+- [x] Add 24 original illustrated objects; 42 total collectible types.
 - [x] Extract complete alpha silhouettes into art IDs 20-43 with transparent sampling gutters.
-- [x] Integrate fixed physical sizes, growth-dependent catalogs, denser spaced placements, larger collision lookup, and scale milestones.
-- [x] Preserve world-anchored roads, visible-object retention, and growth guards.
-- [ ] One production build/push/package; save/deploy publicly.
-- [ ] Confirm success and synchronize release notes/GitHub.
+- [x] Fixed physical sizes, progressive catalogs, denser spaced placement, larger collision lookup, scale milestones, and object-size pickup labels.
+- [x] Preserve world-anchored winding roads, visible-object retention, and growth guards.
+- [x] One production build/push/package; archive-backed version saved.
+- [x] Public v4 deployment succeeded; source/artwork/prompts backed up to GitHub.
 
-Current state: source and artwork ready; v3 remains live. Blockers: none.
-Verification: two new sets extracted successfully (12 sprites each). No v4 production build or browser/device playtest yet, following build-once-publish.
-Next steps: one production build/push/package, GitHub backup, save/deploy, confirm native success, record release, sync GitHub, return URL.
+Live URL: https://katamari-neighborhood.remriel.chatgpt.site
+Source/build commit: 3438b16c6fd27260c44e34aeb3b1bfa89269a5e7.
+Saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_9d3249cf3b7081918298d72b60005a08.
+Deployment: appgdep_6abd6dc3c368819190ea4dd2081bbf8d.
+Blockers: none.
+Verification: 12 complete sprites extracted per new set; one successful Vite build (8 modules, 1.35 s); exact SHA source push; required archive checks; native deployment success.
+Non-blocking warning: JS 518.29 kB minified, 134.51 kB gzip, above the default Vite warning threshold.
+Manual acceptance: no browser/device playtesting, shader runtime check, or long-session run performed, following build-once-publish.
+Next steps: user refreshes the public tab and tries progression beyond houses. No additional validation or changes in this release.
