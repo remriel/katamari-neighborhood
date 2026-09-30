@@ -1,15 +1,21 @@
 # V3 progress
 
-Objective: anchor the background, replace the road grid with winding roads, and stop visible objects resetting at growth.
-Progress: [#######---] 70% toward the updated public release.
+Objective: anchor background, replace the grid with winding roads, and stop visible objects resetting at growth.
+Progress: [##########] 100% — production build and public publication completed.
 
-- [x] Read current source, Git state, and project notes; confirm existing public Site.
-- [x] Identify animated terrain spacing, missing world phases, visible-object replacement, and extra growth-camera zoom.
-- [x] Implement winding world-anchored roads with bounded exact phases.
-- [x] Preserve visible objects at growth, protect their region from replacement spawns, and scale camera padding consistently.
-- [ ] Run one production build, push exact source, and package.
-- [ ] Save/deploy v3, confirm success, and sync release notes/GitHub.
+- [x] Reconcile source/Git/notes and confirm public Site.
+- [x] Remove animated terrain coordinates; anchor winding roads/textures to exact logical world phases.
+- [x] Preserve visible objects at growth and protect retained regions from replacement spawns.
+- [x] Scale camera padding consistently through normalization.
+- [x] One production build, exact source push, and archive packaging.
+- [x] Publish v3 and confirm native deployment succeeded.
 
-Current state: implementation complete; v2 remains live. Blockers: none.
-Verification: source diagnosis of reported defects. No tests, browser QA, or device playtesting requested. No v3 production build yet.
-Next steps: get fresh publishing credential, run existing build/push/package fallback once, save/deploy, confirm native success, record release, sync GitHub, return URL.
+Live URL: https://katamari-neighborhood.remriel.chatgpt.site
+Source/build commit: be1c4fcf4668a76086856f95c9406d2d12f7b85b.
+Saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_56531c4cd44081919e0cbdfd9e6aabe0.
+Deployment: appgdep_6abd66be2a4c8191b1c23a9088d145d5.
+Blockers: none.
+Verification: source diagnosis; one successful Vite build (8 modules, 1.52 s); source SHA/push and mandatory archive checks; native deployment success.
+Non-blocking warning: JS 514.60 kB minified, 133.20 kB gzip, above the default Vite warning threshold.
+Manual acceptance: no browser/device playtest, shader runtime check, or prolonged-session run performed under build-once-publish.
+Next steps: user refreshes the current public tab and checks the growth/generation behavior. No further validation or changes in this release.
