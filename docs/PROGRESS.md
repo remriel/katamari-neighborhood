@@ -1,21 +1,16 @@
-# V3 progress
+# V4 progress
 
-Objective: anchor background, replace the grid with winding roads, and stop visible objects resetting at growth.
-Progress: [##########] 100% — production build and public publication completed.
+Objective: more varied pickups and genuinely larger collectibles beyond houses, preserving stable endless generation.
+Progress: [#######---] 70% toward the updated public release.
 
-- [x] Reconcile source/Git/notes and confirm public Site.
-- [x] Remove animated terrain coordinates; anchor winding roads/textures to exact logical world phases.
-- [x] Preserve visible objects at growth and protect retained regions from replacement spawns.
-- [x] Scale camera padding consistently through normalization.
-- [x] One production build, exact source push, and archive packaging.
-- [x] Publish v3 and confirm native deployment succeeded.
+- [x] Reconcile source, Git state, notes, and public Site.
+- [x] Add 24 new original illustrated objects; 42 total collectible types.
+- [x] Extract complete alpha silhouettes into art IDs 20-43 with transparent sampling gutters.
+- [x] Integrate fixed physical sizes, growth-dependent catalogs, denser spaced placements, larger collision lookup, and scale milestones.
+- [x] Preserve world-anchored roads, visible-object retention, and growth guards.
+- [ ] One production build/push/package; save/deploy publicly.
+- [ ] Confirm success and synchronize release notes/GitHub.
 
-Live URL: https://katamari-neighborhood.remriel.chatgpt.site
-Source/build commit: be1c4fcf4668a76086856f95c9406d2d12f7b85b.
-Saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_56531c4cd44081919e0cbdfd9e6aabe0.
-Deployment: appgdep_6abd66be2a4c8191b1c23a9088d145d5.
-Blockers: none.
-Verification: source diagnosis; one successful Vite build (8 modules, 1.52 s); source SHA/push and mandatory archive checks; native deployment success.
-Non-blocking warning: JS 514.60 kB minified, 133.20 kB gzip, above the default Vite warning threshold.
-Manual acceptance: no browser/device playtest, shader runtime check, or prolonged-session run performed under build-once-publish.
-Next steps: user refreshes the current public tab and checks the growth/generation behavior. No further validation or changes in this release.
+Current state: source and artwork ready; v3 remains live. Blockers: none.
+Verification: two new sets extracted successfully (12 sprites each). No v4 production build or browser/device playtest yet, following build-once-publish.
+Next steps: one production build/push/package, GitHub backup, save/deploy, confirm native success, record release, sync GitHub, return URL.

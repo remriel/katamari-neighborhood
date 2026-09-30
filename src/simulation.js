@@ -11,11 +11,49 @@ export const TYPES = [
   {name:'Flowering bush',size:2.14,art:12}, {name:'Vending machine',size:2.58,art:13},
   {name:'Little van',size:3.12,art:14}, {name:'Peach house',size:5.1,art:15},
   {name:'Neighborhood tree',size:3.78,art:16}, {name:'Park bench',size:2.6,art:17},
+  {name:'Cupcake',size:.2,art:20,footprint:.32,fitSize:true},
+  {name:'Sushi tray',size:.16,art:21,footprint:.4,fitSize:true},
+  {name:'Teapot',size:.45,art:22,footprint:.4,fitSize:true},
+  {name:'Rubber duck',size:.33,art:23,footprint:.35,fitSize:true},
+  {name:'Skateboard',size:.85,art:24,footprint:.48,fitSize:true},
+  {name:'Golden dog',size:1.15,art:25,footprint:.38,fitSize:true},
+  {name:'Armchair',size:1.65,art:26,footprint:.42,fitSize:true},
+  {name:'Suitcase',size:.75,art:27,footprint:.4,fitSize:true},
+  {name:'Streetlamp',size:3.2,art:28,footprint:.2,fitSize:true},
+  {name:'Food cart',size:2.4,art:29,footprint:.45,fitSize:true},
+  {name:'Telephone booth',size:2.6,art:30,footprint:.36,fitSize:true},
+  {name:'Convertible',size:4.6,art:31,footprint:.5,fitSize:true},
+  {name:'City bus',size:9,art:32,footprint:.5,fitSize:true},
+  {name:'Ancient oak',size:14,art:33,footprint:.45,fitSize:true},
+  {name:'Apartment building',size:22,art:34,footprint:.4,fitSize:true},
+  {name:'Windmill',size:28,art:35,footprint:.32,fitSize:true},
+  {name:'Ferris wheel',size:48,art:36,footprint:.4,fitSize:true},
+  {name:'Water tower',size:36,art:37,footprint:.3,fitSize:true},
+  {name:'Clock tower',size:65,art:38,footprint:.3,fitSize:true},
+  {name:'Castle',size:95,art:39,footprint:.48,fitSize:true},
+  {name:'Stadium',size:150,art:40,footprint:.52,fitSize:true},
+  {name:'Skyscraper',size:260,art:41,footprint:.28,fitSize:true},
+  {name:'Mountain',size:900,art:42,footprint:.5,fitSize:true,endless:true,endlessName:'Mountain range'},
+  {name:'Island',size:2200,art:43,footprint:.55,fitSize:true,endless:true,endlessName:'Island chain'},
 ];
+export const PROP_ART_COUNT=44;
 function seededRandom(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 export function hash(...parts){let h=2166136261;for(const ch of parts.join(':')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 const DISTRICTS=['Pocket Parks','Flower Market','Sunny Side Streets','Orchard Walk'];
 const FOOTPRINT=[.28,.3,.3,.33,.32,.32,.48,.38,.38,.4,.43,.54,.45,.42,.52,.52,.44,.6];
+const footprint=type=>TYPES[type].footprint??FOOTPRINT[type]??.4;
+const localSize=(type,level)=>TYPES[type].size*2**((TYPES[type].endless?Math.max(0,level-10):0)-level);
+const SCALE_STAGES=[
+  {size:0,label:'POCKET SCALE',message:'Small things. Big dreams.'},
+  {size:1,label:'STREET SCALE',message:'The street is yours!'},
+  {size:6,label:'HOUSE SCALE',message:'Bigger than houses!'},
+  {size:12,label:'TOWN SCALE',message:'Here come the buses and giant trees!'},
+  {size:30,label:'LANDMARK SCALE',message:'Roll up the landmarks!'},
+  {size:100,label:'CITY SCALE',message:'A whole city of glorious stuff!'},
+  {size:500,label:'MOUNTAIN SCALE',message:'Move mountains. Literally.'},
+  {size:1600,label:'ISLAND SCALE',message:'Islands? Absolutely.'},
+  {size:4000,label:'WORLD SCALE',message:'Island chains and mountain ranges!'},
+];
 const floorHalf=n=>n>=0n?n/2n:(n-1n)/2n;
 function newSeed(){const values=new Uint32Array(1);if(globalThis.crypto?.getRandomValues){globalThis.crypto.getRandomValues(values);return values[0];}return(Math.random()*4294967296)>>>0;}
 
@@ -34,9 +72,15 @@ class ProceduralWorld{
     const ax=this.originX+BigInt(cx),az=this.originZ+BigInt(cz),id=`${this.level}:${ax}:${az}`;
     const seed=hash(this.seed,id),random=seededRandom(seed),biome=seed%4;
     const chunk={id,cx,cz,biome,mask:this.history.get(id)||0n,items:[]};this.generated++;
-    const themed=[[7,12,16,17],[3,5,7,13],[9,10,11,14,15],[1,2,7,12,16]][biome];
+    const catalogue=TYPES.map((_,type)=>type).filter(type=>{const size=localSize(type,this.level);return size>=.1&&size<=12;});
+    const theme=[[7,12,16,17,21,23,31,33,34,35,40,41],[3,5,7,13,18,19,20,27,28,30,32,36,38],[9,10,11,14,15,22,24,25,26,29,30,32,36,37,39],[1,2,7,12,16,19,21,23,31,33,35,37,40,41]][biome];
+    const themed=theme.filter(type=>catalogue.includes(type));
+    const large=catalogue.filter(type=>localSize(type,this.level)>=1.6);
+    const small=catalogue.filter(type=>localSize(type,this.level)<=1.6);
+    const medium=catalogue.filter(type=>{const size=localSize(type,this.level);return size>=.65&&size<=5.4;});
+    const select=pool=>{const entries=pool.length?pool:catalogue;return entries[Math.floor(random()*entries.length)];};
     const add=(type,x,z,slot)=>{
-      const size=TYPES[type].size;
+      const info=TYPES[type],size=localSize(type,this.level);
       // A growth transition cannot populate the space already on screen.
       // Remember skipped slots so unloading/reloading this block stays stable.
       if(this.guards.some(guard=>Math.hypot(x-guard.x,z-guard.z)<guard.radius+size)){
@@ -46,19 +90,23 @@ class ProceduralWorld{
       if(size>1&&Math.hypot(x,z)<6.5&&this.level===0&&this.originX===0n&&this.originZ===0n)return;
       if(this.level>0&&Math.hypot(x-player.x,z-player.z)<player.diameter*.65+size*.5)return;
       for(const old of this.legacy){if(old.collected)continue;const gap=(size+old.size)*.3;if(Math.abs(x-old.x)<gap&&Math.abs(z-old.z)<gap&&Math.hypot(x-old.x,z-old.z)<gap)return;}
-      chunk.items.push({id:`${id}:${slot}`,type,x,z,size,collected:Boolean(chunk.mask&(1n<<BigInt(slot))),visualSeed:hash(seed,slot),slot,owner:chunk});
+      for(const other of chunk.items){const gap=size*footprint(type)+other.size*footprint(other.type)+.08;if(Math.abs(x-other.x)<gap&&Math.abs(z-other.z)<gap&&Math.hypot(x-other.x,z-other.z)<gap)return;}
+      const name=info.endless&&this.level>10?info.endlessName:info.name;
+      chunk.items.push({id:`${id}:${slot}`,type,name,x,z,size,collected:Boolean(chunk.mask&(1n<<BigInt(slot))),visualSeed:hash(seed,slot),slot,owner:chunk});
     };
     for(let slot=0;slot<16;slot++){
       const gx=slot%4,gz=Math.floor(slot/4);
       const x=cx*CHUNK_SIZE+2.8+gx*4.1+(random()-.5)*.8,z=cz*CHUNK_SIZE+2.8+gz*4.1+(random()-.5)*.8;
-      const type=random()<.38?themed[Math.floor(random()*themed.length)]:Math.floor(random()*TYPES.length);
+      const themedLarge=themed.filter(type=>localSize(type,this.level)>=1.6);
+      const type=select(random()<.55&&themedLarge.length?themedLarge:large);
       add(type,x,z,slot);
     }
     // Snack trails and mid-size props keep every fresh block useful for growth.
-    for(let slot=16;slot<36;slot++){
+    for(let slot=16;slot<80;slot++){
       const x=cx*CHUNK_SIZE+1.8+random()*14.4,z=cz*CHUNK_SIZE+1.8+random()*14.4;
-      add(2+Math.floor(random()*10),x,z,slot);
+      add(select(random()<.25?medium:small),x,z,slot);
     }
+    for(let slot=80;slot<96;slot++){const x=cx*CHUNK_SIZE+1.8+random()*14.4,z=cz*CHUNK_SIZE+1.8+random()*14.4;add(select(medium),x,z,slot);}
     return chunk;
   }
   sync(player,radius){
@@ -72,7 +120,7 @@ class ProceduralWorld{
     this.items=[...this.legacy,...Array.from(this.chunks.values()).flatMap(chunk=>chunk.items)];
   }
   nearby(x,z,radius){
-    const reach=radius+3.2,result=[];
+    const reach=radius+8,result=[];
     for(const chunk of this.chunks.values()){
       if(x+reach<chunk.cx*CHUNK_SIZE||x-reach>(chunk.cx+1)*CHUNK_SIZE||z+reach<chunk.cz*CHUNK_SIZE||z-reach>(chunk.cz+1)*CHUNK_SIZE)continue;
       result.push(...chunk.items);
@@ -108,14 +156,14 @@ class ProceduralWorld{
     this.originX=ox;this.originZ=oz;this.level++;this.chunks.clear();this.stamp='';this.items=this.legacy;
     return{shiftX,shiftZ};
   }
-  district(x,z){return DISTRICTS[this.chunks.get(`${Math.floor(x/CHUNK_SIZE)}:${Math.floor(z/CHUNK_SIZE)}`)?.biome??0];}
+  district(x,z){const biome=this.chunks.get(`${Math.floor(x/CHUNK_SIZE)}:${Math.floor(z/CHUNK_SIZE)}`)?.biome??0;const districts=this.level>=8?['Mountain Pass','Island Coast','Island Chain','Highland Valley']:this.level>=4?['Landmark Park','Town Square','City Center','Castle Grounds']:this.level>=1?['Giant Oaks','Market District','Town Center','Windmill Fields']:DISTRICTS;return districts[biome];}
 }
 
 export class Simulation{
   constructor(){this.reset(true);this.mode='menu';}
   get items(){return this.world.items;}
   get level(){return this.world.level;}
-  reset(free=true){this.world=new ProceduralWorld(newSeed());this.x=0;this.z=0;this.vx=0;this.vz=0;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.free=free;this.mode='playing';this.milestone=0;this.won=false;this.combo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;this.world.sync(this,this.viewRadius);}
+  reset(free=true){this.world=new ProceduralWorld(newSeed());this.x=0;this.z=0;this.vx=0;this.vz=0;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.free=free;this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;this.world.sync(this,this.viewRadius);}
   setViewRadius(radius){this.viewRadius=Math.max(2,Math.min(4,radius));}
   setVisibleRadius(radius){this.visibleRadius=radius;}
   step(dt,input){
@@ -132,10 +180,10 @@ export class Simulation{
       this.x+=this.vx*dt/substeps;this.z+=this.vz*dt/substeps;
       for(let pass=0;pass<2;pass++)for(const item of nearby){
         if(item.collected)continue;
-        const dx=this.x-item.x,dz=this.z-item.z,dist=Math.hypot(dx,dz),reach=this.diameter*.5+item.size*FOOTPRINT[item.type];
+        const dx=this.x-item.x,dz=this.z-item.z,dist=Math.hypot(dx,dz),reach=this.diameter*.5+item.size*footprint(item.type);
         if(dist>=reach)continue;
         if(item.size*1.08<=this.diameter){
-          this.world.collect(item);this.count++;this.volume+=item.size**3*.82;this.diameter=Math.cbrt(this.volume);pickups.push({...item,owner:null});
+          this.world.collect(item);this.count++;this.volume+=item.size**3*.82;this.diameter=Math.cbrt(this.volume);pickups.push({...item,owner:null,sizeLevel:this.level});
           this.combo=this.elapsed-this.lastPickup<1.5?this.combo+1:1;this.lastPickup=this.elapsed;
         }else{
           const nx=dist>.00001?dx/dist:1,nz=dist>.00001?dz/dist:0,overlap=reach-dist+.001;
@@ -150,6 +198,8 @@ export class Simulation{
     const stages=[.65,1.2,2.2,3.8];
     while(this.milestone<stages.length&&this.diameter>=stages[this.milestone]){milestone=this.milestone++;}
     while(Math.log2(this.diameter)+this.level>=Math.log2(GOAL)+this.nextGoal){milestone=4;this.nextGoal++;}
+    let unlock=null;
+    while(this.scaleStage<SCALE_STAGES.length-1&&Math.log2(this.diameter)+this.level>=Math.log2(SCALE_STAGES[this.scaleStage+1].size)){this.scaleStage++;unlock=SCALE_STAGES[this.scaleStage].message;}
     if(!this.free&&(this.nextGoal>0||this.elapsed>=ROUND_SECONDS)){this.won=this.nextGoal>0;this.mode='result';}
     // Normalize the simulation as size grows; numbers and camera precision stay
     // small while the logical Katamari size continues to increase without a cap.
@@ -161,8 +211,9 @@ export class Simulation{
       const shift=this.world.rebase(Math.floor(this.x/CHUNK_SIZE),Math.floor(this.z/CHUNK_SIZE));this.x-=shift.dx;this.z-=shift.dz;transform.x-=shift.dx;transform.z-=shift.dz;
     }
     this.world.sync(this,this.viewRadius);
-    return{pickups,distance:Math.hypot(dx,dz),dx,dz,milestone,transform};
+    return{pickups,distance:Math.hypot(dx,dz),dx,dz,milestone,unlock,transform};
   }
+  scaleLabel(){return SCALE_STAGES[this.scaleStage].label;}
   progress(){const relative=this.diameter/2**(this.nextGoal-this.level);return this.nextGoal===0?Math.max(0,(relative-.32)/(GOAL-.32)):Math.max(0,(relative-3)/3);}
   nextGoalSize(){return formatSize(GOAL,this.nextGoal);}
   snapshot(){return{mode:this.mode,map:'Endless Sunny Side',size:formatSize(this.diameter,this.level),normalizedDiameter:this.diameter,scaleExponent:this.level,collected:this.count,nearbyRemaining:this.items.filter(i=>!i.collected).length,loadedBlocks:this.world.chunks.size,generatedBlocks:this.world.generated,seed:this.world.seed,secondsRemaining:this.free?null:Math.max(0,Math.ceil(ROUND_SECONDS-this.elapsed)),freeRoll:this.free,goalMeters:GOAL};}

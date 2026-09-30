@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import './style.css';
-import {Simulation,TYPES,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
+import {Simulation,TYPES,PROP_ART_COUNT,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
 import {createTerrain} from './terrain.js';
 
 const $=id=>document.getElementById(id);
@@ -41,7 +41,8 @@ function createItemViews(){
     let view=itemViews.get(item.id);
     if(!view){const s=sprite(TYPES[item.type].art,item.size*1.05),sh=shadow(item.size*.85);scene.add(s,sh);view={sprite:s,shadow:sh};itemViews.set(item.id,view);}
     const ratio=assets[TYPES[item.type].art].image.width/assets[TYPES[item.type].art].image.height;
-    view.sprite.scale.set(item.size*1.05*ratio,item.size*1.05,1);view.sprite.position.set(item.x,.025,item.z);
+    const height=item.size*1.05/(TYPES[item.type].fitSize?Math.max(1,ratio):1);
+    view.sprite.scale.set(height*ratio,height,1);view.sprite.position.set(item.x,.025,item.z);
     view.shadow.scale.setScalar(item.size*.85);view.shadow.position.set(item.x,.012,item.z);
   }
   lastItems=sim.items;
@@ -54,11 +55,11 @@ async function init(){
     camera=new THREE.OrthographicCamera(-5,5,5,-5,.1,150);
     scene.add(new THREE.HemisphereLight('#fffbe4','#73935c',2.7));
     const sun=new THREE.DirectionalLight('#fff1bf',2.5);sun.position.set(-10,22,12);scene.add(sun);
-    const textures=await Promise.all([...Array.from({length:20},(_,i)=>loadTexture(`/assets/prop-${i}.webp`)),loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp')]);
-    assets=textures.slice(0,20);shadowMap=shadowTexture();
-    terrain=createTerrain(textures[20],textures[21],renderer);scene.add(terrain.mesh);
+    const textures=await Promise.all([...Array.from({length:PROP_ART_COUNT},(_,i)=>loadTexture(`/assets/prop-${i}.webp`)),loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp')]);
+    assets=textures.slice(0,PROP_ART_COUNT);shadowMap=shadowTexture();
+    terrain=createTerrain(textures[PROP_ART_COUNT],textures[PROP_ART_COUNT+1],renderer);scene.add(terrain.mesh);
     // A generated paint texture, lighting, and collected artwork form the Katamari.
-    ball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshStandardMaterial({map:textures[22],roughness:.82,metalness:0}));scene.add(ball);
+    ball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshStandardMaterial({map:textures[PROP_ART_COUNT+2],roughness:.82,metalness:0}));scene.add(ball);
     ballShadow=shadow(.48);scene.add(ballShadow);
     prince=sprite(18,.34);scene.add(prince);
     createItemViews();resize();
@@ -103,12 +104,13 @@ function updateHud(){
   if(sim.free){ui.timer.textContent='∞';ui.timer.style.color='';}
   else{const t=Math.max(0,Math.ceil(ROUND_SECONDS-sim.elapsed));ui.timer.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;ui.timer.style.color=t<=30?'#d65374':'';}
   ui.district.textContent=sim.world.district(sim.x,sim.z);
+  document.querySelector('.size-sticker').innerHTML=sim.scaleLabel().replace(' ','<br>');
 }
 function attach(item){
   const s=sprite(TYPES[item.type].art,item.size*.45);s.center.set(.5,.5);
   const n=item.visualSeed*2.3999632297,z=1-2*((item.visualSeed*.61803398875)%1),r=Math.sqrt(1-z*z);
   const direction=new THREE.Vector3(r*Math.cos(n),z,r*Math.sin(n));
-  scene.add(s);attachments.push({sprite:s,direction,size:item.size,angle:n,ratio:assets[TYPES[item.type].art].image.width/assets[TYPES[item.type].art].image.height});
+  scene.add(s);attachments.push({sprite:s,direction,size:item.size,angle:n,fitSize:TYPES[item.type].fitSize,ratio:assets[TYPES[item.type].art].image.width/assets[TYPES[item.type].art].image.height});
   if(attachments.length>48){const old=attachments.shift();scene.remove(old.sprite);old.sprite.material.dispose();}
 }
 function emitSparks(item){
@@ -147,13 +149,13 @@ function tick(now){
       const item={...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale};
       attach(item);emitSparks(item);
     }
-    const last=result.pickups[result.pickups.length-1];$('pickup').textContent=`+ ${TYPES[last.type].name}${sim.combo>=3?' · '+sim.combo+' in a row!':''}`;pickupUntil=now+1500;
+    const last=result.pickups[result.pickups.length-1];$('pickup').textContent=`+ ${last.name||TYPES[last.type].name} · ${formatSize(last.size,last.sizeLevel??sim.level)}${sim.combo>=3?' · '+sim.combo+' in a row!':''}`;pickupUntil=now+1500;
     tone(350+Math.min(sim.combo,12)*45,.09);
     if(navigator.vibrate)navigator.vibrate(12);
   }
-  if(result.milestone!==null&&result.milestone!==undefined){
+  if(result.unlock||(result.milestone!==null&&result.milestone!==undefined)){
     const messages=['A little bigger!','Look at you grow!','Bicycles? Absolutely.','Here come the vans!'];
-    $('milestone').textContent=messages[result.milestone]||`${formatSize(sim.diameter,sim.level)} of glorious stuff!`;milestoneUntil=now+2400;melody([392,523,659]);
+    $('milestone').textContent=result.unlock||messages[result.milestone]||`${formatSize(sim.diameter,sim.level)} of glorious stuff!`;milestoneUntil=now+2400;melody([392,523,659]);
   }
   if(sim.mode==='result'&&$('result-menu').classList.contains('hidden'))finish();
   const inMenu=sim.mode==='menu';
@@ -164,7 +166,7 @@ function tick(now){
   else if(inMenu&&!reducedMotion)ball.rotation.y+=dt*.22;
   ballShadow.position.set(sim.x,.018,sim.z);ballShadow.scale.setScalar(visualRadius*3.1);
   for(const a of attachments){
-    const h=Math.min(a.size*.45,visualRadius*.42),halfDiagonal=Math.hypot(h*a.ratio,h)*.5;
+    const h=Math.min(a.size*.45,visualRadius*.42)/(a.fitSize?Math.max(1,a.ratio):1),halfDiagonal=Math.hypot(h*a.ratio,h)*.5;
     const v=a.direction.clone().applyQuaternion(ball.quaternion).multiplyScalar(visualRadius+halfDiagonal+.012);
     a.sprite.position.copy(ball.position).add(v);a.sprite.material.rotation=Math.sin(now*.0007+a.angle)*.14;a.sprite.scale.set(h*a.ratio,h,1);
     // The full cutout sits outside the sphere. Underside pieces disappear as a
