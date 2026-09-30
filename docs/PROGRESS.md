@@ -1,15 +1,20 @@
 # V2 progress
 
 Objective: release an endless procedural map, clean object cutouts, and sharp terrain.
-Progress: [#######---] 70% toward the updated public release.
+Progress: [##########] 100% — production build and public publication completed.
 
 - [x] Reconcile source, Git state, notes, and public Site.
 - [x] Diagnose and repair equal-cell sprite slicing using complete alpha silhouettes.
-- [x] Integrate original native-resolution repeating meadow/paving textures.
-- [x] Implement streaming, scale normalization, floating origin, exterior attachments, collision substeps, adaptive camera, and endless-first HUD.
-- [ ] Build once, push exact source, and package.
-- [ ] Save/deploy v2 and confirm terminal success.
+- [x] Integrate native-resolution repeating meadow/paving textures.
+- [x] Implement streaming, scale normalization, floating origin, exterior attachments, stepped collision, adaptive camera, and endless-first HUD.
+- [x] Run one production build, push exact source, and package.
+- [x] Publish v2 and confirm terminal deployment success.
 
-Current state: implementation complete; v1 remains live until publication. Blockers: none.
-Verification: targeted original-art inspection diagnosed the reported defect; asset extraction/conversion completed. Meadow and paving each 1254 x 1254 at native resolution, repeated locally. No tests, browser QA, or device playtesting. No v2 production build yet.
-Next steps: one production build/push/package via Sites workflow, GitHub backup, save/deploy, confirm native success, record release, return URL.
+Current state: public v2 is live at https://katamari-neighborhood.remriel.chatgpt.site. Blockers: none.
+Verification: targeted original-art inspection; asset extraction/conversion; one successful Vite production build (8 modules, 1.31 s); exact source SHA push; mandatory archive identity check; native deployment succeeded.
+Non-blocking build warning: minified JS 511.75 kB, gzip 132.15 kB, above Vite's default warning threshold.
+Manual acceptance: no browser/device playtesting, shader runtime check, WebMCP validation, or long-session performance run was performed, following build-once-publish.
+Source commit: b7425bbc918e36ddd239e32c64a3a3150c7a8964.
+Saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_dddca419f88481918103a12dbc2e985f.
+Deployment: appgdep_6abd5fff61348191a36d3443f706acb6.
+Next steps: refresh the existing public tab for v2 and manually assess gameplay. No additional checks or changes in this release.
