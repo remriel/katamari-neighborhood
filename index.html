@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
+  <meta name="theme-color" content="#bce7a0" />
+  <meta name="description" content="Roll through a sunny neighborhood, collect everything smaller than you, and grow a glorious Katamari. A mobile-first fan game with one original map." />
+  <title>Katamari Neighborhood — Roll a little, grow a lot</title>
+  <link rel="icon" type="image/png" href="/assets/ball-icon.png" />
+</head>
+<body>
+  <main id="game" aria-label="Katamari Neighborhood game">
+    <canvas id="world" aria-label="Three dimensional neighborhood. Use the touch joystick or WASD to roll." tabindex="0"></canvas>
+    <header class="topbar">
+      <div class="brand"><span class="brand-top">KATAMARI</span><span class="brand-bottom">NEIGHBORHOOD</span></div>
+      <div class="top-buttons">
+        <button id="sound" class="icon-button" aria-label="Turn sound on" title="Sound off">♪<span class="sound-slash">/</span></button>
+        <button id="pause" class="icon-button" aria-label="Pause game" title="Pause">Ⅱ</button>
+      </div>
+    </header>
+    <section class="hud" aria-label="Game status">
+      <div class="size-label">YOUR KATAMARI</div>
+      <div class="size-row"><strong id="size">32</strong><span id="unit">cm</span><span class="size-sticker">KEEP<br>ROLLING!</span></div>
+      <div class="goal-row"><span id="goal-label">GOAL · 6 m</span><span id="timer">4:00</span></div>
+      <div class="progress-track"><div id="growth"></div></div>
+      <div class="hud-bottom"><span id="count">0 things</span><span id="district">Pocket Park</span></div>
+    </section>
+    <div id="pickup" class="pickup-message" aria-live="polite"></div>
+    <div id="milestone" class="milestone" aria-live="polite"></div>
+    <div id="hint" class="hint">Small things. Big dreams.</div>
+    <div class="touch-controls" id="controls">
+      <div id="joystick" class="joystick" role="group" aria-label="Drag to roll"><div class="joystick-ring"></div><div id="stick" class="stick"></div><span>ROLL</span></div>
+      <div class="action-controls">
+        <button id="camera" class="camera-button" aria-label="Rotate camera 45 degrees" title="Rotate camera">↻</button>
+        <button id="boost" class="boost-button" aria-label="Hold to roll faster">GO!<small>HOLD</small></button>
+      </div>
+    </div>
+    <div class="desktop-help">WASD / arrows to roll <b>·</b> Shift to dash <b>·</b> Q / E rotate <b>·</b> Esc pause</div>
+    <section id="menu" class="menu-layer" aria-label="Start game">
+      <div class="menu-card">
+        <span class="map-kicker">ONE LITTLE MAP · A WHOLE LOT TO ROLL</span>
+        <h1>Make a<br><em>little mess.</em></h1>
+        <p class="menu-description">Start tiny. Pick up anything smaller than you.<br>Grow big enough to roll up the neighborhood.</p>
+        <div class="map-pill"><span class="map-dot"></span> Sunny Side Neighborhood <span>01</span></div>
+        <button id="start" class="primary-button" disabled>Preparing your neighborhood…</button>
+        <button id="free" class="text-button" disabled>Just roll · no timer</button>
+        <p class="start-hint">Drag the thumbstick to roll. Hold GO! for a little speed.</p>
+        <span class="fan-note">An independent Katamari-inspired fan game.</span>
+      </div>
+    </section>
+    <section id="pause-menu" class="menu-layer hidden" aria-label="Game paused">
+      <div class="menu-card compact"><span class="map-kicker">TAKE YOUR TIME</span><h2>Just a<br><em>little pause.</em></h2><p>Your neighborhood is right where you left it.</p><button id="resume" class="primary-button">Keep rolling</button><button id="restart" class="text-button">Start a fresh roll</button></div>
+    </section>
+    <section id="result-menu" class="menu-layer hidden" aria-label="Round results">
+      <div class="menu-card compact"><span id="result-kicker" class="map-kicker">THAT'S A LOVELY KATAMARI</span><h2 id="result-title">What a<br><em>little world.</em></h2><div class="result-stats"><div><strong id="result-size">0</strong><span>FINAL SIZE</span></div><div><strong id="result-count">0</strong><span>THINGS COLLECTED</span></div></div><p id="result-text"></p><button id="again" class="primary-button">Roll again</button><button id="continue" class="text-button">Keep this Katamari · free roll</button></div>
+    </section>
+    <section id="error" class="menu-layer hidden" role="alert"><div class="menu-card compact"><h2>A little<br><em>hiccup.</em></h2><p id="error-text">Your browser couldn't start the game.</p><button onclick="location.reload()" class="primary-button">Try again</button></div></section>
+  </main>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
