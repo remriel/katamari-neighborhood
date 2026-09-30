@@ -1,15 +1,22 @@
 # Eon Roll progress
 
-Objective: implement the attached six-era campaign and publish to the existing public Site.
-Progress: [########--] 80% toward the requested publishable delivery; production build and publication pending. Runtime balance remains unverified.
+Current objective: publish an ASAP working prototype, per latest user clarification; deadline removed.
+Progress: [##########] 100% of prototype build/publication workflow completed. Full production campaign balance is not verified.
 
-- [x] Read brief, preserve/push V5 archival branch.
-- [x] Author six distinct era modules and authored variants.
-- [x] Generate original artwork; process 54 complete silhouettes and 54 GLBs plus six high-resolution grounds.
-- [x] Connect campaign renderer, mobile/desktop input, saves, recovery and adaptation choices.
-- [x] Add journal, persistent layer reconstruction, finite ending, replay and chapter selection.
-- [ ] Production build; repair blocking errors only.
-- [ ] Exact source push/package/save/public deployment and GitHub synchronization.
+- [x] Read brief and reconcile repository; preserve/push V5 archival branch.
+- [x] Author six distinct era modules and two authored variants per era.
+- [x] Generate original artwork; process 54 silhouettes/GLBs plus six native 1254px grounds.
+- [x] Connect renderer, mobile/desktop input, persistent saves/ancestry, recovery and adaptation choices.
+- [x] Add journal, reconstructed body layers, finite ending, replay and chapter selection.
+- [x] Run one production build: Vite passed in 2.79s.
+- [x] Push exact release source, package, save version 5 and publish publicly; native deployment succeeded.
+- [x] Sync source to private GitHub main.
 
-Blockers: none known. Verification: source/brief inspection; asset-processing and Blender exports completed. No gameplay/browser tests, pacing measurement or performance audit, per build-once-publish. Presentation limitation: individual layer inspection rather than continuous six-layer cinematic cutaway.
-Next: 1. Production build/package. 2. Save/deploy. 3. Capture terminal deployment status. 4. Sync GitHub and hand manual acceptance to user.
+Released source: a78ded03fc9f805401ae0ddc19cc60b692af20b8.
+Live: https://katamari-neighborhood.remriel.chatgpt.site
+Deployment: appgdep_6abd9d36e1688191b48764944be9e984, succeeded 2026-09-30 23:37:41 UTC.
+Archive: outputs/eon-roll.tar.gz; SHA256 f4518550bf1f5309b85f1b11c35424197cdf1ec01169ce76efcb81c9a7a59459.
+
+Blockers: none for publication. Remaining prototype limitations: pacing/engagement and mobile performance unmeasured; artwork GLBs are textured sculpted silhouette volumes; ending offers per-layer reconstruction rather than a continuous six-layer cutaway. Build warned about large JS chunk. No lint, automated/gameplay/browser tests or performance audit, as requested by build-once-publish.
+
+Next steps: 1. User plays the live prototype. 2. Capture concrete feedback. 3. Implement requested fixes and publish using the same release workflow. Original full production brief remains docs/EON_ROLL_PLAN.md.
