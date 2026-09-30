@@ -1,0 +1,11 @@
+# civilizations original artwork
+
+Built-in image generation.
+
+## Objects
+
+Use case: stylized-concept. Production game art for Eon Roll, a tactile richly illustrated diorama adventure through Earth history. Create exactly NINE separate COMPLETE isolated objects in a THREE COLUMN by THREE ROW sheet, row-major order: a connected terraced-stone city district with gardens, a connected river-courtyard city district, a connected timber woodland city district; a detailed clean wind energy hub, a trade port with connected warehouses, a research laboratory and observatory; an orbital launch rocket on its connected platform, a steam-to-electric railway transport hub, a lush living world seed with tiny integrated city districts. True transparent background. Each whole subject generously separated with clear margins, absolutely no touching other subjects, no grid lines, no labels or words or numbers, no watermark or shared scenery. Coherent handcrafted painted resin / clay miniatures with rich high-resolution texture detail, rounded organic edges, expressive materials, tasteful luminous accents. Front three-quarter view, consistent warm light from upper left, entire silhouette including supports and limbs. Layered readable depth, refined premium game art, not emoji or stock icons or simple geometric placeholders. Each row has exactly three subjects as separated by semicolons. Detailed enough for sprite cutouts and sculpted GLB artwork.
+
+## Environment
+
+Use case: stylized-concept. Native high-resolution seamless square terrain/material texture for Eon Roll, a premium tactile painted-clay / resin diorama game. Scene: terraced lush green land with subtle fields and geographic texture seen directly overhead, no buildings and no map labels or painted networks. Directly overhead orthographic edge-to-edge diffuse material, crisp fine detail rather than a blurry distant landscape. Absolutely seamless all opposing edges; no border, vignette, UI, letters, symbols, labels, perspective horizon or large focal object. Intended to repeat at a small physical scale under real gameplay objects. Cohesive art direction: sumptuous but readable handcrafted illustration, subtle variation, carefully controlled contrast, no generic stock art.

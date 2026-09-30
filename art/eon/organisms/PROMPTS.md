@@ -1,0 +1,11 @@
+# organisms original artwork
+
+Built-in image generation.
+
+## Objects
+
+Use case: stylized-concept. Production game art for Eon Roll, a tactile richly illustrated diorama adventure through Earth history. Create exactly NINE separate COMPLETE isolated objects in a THREE COLUMN by THREE ROW sheet, row-major order: a complete small blue fish with translucent fins, a curled violet sea snail with full shell, a golden green amphibian with full legs; a small warm brown furry mammal, a lush fern colony on connected root base, a mint cold-adapted moss colony on stone; a dark plum predatory sea creature with fins and readable teeth, a small ivory bird with open wings, a colorful living ecosystem seed with fins shell roots and tiny plants. True transparent background. Each whole subject generously separated with clear margins, absolutely no touching other subjects, no grid lines, no labels or words or numbers, no watermark or shared scenery. Coherent handcrafted painted resin / clay miniatures with rich high-resolution texture detail, rounded organic edges, expressive materials, tasteful luminous accents. Front three-quarter view, consistent warm light from upper left, entire silhouette including supports and limbs. Layered readable depth, refined premium game art, not emoji or stock icons or simple geometric placeholders. Each row has exactly three subjects as separated by semicolons. Detailed enough for sprite cutouts and sculpted GLB artwork.
+
+## Environment
+
+Use case: stylized-concept. Native high-resolution seamless square terrain/material texture for Eon Roll, a premium tactile painted-clay / resin diorama game. Scene: lush richly textured moss and fern forest floor with small green plants and earth flecks, no large plants or creatures. Directly overhead orthographic edge-to-edge diffuse material, crisp fine detail rather than a blurry distant landscape. Absolutely seamless all opposing edges; no border, vignette, UI, letters, symbols, labels, perspective horizon or large focal object. Intended to repeat at a small physical scale under real gameplay objects. Cohesive art direction: sumptuous but readable handcrafted illustration, subtle variation, carefully controlled contrast, no generic stock art.

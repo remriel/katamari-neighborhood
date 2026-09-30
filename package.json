@@ -3,7 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "vite --host 127.0.0.1", "build": "vite build" },
-  "dependencies": { "three": "0.180.0" },
-  "devDependencies": { "vite": "7.1.7" }
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.21.0",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "vite": "7.1.7"
+  }
 }
