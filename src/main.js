@@ -2,16 +2,18 @@ import * as THREE from 'three';
 import './style.css';
 import {Simulation,TYPES,PROP_ART_COUNT,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
 import {createTerrain} from './terrain.js';
+import {CompoundView} from './compound-view.js';
+import {CHAPTERS} from './campaign.js';
 
 const $=id=>document.getElementById(id);
 const sim=new Simulation();
 const ui={size:$('size'),unit:$('unit'),timer:$('timer'),growth:$('growth'),count:$('count'),district:$('district')};
 const keys=new Set(),joystick={x:0,z:0,pointer:null};
-let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain;
+let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain,compoundView;
 let yaw=0,targetYaw=0,visualRadius=.16,viewSpan=8,follow=new THREE.Vector3();
-let itemViews=new Map(),attachments=[],sparks=[],assets=[],lastItems=null;
+let itemViews=new Map(),sparks=[],assets=[],lastItems=null;
 let audio=null,soundEnabled=false,pickupUntil=0,milestoneUntil=0,hintUntil=0,startedAt=0;
-let lastTime=performance.now(),frame=0;
+let lastTime=performance.now(),frame=0,resultShown=false;
 const world=$('world'),loader=new THREE.TextureLoader();
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.body.classList.add('menu-open');
@@ -55,15 +57,17 @@ async function init(){
     camera=new THREE.OrthographicCamera(-5,5,5,-5,.1,150);
     scene.add(new THREE.HemisphereLight('#fffbe4','#73935c',2.7));
     const sun=new THREE.DirectionalLight('#fff1bf',2.5);sun.position.set(-10,22,12);scene.add(sun);
-    const textures=await Promise.all([...Array.from({length:PROP_ART_COUNT},(_,i)=>loadTexture(`/assets/prop-${i}.webp`)),loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp')]);
+    const textures=await Promise.all([...Array.from({length:PROP_ART_COUNT},(_,i)=>loadTexture(`/assets/prop-${i}.webp`)),loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp')]);
     assets=textures.slice(0,PROP_ART_COUNT);shadowMap=shadowTexture();
-    terrain=createTerrain(textures[PROP_ART_COUNT],textures[PROP_ART_COUNT+1],renderer);scene.add(terrain.mesh);
-    // A generated paint texture, lighting, and collected artwork form the Katamari.
-    ball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshStandardMaterial({map:textures[PROP_ART_COUNT+2],roughness:.82,metalness:0}));scene.add(ball);
+    sim.setArtRatios(assets.map(texture=>texture.image.width/texture.image.height));
+    terrain=createTerrain(textures[PROP_ART_COUNT],textures[PROP_ART_COUNT+1],renderer,textures[PROP_ART_COUNT+3]);scene.add(terrain.mesh);
+    compoundView=new CompoundView(scene,assets);
+    // The original seed stays small; retained objects form the entire growing heap.
+    ball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshStandardMaterial({map:textures[PROP_ART_COUNT+2],roughness:.82,metalness:0}));compoundView.root.add(ball);
     ballShadow=shadow(.48);scene.add(ballShadow);
     prince=sprite(18,.34);scene.add(prince);
     createItemViews();resize();
-    loaded=true;$('start').disabled=false;$('free').disabled=false;$('start').textContent='Let’s roll · forever';
+    loaded=true;$('start').disabled=false;$('free').disabled=false;$('start').textContent='Roll the island · 7 stages';
     registerTools();requestAnimationFrame(tick);
   }catch(error){reportError(error.message||'This device could not start WebGL. Try a browser with hardware acceleration enabled.');}
 }
@@ -72,15 +76,15 @@ function resize(){
   const aspect=w/Math.max(1,h);camera.left=-viewSpan*aspect/2;camera.right=viewSpan*aspect/2;camera.top=viewSpan/2;camera.bottom=-viewSpan/2;camera.updateProjectionMatrix();
 }
 function resetVisuals(){
-  for(const a of attachments){scene.remove(a.sprite);a.sprite.material.dispose();}attachments=[];
+  compoundView.reset();
   for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
   for(const v of itemViews.values()){scene.remove(v.sprite,v.shadow);v.sprite.material.dispose();v.shadow.material.dispose();v.shadow.geometry.dispose();}itemViews.clear();
   ball.quaternion.identity();visualRadius=sim.diameter/2;viewSpan=6+sim.diameter*4.1;follow.set(sim.x,0,sim.z);yaw=targetYaw=0;createItemViews();
 }
-function start(free=true){
-  if(!loaded)return;sim.reset(free);resetVisuals();startedAt=performance.now();hintUntil=startedAt+9500;
-  $('hint').textContent='Keep rolling. New streets are just ahead.';
-  $('goal-label').textContent=free?'NEXT · 6 m':'GOAL · 6 m';
+function start(runMode='campaign'){
+  if(!loaded)return;sim.reset(runMode);resetVisuals();resultShown=false;startedAt=performance.now();hintUntil=startedAt+9500;
+  $('hint').textContent='Everything sticks. Follow the goal and build a monster.';
+  $('goal-label').textContent='GOAL · '+sim.nextGoalSize();
   hideMenus();updateHud();initAudio();world.focus({preventScroll:true});
 }
 function hideMenus(){for(const id of ['menu','pause-menu','result-menu'])$(id).classList.add('hidden');document.body.classList.remove('menu-open');}
@@ -88,30 +92,32 @@ function resetInput(){keys.clear();joystick.x=joystick.z=0;joystick.pointer=null
 function pause(){if(sim.mode!=='playing')return;sim.mode='paused';resetInput();$('pause-menu').classList.remove('hidden');document.body.classList.add('menu-open');}
 function resume(){if(sim.mode!=='paused'||!loaded)return;sim.mode='playing';hideMenus();lastTime=performance.now();world.focus({preventScroll:true});}
 function finish(){
+  resultShown=true;
   resetInput();$('result-menu').classList.remove('hidden');document.body.classList.add('menu-open');
-  $('result-kicker').textContent=sim.won?'NEIGHBORHOOD, SUCCESSFULLY ROLLED!':'FOUR MINUTES OF GOOD LITTLE CHAOS';
-  $('result-title').innerHTML=sim.won?'You made<br><em>a big mess.</em>':'What a<br><em>little world.</em>';
+  const completedIsland=sim.won&&sim.runMode==='campaign';
+  $('result-kicker').textContent=completedIsland?'SUNNY SIDE ISLAND · COMPLETELY ROLLED':sim.won?'QUICK CHALLENGE COMPLETE':'THE CLOCK CAUGHT UP';
+  $('result-title').innerHTML=completedIsland?'What a<br><em>monstrosity.</em>':sim.won?'A beautiful<br><em>little monster.</em>':'One more<br><em>glorious roll?</em>';
   $('result-size').textContent=formatSize(sim.diameter,sim.level);$('result-count').textContent=String(sim.count);
-  $('result-text').textContent=sim.won?'Six meters of glorious stuff. Keep rolling into the endless neighborhood.':'A lovely start. Try another roll, or keep growing this one without a timer.';
+  $('result-score').textContent=sim.score.toLocaleString();$('result-combo').textContent=String(sim.bestCombo);
+  $('result-text').textContent=completedIsland?'Candy, cars, castles, a mountain, and the whole island. Every piece is still in that ridiculous heap. You finished the level.':sim.won?'Six meters of permanently stuck stuff. Your quick challenge is finished.':`You reached ${sim.runMode==='campaign'?Math.min(sim.chapter+1,CHAPTERS.length)+' / '+CHAPTERS.length+' stages':'the quick challenge'} and built a pile of ${sim.count} things. Try again for the finish.`;
+  $('again').textContent='Roll again · '+(sim.runMode==='campaign'?'the island':'quick challenge');
   melody(sim.won?[523,659,784,1047]:[440,392,330]);
 }
-function continueFree(){sim.free=true;sim.mode='playing';hideMenus();hintUntil=performance.now()+5500;$('hint').textContent='No clock. No edge. Just keep rolling.';updateHud();}
+function inspectResult(){hideMenus();hintUntil=performance.now()+12000;$('hint').textContent='Finished. Rotate the camera to admire your heap. Tap Ⅱ for results.';}
 function updateHud(){
   const parts=sizeParts(sim.diameter,sim.level);ui.size.textContent=parts.value;ui.unit.textContent=parts.unit;ui.size.style.fontSize=parts.value.length>5?'30px':'';
   ui.count.textContent=`${sim.count} thing${sim.count===1?'':'s'}`;
   ui.growth.style.width=`${Math.min(100,sim.progress()*100)}%`;
-  $('goal-label').textContent=sim.free?`NEXT · ${sim.nextGoalSize()}`:'GOAL · 6 m';
-  if(sim.free){ui.timer.textContent='∞';ui.timer.style.color='';}
-  else{const t=Math.max(0,Math.ceil(ROUND_SECONDS-sim.elapsed));ui.timer.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;ui.timer.style.color=t<=30?'#d65374':'';}
+  $('goal-label').textContent=`GOAL · ${sim.nextGoalSize()}`;
+  const t=Math.max(0,Math.ceil(sim.timeLimit-sim.elapsed));ui.timer.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;ui.timer.style.color=t<=30?'#d65374':'';
   ui.district.textContent=sim.world.district(sim.x,sim.z);
   document.querySelector('.size-sticker').innerHTML=sim.scaleLabel().replace(' ','<br>');
-}
-function attach(item){
-  const s=sprite(TYPES[item.type].art,item.size*.45);s.center.set(.5,.5);
-  const n=item.visualSeed*2.3999632297,z=1-2*((item.visualSeed*.61803398875)%1),r=Math.sqrt(1-z*z);
-  const direction=new THREE.Vector3(r*Math.cos(n),z,r*Math.sin(n));
-  scene.add(s);attachments.push({sprite:s,direction,size:item.size,angle:n,fitSize:TYPES[item.type].fitSize,ratio:assets[TYPES[item.type].art].image.width/assets[TYPES[item.type].art].image.height});
-  if(attachments.length>48){const old=attachments.shift();scene.remove(old.sprite);old.sprite.material.dispose();}
+  const goal=sim.chapterGoal();$('chapter-title').textContent=sim.runMode==='quick'?'QUICK CHALLENGE':`${Math.min(sim.chapter+1,CHAPTERS.length)} / ${CHAPTERS.length} · ${goal.name}`;
+  $('chapter-hint').textContent=sim.runMode==='quick'?'Build a 6 m heap before the four-minute clock runs out.':goal.hint;
+  const multiplier=Math.min(5,1+Math.floor(sim.combo/4));$('score').textContent=sim.score.toLocaleString()+' PTS';$('combo').textContent=sim.combo>=4&&sim.elapsed-sim.lastPickup<1.5?'×'+multiplier+' COMBO':'';
+  const target=sim.runMode==='campaign'?sim.objective():null;
+  $('target-guide').classList.toggle('hidden',!target||sim.mode!=='playing');
+  if(target){const dx=target.x-sim.x,dz=target.z-sim.z,sx=dx*Math.cos(yaw)-dz*Math.sin(yaw),sy=dx*Math.sin(yaw)+dz*Math.cos(yaw);$('target-arrow').style.transform=`rotate(${Math.atan2(sx,-sy)*180/Math.PI}deg)`;$('target-distance').textContent=formatSize(Math.hypot(dx,dz),sim.level);}
 }
 function emitSparks(item){
   if(reducedMotion)return;
@@ -139,7 +145,6 @@ function tick(now){
   if(transform.scale!==1||transform.x!==0||transform.z!==0){
     follow.multiplyScalar(transform.scale);follow.x+=transform.x;follow.z+=transform.z;
     visualRadius*=transform.scale;viewSpan*=transform.scale;
-    for(const a of attachments)a.size*=transform.scale;
     for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
   }
   if(sim.items!==lastItems)createItemViews();
@@ -147,32 +152,25 @@ function tick(now){
     for(const picked of result.pickups){
       const view=itemViews.get(picked.id);if(view){view.sprite.visible=false;view.shadow.visible=false;}
       const item={...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale};
-      attach(item);emitSparks(item);
+      emitSparks(item);
     }
     const last=result.pickups[result.pickups.length-1];$('pickup').textContent=`+ ${last.name||TYPES[last.type].name} · ${formatSize(last.size,last.sizeLevel??sim.level)}${sim.combo>=3?' · '+sim.combo+' in a row!':''}`;pickupUntil=now+1500;
     tone(350+Math.min(sim.combo,12)*45,.09);
     if(navigator.vibrate)navigator.vibrate(12);
   }
-  if(result.unlock||(result.milestone!==null&&result.milestone!==undefined)){
+  if(result.checkpoint||result.unlock||(result.milestone!==null&&result.milestone!==undefined)){
     const messages=['A little bigger!','Look at you grow!','Bicycles? Absolutely.','Here come the vans!'];
-    $('milestone').textContent=result.unlock||messages[result.milestone]||`${formatSize(sim.diameter,sim.level)} of glorious stuff!`;milestoneUntil=now+2400;melody([392,523,659]);
+    $('milestone').textContent=result.checkpoint||result.unlock||messages[result.milestone]||`${formatSize(sim.diameter,sim.level)} of glorious stuff!`;milestoneUntil=now+2800;melody([392,523,659]);
   }
-  if(sim.mode==='result'&&$('result-menu').classList.contains('hidden'))finish();
+  if(sim.mode==='result'&&!resultShown)finish();
   const inMenu=sim.mode==='menu';
   const radiusTarget=inMenu ? .55 : sim.diameter*.5;
   visualRadius+=(radiusTarget-visualRadius)*(1-Math.exp(-dt*8));
-  ball.scale.setScalar(visualRadius);ball.position.set(sim.x,visualRadius+.025,sim.z);
-  if(result.distance>.0001){const axis=new THREE.Vector3(result.dz,0,-result.dx).normalize();const q=new THREE.Quaternion().setFromAxisAngle(axis,result.distance/Math.max(.1,visualRadius));ball.quaternion.premultiply(q);}
-  else if(inMenu&&!reducedMotion)ball.rotation.y+=dt*.22;
-  ballShadow.position.set(sim.x,.018,sim.z);ballShadow.scale.setScalar(visualRadius*3.1);
-  for(const a of attachments){
-    const h=Math.min(a.size*.45,visualRadius*.42)/(a.fitSize?Math.max(1,a.ratio):1),halfDiagonal=Math.hypot(h*a.ratio,h)*.5;
-    const v=a.direction.clone().applyQuaternion(ball.quaternion).multiplyScalar(visualRadius+halfDiagonal+.012);
-    a.sprite.position.copy(ball.position).add(v);a.sprite.material.rotation=Math.sin(now*.0007+a.angle)*.14;a.sprite.scale.set(h*a.ratio,h,1);
-    // The full cutout sits outside the sphere. Underside pieces disappear as a
-    // whole before touching terrain, rather than being sliced by the ground.
-    a.sprite.visible=a.sprite.position.y-halfDiagonal>.028;
-  }
+  compoundView.sync(sim.body);compoundView.pose(sim.x,inMenu ? .55 : sim.body.height,sim.z,sim.body.orientation);
+  ball.scale.setScalar(inMenu ? .55 : sim.body.coreRadius);ball.position.set(0,0,0);
+  if(inMenu&&!reducedMotion)compoundView.root.rotateY(now*.0002);
+  ballShadow.position.set(sim.x,.018,sim.z);ballShadow.scale.setScalar(visualRadius*2.7);
+  ballShadow.material.opacity=.72/(1+Math.max(0,sim.body.height-sim.body.lastGround)/Math.max(.1,visualRadius));
   // Prince follows behind the rolling direction and remains readable at every size.
   const moveAngle=Math.hypot(sim.vx,sim.vz)>.1?Math.atan2(sim.vx,sim.vz):yaw+Math.PI;
   const ph=Math.max(.29,visualRadius*.63),ratio=assets[18].image.width/assets[18].image.height;
@@ -194,7 +192,7 @@ function tick(now){
     const margin=.1+item.size/viewSpan*Math.max(1,1/aspect);
     if(Math.abs(projection.x)<1+margin&&Math.abs(projection.y)<1+margin&&projection.z>-1&&projection.z<1)candidates.push({item,view,distance:(item.x-sim.x)**2+(item.z-sim.z)**2});
   }
-  candidates.sort((a,b)=>a.distance-b.distance);
+  candidates.sort((a,b)=>((a.item.objectiveIndex===sim.chapter)?-1:0)-((b.item.objectiveIndex===sim.chapter)?-1:0)||a.distance-b.distance);
   for(const{item,view}of candidates.slice(0,650)){view.sprite.visible=true;view.shadow.visible=item.size>.3;}
   for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.life-=dt;s.mesh.position.y+=dt*.7;s.mesh.material.opacity=Math.max(0,s.life/.65);if(s.life<=0){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();sparks.splice(i,1);}}
   $('pickup').classList.toggle('show',now<pickupUntil&&sim.mode==='playing');$('milestone').classList.toggle('show',now<milestoneUntil&&sim.mode==='playing');$('hint').style.opacity=now<hintUntil?'1':'0';
@@ -212,10 +210,10 @@ function tone(freq,duration=.12,delay=0){
 }
 function melody(notes){notes.forEach((n,i)=>tone(n,.19,i*.1));}
 
-$('start').addEventListener('click',()=>start(true));$('free').addEventListener('click',()=>start(false));
-$('pause').addEventListener('click',()=>sim.mode==='paused'?resume():pause());$('resume').addEventListener('click',resume);
-$('restart').addEventListener('click',()=>start(sim.free));$('again').addEventListener('click',()=>start(false));$('continue').addEventListener('click',continueFree);
-$('camera').addEventListener('click',()=>{if(sim.mode==='playing')targetYaw+=Math.PI/4;});
+$('start').addEventListener('click',()=>start('campaign'));$('free').addEventListener('click',()=>start('quick'));
+$('pause').addEventListener('click',()=>{if(sim.mode==='result'){$('result-menu').classList.remove('hidden');document.body.classList.add('menu-open');}else sim.mode==='paused'?resume():pause();});$('resume').addEventListener('click',resume);
+$('restart').addEventListener('click',()=>start(sim.runMode));$('again').addEventListener('click',()=>start(sim.runMode));$('continue').addEventListener('click',inspectResult);
+$('camera').addEventListener('click',()=>{if(sim.mode==='playing'||sim.mode==='result')targetYaw+=Math.PI/4;});
 $('sound').addEventListener('click',()=>{soundEnabled=!soundEnabled;$('sound').setAttribute('aria-label',soundEnabled?'Turn sound off':'Turn sound on');$('sound').title=soundEnabled?'Sound on':'Sound off';$('sound').querySelector('.sound-slash').style.display=soundEnabled?'none':'';initAudio();if(soundEnabled)tone(523,.15);});
 const joy=$('joystick');
 function moveJoy(e){
@@ -247,7 +245,7 @@ function registerTools(){
   const lifecycle=new AbortController();
   const register=tool=>{try{Promise.resolve(context.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'read_roll_status',description:'Read the current neighborhood game status, size, timer and collection count.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:()=>sim.snapshot()});
-  register({name:'start_neighborhood_roll',description:'Start a fresh roll on the one neighborhood map. Resets the current ball and collection.',inputSchema:{type:'object',properties:{freeRoll:{type:'boolean'}},required:['freeRoll'],additionalProperties:false},annotations:{readOnlyHint:false},execute:input=>{if(typeof input?.freeRoll!=='boolean')throw new Error('freeRoll must be a boolean');start(input.freeRoll);return sim.snapshot();}});
+  register({name:'start_neighborhood_roll',description:'Start a fresh finite island campaign or four-minute quick challenge. Resets the current heap and collection.',inputSchema:{type:'object',properties:{runMode:{type:'string',enum:['campaign','quick']}},required:['runMode'],additionalProperties:false},annotations:{readOnlyHint:false},execute:input=>{if(!['campaign','quick'].includes(input?.runMode))throw new Error('runMode must be campaign or quick');start(input.runMode);return sim.snapshot();}});
   window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
 }
 init();

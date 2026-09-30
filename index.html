@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
   <meta name="theme-color" content="#bce7a0" />
-  <meta name="description" content="Roll forever through an endless procedural neighborhood. Collect smaller objects, grow without a size cap, and explore sharp hand-painted streets in this mobile-first Katamari-inspired game." />
+  <meta name="description" content="Build a bumpy monstrosity of permanently stuck objects. Beat seven stages, collect landmarks, and roll up Sunny Side Island in this finite mobile-first Katamari-inspired game." />
   <title>Katamari Neighborhood — Roll a little, grow a lot</title>
   <link rel="icon" type="image/png" href="/assets/ball-icon.png" />
 </head>
@@ -21,9 +21,14 @@
     <section class="hud" aria-label="Game status">
       <div class="size-label">YOUR KATAMARI</div>
       <div class="size-row"><strong id="size">32</strong><span id="unit">cm</span><span class="size-sticker">KEEP<br>ROLLING!</span></div>
-      <div class="goal-row"><span id="goal-label">NEXT · 6 m</span><span id="timer">∞</span></div>
+      <div class="goal-row"><span id="goal-label">GOAL · 1 m</span><span id="timer">2:30</span></div>
       <div class="progress-track"><div id="growth"></div></div>
       <div class="hud-bottom"><span id="count">0 things</span><span id="district">Pocket Park</span></div>
+    </section>
+    <section class="mission-card" aria-label="Current objective">
+      <div class="mission-header"><strong id="chapter-title">1 / 7 · Snack attack</strong><span id="score">0 PTS</span></div>
+      <div class="mission-content"><p id="chapter-hint">Collect 20 little things and reach 1 m.</p><div id="target-guide" class="target-guide hidden"><span id="target-arrow">↑</span><small id="target-distance"></small></div></div>
+      <span id="combo" class="combo-label"></span>
     </section>
     <div id="pickup" class="pickup-message" aria-live="polite"></div>
     <div id="milestone" class="milestone" aria-live="polite"></div>
@@ -38,13 +43,13 @@
     <div class="desktop-help">WASD / arrows to roll <b>·</b> Shift to dash <b>·</b> Q / E rotate <b>·</b> Esc pause</div>
     <section id="menu" class="menu-layer" aria-label="Start game">
       <div class="menu-card">
-        <span class="map-kicker">ENDLESS STREETS · A WHOLE LOT TO ROLL</span>
-        <h1>Make a<br><em>little mess.</em></h1>
-        <p class="menu-description">Start with candy. Grow past houses.<br>Roll up landmarks, mountains, and whole islands.</p>
-        <div class="map-pill"><span class="map-dot"></span> Endless Sunny Side <span>∞</span></div>
+        <span class="map-kicker">ONE ISLAND · SEVEN GLORIOUS STAGES</span>
+        <h1>Build a<br><em>monstrosity.</em></h1>
+        <p class="menu-description">Everything sticks. Every lump changes the roll.<br>Beat the goals. Earn time. Roll up the whole island.</p>
+        <div class="map-pill"><span class="map-dot"></span> Sunny Side Island <span>01</span></div>
         <button id="start" class="primary-button" disabled>Preparing your neighborhood…</button>
         <button id="free" class="text-button" disabled>Try the 4 minute challenge</button>
-        <p class="start-hint">Drag the thumbstick to roll. Hold GO! for a little speed.</p>
+        <p class="start-hint">Start with 2:30. Finish each stage for +60 seconds.<br>Drag the thumbstick to roll. Hold GO! to dash.</p>
         <span class="fan-note">An independent Katamari-inspired fan game.</span>
       </div>
     </section>
@@ -52,7 +57,7 @@
       <div class="menu-card compact"><span class="map-kicker">TAKE YOUR TIME</span><h2>Just a<br><em>little pause.</em></h2><p>Your neighborhood is right where you left it.</p><button id="resume" class="primary-button">Keep rolling</button><button id="restart" class="text-button">Start a fresh roll</button></div>
     </section>
     <section id="result-menu" class="menu-layer hidden" aria-label="Round results">
-      <div class="menu-card compact"><span id="result-kicker" class="map-kicker">THAT'S A LOVELY KATAMARI</span><h2 id="result-title">What a<br><em>little world.</em></h2><div class="result-stats"><div><strong id="result-size">0</strong><span>FINAL SIZE</span></div><div><strong id="result-count">0</strong><span>THINGS COLLECTED</span></div></div><p id="result-text"></p><button id="again" class="primary-button">Try the challenge again</button><button id="continue" class="text-button">Keep this Katamari · roll forever</button></div>
+      <div class="menu-card compact"><span id="result-kicker" class="map-kicker">A GLORIOUS HEAP OF STUFF</span><h2 id="result-title">What a<br><em>monstrosity.</em></h2><div class="result-stats"><div><strong id="result-size">0</strong><span>FINAL SIZE</span></div><div><strong id="result-count">0</strong><span>STUCK OBJECTS</span></div><div><strong id="result-score">0</strong><span>FINAL SCORE</span></div><div><strong id="result-combo">0</strong><span>BEST STREAK</span></div></div><p id="result-text"></p><button id="again" class="primary-button">Roll the island again</button><button id="continue" class="text-button">Admire your finished monstrosity</button></div>
     </section>
     <section id="error" class="menu-layer hidden" role="alert"><div class="menu-card compact"><h2>A little<br><em>hiccup.</em></h2><p id="error-text">Your browser couldn't start the game.</p><button onclick="location.reload()" class="primary-button">Try again</button></div></section>
   </main>

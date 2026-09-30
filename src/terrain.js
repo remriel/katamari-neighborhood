@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {CHUNK_SIZE,hash} from './simulation.js';
+import {MAP_HALF_METERS} from './campaign.js';
 
 function pow2mod(exponent,modulus){
   let value=1n,base=2n%modulus,n=BigInt(exponent);
@@ -14,11 +15,11 @@ function originPhase(origin,delta,numerator,denominator=1){
   return Number((n%d+d)%d)/Number(d);
 }
 
-export function createTerrain(grass,paving,renderer){
+export function createTerrain(grass,paving,renderer,ocean){
   const anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-  for(const texture of[grass,paving]){texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.anisotropy=anisotropy;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.magFilter=THREE.LinearFilter;texture.needsUpdate=true;}
+  for(const texture of[grass,paving,ocean]){texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.anisotropy=anisotropy;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.magFilter=THREE.LinearFilter;texture.needsUpdate=true;}
   const material=new THREE.ShaderMaterial({
-    uniforms:{grass:{value:grass},paving:{value:paving},
+    uniforms:{grass:{value:grass},paving:{value:paving},ocean:{value:ocean},mapCenter:{value:new THREE.Vector2()},mapHalf:{value:MAP_HALF_METERS},
       roads:{value:Array.from({length:5},()=>new THREE.Vector4())},
       pavingPhases:{value:Array.from({length:5},()=>new THREE.Vector2())},
       grassUnits:{value:new THREE.Vector2(3,6)},grassPhases:{value:[new THREE.Vector2(),new THREE.Vector2()]},
@@ -27,7 +28,7 @@ export function createTerrain(grass,paving,renderer){
     vertexShader:`varying vec2 groundPosition; varying float viewDepth;
       void main(){vec4 p=modelMatrix*vec4(position,1.0);groundPosition=p.xz;vec4 view=modelViewMatrix*vec4(position,1.0);viewDepth=-view.z;gl_Position=projectionMatrix*view;}`,
     fragmentShader:`precision highp float;
-      uniform sampler2D grass;uniform sampler2D paving;
+      uniform sampler2D grass;uniform sampler2D paving;uniform sampler2D ocean;uniform vec2 mapCenter;uniform float mapHalf;
       uniform vec4 roads[5];uniform vec2 pavingPhases[5];
       uniform vec2 grassUnits;uniform vec2 grassPhases[2];uniform float grassBlend;uniform float viewSpan;
       uniform vec3 fogColor;uniform float fogNear;uniform float fogFar;
@@ -60,6 +61,11 @@ export function createTerrain(grass,paving,renderer){
         }
         vec3 street=texture2D(paving,pavingUv).rgb;
         vec3 color=mix(meadow,street,coverage);
+        vec2 coast=abs(groundPosition-mapCenter)/mapHalf;
+        float edge=max(coast.x,coast.y);
+        float shore=smoothstep(.95,1.0,edge);
+        vec3 sea=texture2D(ocean,groundPosition/(grassUnits.y*2.0)+grassPhases[1]*.5).rgb;
+        color=mix(color,sea,shore);
         float fog=smoothstep(fogNear,fogFar,viewDepth);
         gl_FragColor=vec4(mix(color,fogColor,fog),1.0);
         #include <colorspace_fragment>
@@ -74,6 +80,7 @@ export function createTerrain(grass,paving,renderer){
     const extent=Math.max(120,span*Math.max(1,aspect)*4);
     mesh.scale.set(extent,extent,1);mesh.position.set(x,0,z);
     material.uniforms.fogNear.value=cameraDistance+span*.65;material.uniforms.fogFar.value=cameraDistance+span*2;
+    material.uniforms.mapCenter.value.set(-Number(world.originX)*CHUNK_SIZE,-Number(world.originZ)*CHUNK_SIZE);material.uniforms.mapHalf.value=MAP_HALF_METERS*2**(-world.level);
     const zoom=Math.log2(Math.max(.001,span)/8),localLayer=Math.floor(zoom),baseLayer=world.level+localLayer;
     material.uniforms.grassBlend.value=zoom-localLayer;material.uniforms.viewSpan.value=span;
     const key=`${world.seed}:${world.level}:${world.originX}:${world.originZ}:${baseLayer}`;

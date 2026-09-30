@@ -1,3 +1,5 @@
+import {CompoundBall} from './compound-ball.js';
+import {MAP_HALF_METERS,CHAPTERS,CAMPAIGN_START_SECONDS,CHAPTER_BONUS_SECONDS,CAMPAIGN_MAX_SECONDS} from './campaign.js';
 export const CHUNK_SIZE = 18;
 export const GOAL = 6;
 export const ROUND_SECONDS = 240;
@@ -33,8 +35,8 @@ export const TYPES = [
   {name:'Castle',size:95,art:39,footprint:.48,fitSize:true},
   {name:'Stadium',size:150,art:40,footprint:.52,fitSize:true},
   {name:'Skyscraper',size:260,art:41,footprint:.28,fitSize:true},
-  {name:'Mountain',size:900,art:42,footprint:.5,fitSize:true,endless:true,endlessName:'Mountain range'},
-  {name:'Island',size:2200,art:43,footprint:.55,fitSize:true,endless:true,endlessName:'Island chain'},
+  {name:'Mountain',size:900,art:42,footprint:.5,fitSize:true},
+  {name:'Island',size:2200,art:43,footprint:.55,fitSize:true},
 ];
 export const PROP_ART_COUNT=44;
 function seededRandom(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -42,7 +44,7 @@ export function hash(...parts){let h=2166136261;for(const ch of parts.join(':'))
 const DISTRICTS=['Pocket Parks','Flower Market','Sunny Side Streets','Orchard Walk'];
 const FOOTPRINT=[.28,.3,.3,.33,.32,.32,.48,.38,.38,.4,.43,.54,.45,.42,.52,.52,.44,.6];
 const footprint=type=>TYPES[type].footprint??FOOTPRINT[type]??.4;
-const localSize=(type,level)=>TYPES[type].size*2**((TYPES[type].endless?Math.max(0,level-10):0)-level);
+const localSize=(type,level)=>TYPES[type].size*2**(-level);
 const SCALE_STAGES=[
   {size:0,label:'POCKET SCALE',message:'Small things. Big dreams.'},
   {size:1,label:'STREET SCALE',message:'The street is yours!'},
@@ -64,6 +66,13 @@ class ProceduralWorld{
     for(let i=0;i<92;i++){const angle=random()*Math.PI*2,r=.65+Math.sqrt(random())*5.8,type=i%6;
       this.legacy.push({id:`opening:${i}`,type,x:Math.cos(angle)*r,z:Math.sin(angle)*r,size:TYPES[type].size,collected:false,visualSeed:hash(this.seed,i),owner:null});}
   }
+  installObjectives(){
+    const positions=[[0,0],[28,-6],[145,-35],[640,130],[1700,-340],[2900,800],[3800,-1600]];
+    for(let index=1;index<CHAPTERS.length;index++){
+      const type=CHAPTERS[index].type,[x,z]=positions[index];
+      this.legacy.push({id:`objective:${index}`,type,name:index===6?'Sunny Side Island':TYPES[type].name,x,z,size:TYPES[type].size,collected:false,visualSeed:hash(this.seed,'objective',index),owner:null,objectiveIndex:index});
+    }
+  }
   remember(chunk){
     if(!chunk.mask)return;this.history.delete(chunk.id);this.history.set(chunk.id,chunk.mask);
     while(this.history.size>384)this.history.delete(this.history.keys().next().value);
@@ -73,6 +82,7 @@ class ProceduralWorld{
     const seed=hash(this.seed,id),random=seededRandom(seed),biome=seed%4;
     const chunk={id,cx,cz,biome,mask:this.history.get(id)||0n,items:[]};this.generated++;
     const catalogue=TYPES.map((_,type)=>type).filter(type=>{const size=localSize(type,this.level);return size>=.1&&size<=12;});
+    if(!catalogue.length)return chunk;
     const theme=[[7,12,16,17,21,23,31,33,34,35,40,41],[3,5,7,13,18,19,20,27,28,30,32,36,38],[9,10,11,14,15,22,24,25,26,29,30,32,36,37,39],[1,2,7,12,16,19,21,23,31,33,35,37,40,41]][biome];
     const themed=theme.filter(type=>catalogue.includes(type));
     const large=catalogue.filter(type=>localSize(type,this.level)>=1.6);
@@ -81,6 +91,8 @@ class ProceduralWorld{
     const select=pool=>{const entries=pool.length?pool:catalogue;return entries[Math.floor(random()*entries.length)];};
     const add=(type,x,z,slot)=>{
       const info=TYPES[type],size=localSize(type,this.level);
+      const half=MAP_HALF_METERS*2**(-this.level),absoluteX=x+Number(this.originX)*CHUNK_SIZE,absoluteZ=z+Number(this.originZ)*CHUNK_SIZE;
+      if(Math.abs(absoluteX)+size*.6>half||Math.abs(absoluteZ)+size*.6>half){chunk.mask|=1n<<BigInt(slot);return;}
       // A growth transition cannot populate the space already on screen.
       // Remember skipped slots so unloading/reloading this block stays stable.
       if(this.guards.some(guard=>Math.hypot(x-guard.x,z-guard.z)<guard.radius+size)){
@@ -91,7 +103,7 @@ class ProceduralWorld{
       if(this.level>0&&Math.hypot(x-player.x,z-player.z)<player.diameter*.65+size*.5)return;
       for(const old of this.legacy){if(old.collected)continue;const gap=(size+old.size)*.3;if(Math.abs(x-old.x)<gap&&Math.abs(z-old.z)<gap&&Math.hypot(x-old.x,z-old.z)<gap)return;}
       for(const other of chunk.items){const gap=size*footprint(type)+other.size*footprint(other.type)+.08;if(Math.abs(x-other.x)<gap&&Math.abs(z-other.z)<gap&&Math.hypot(x-other.x,z-other.z)<gap)return;}
-      const name=info.endless&&this.level>10?info.endlessName:info.name;
+      const name=info.name;
       chunk.items.push({id:`${id}:${slot}`,type,name,x,z,size,collected:Boolean(chunk.mask&(1n<<BigInt(slot))),visualSeed:hash(seed,slot),slot,owner:chunk});
     };
     for(let slot=0;slot<16;slot++){
@@ -116,7 +128,7 @@ class ProceduralWorld{
     for(let z=cz-radius;z<=cz+radius;z++)for(let x=cx-radius;x<=cx+radius;x++){
       const key=`${x}:${z}`;if(!this.chunks.has(key))this.chunks.set(key,this.generate(x,z,player));
     }
-    this.legacy=this.legacy.filter(item=>!item.collected&&Math.hypot(item.x-player.x,item.z-player.z)<Math.max(CHUNK_SIZE*(radius+1),player.visibleRadius||0));
+    this.legacy=this.legacy.filter(item=>!item.collected&&(item.objectiveIndex!==undefined||Math.hypot(item.x-player.x,item.z-player.z)<Math.max(CHUNK_SIZE*(radius+1),player.visibleRadius||0)));
     this.items=[...this.legacy,...Array.from(this.chunks.values()).flatMap(chunk=>chunk.items)];
   }
   nearby(x,z,radius){
@@ -125,7 +137,7 @@ class ProceduralWorld{
       if(x+reach<chunk.cx*CHUNK_SIZE||x-reach>(chunk.cx+1)*CHUNK_SIZE||z+reach<chunk.cz*CHUNK_SIZE||z-reach>(chunk.cz+1)*CHUNK_SIZE)continue;
       result.push(...chunk.items);
     }
-    for(const item of this.legacy)if(Math.abs(item.x-x)<reach&&Math.abs(item.z-z)<reach)result.push(item);
+    for(const item of this.legacy){const itemReach=radius+item.size*footprint(item.type);if(Math.abs(item.x-x)<itemReach&&Math.abs(item.z-z)<itemReach)result.push(item);}
     return result;
   }
   collect(item){item.collected=true;if(item.owner)item.owner.mask|=1n<<BigInt(item.slot);}
@@ -143,9 +155,9 @@ class ProceduralWorld{
     const retentionRadius=Math.max(player.visibleRadius||0,CHUNK_SIZE*(player.viewRadius+1));
     // Retain the entire visible population, not just the closest 512 objects.
     // Old tiny objects leave naturally as the player travels into fresh areas.
-    this.legacy=this.items.filter(item=>!item.collected&&Math.hypot(item.x-player.x,item.z-player.z)<retentionRadius)
+    this.legacy=this.items.filter(item=>!item.collected&&(item.objectiveIndex!==undefined||Math.hypot(item.x-player.x,item.z-player.z)<retentionRadius))
       .sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z));
-    const retainedVisible=this.legacy.filter(item=>Math.hypot(item.x-player.x,item.z-player.z)<(player.visibleRadius||0));
+    const retainedVisible=this.legacy.filter(item=>item.objectiveIndex!==undefined||Math.hypot(item.x-player.x,item.z-player.z)<(player.visibleRadius||0));
     const visibleIds=new Set(retainedVisible.map(item=>item.id));
     this.legacy=[...retainedVisible,...this.legacy.filter(item=>!visibleIds.has(item.id)).slice(0,Math.max(0,4096-retainedVisible.length))];
     for(const item of this.legacy){item.x=item.x/2+shiftX;item.z=item.z/2+shiftZ;item.size/=2;item.owner=null;}
@@ -160,16 +172,22 @@ class ProceduralWorld{
 }
 
 export class Simulation{
-  constructor(){this.reset(true);this.mode='menu';}
+  constructor(){this.artRatios=[];this.reset('campaign');this.mode='menu';}
   get items(){return this.world.items;}
   get level(){return this.world.level;}
-  reset(free=true){this.world=new ProceduralWorld(newSeed());this.x=0;this.z=0;this.vx=0;this.vz=0;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.free=free;this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;this.world.sync(this,this.viewRadius);}
+  reset(runMode='campaign'){
+    this.runMode=runMode==='quick'||runMode===false?'quick':'campaign';this.free=false;this.world=new ProceduralWorld(newSeed());this.body=new CompoundBall();
+    if(this.runMode==='campaign')this.world.installObjectives();
+    this.x=0;this.z=0;this.vx=0;this.vz=0;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.bestCombo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;
+    this.chapter=0;this.capturedObjectives=new Set();this.score=0;this.timeLimit=this.runMode==='campaign'?CAMPAIGN_START_SECONDS:ROUND_SECONDS;this.world.sync(this,this.viewRadius);
+  }
+  setArtRatios(ratios){this.artRatios=ratios;}
   setViewRadius(radius){this.viewRadius=Math.max(2,Math.min(4,radius));}
   setVisibleRadius(radius){this.visibleRadius=radius;}
   step(dt,input){
     if(this.mode!=='playing')return {pickups:[],distance:0,transform:{scale:1,x:0,z:0}};
     this.elapsed+=dt;
-    const speed=(1.7+Math.sqrt(this.diameter)*1.5)*(input.boost?1.7:1);
+    const speed=(1.7+Math.sqrt(this.diameter)*1.5)*(input.boost?1.7:1)*(1-this.body.impact*.22);
     const smoothing=1-Math.exp(-dt*9);
     this.vx+=(input.x*speed-this.vx)*smoothing;this.vz+=(input.z*speed-this.vz)*smoothing;
     const oldX=this.x,oldZ=this.z;
@@ -177,20 +195,29 @@ export class Simulation{
     const pickups=[],nearby=this.world.nearby(this.x,this.z,this.diameter*.5);
     const substeps=Math.min(10,Math.max(1,Math.ceil(Math.hypot(this.vx,this.vz)*dt/Math.max(.06,this.diameter*.16))));
     for(let step=0;step<substeps;step++){
+      const beforeX=this.x,beforeZ=this.z;
       this.x+=this.vx*dt/substeps;this.z+=this.vz*dt/substeps;
       for(let pass=0;pass<2;pass++)for(const item of nearby){
         if(item.collected)continue;
-        const dx=this.x-item.x,dz=this.z-item.z,dist=Math.hypot(dx,dz),reach=this.diameter*.5+item.size*footprint(item.type);
+        const dx=this.x-item.x,dz=this.z-item.z,dist=Math.hypot(dx,dz),itemRadius=item.size*footprint(item.type);
+        if(dist>=this.body.boundRadius+itemRadius)continue;
+        const reach=this.body.supportWorld(dist>.00001?-dx/dist:-1,0,dist>.00001?-dz/dist:0)+itemRadius;
         if(dist>=reach)continue;
         if(item.size*1.08<=this.diameter){
-          this.world.collect(item);this.count++;this.volume+=item.size**3*.82;this.diameter=Math.cbrt(this.volume);pickups.push({...item,owner:null,sizeLevel:this.level});
+          this.world.collect(item);this.count++;this.volume+=item.size**3*.82;
+          this.body.attach(item,TYPES[item.type],this.artRatios[TYPES[item.type].art]||1,this.x,this.z);this.diameter=this.body.boundRadius*2;
+          pickups.push({...item,owner:null,sizeLevel:this.level});
           this.combo=this.elapsed-this.lastPickup<1.5?this.combo+1:1;this.lastPickup=this.elapsed;
+          this.bestCombo=Math.max(this.bestCombo,this.combo);const multiplier=Math.min(5,1+Math.floor(this.combo/4));
+          this.score+=Math.round((10+Math.min(2500,item.size*2**this.level)*8)*multiplier);
+          if(item.objectiveIndex!==undefined)this.capturedObjectives.add(item.objectiveIndex);
         }else{
           const nx=dist>.00001?dx/dist:1,nz=dist>.00001?dz/dist:0,overlap=reach-dist+.001;
           this.x+=nx*overlap;this.z+=nz*overlap;
           const dot=this.vx*nx+this.vz*nz;if(dot<0){this.vx-=dot*nx;this.vz-=dot*nz;}
         }
       }
+      this.body.advance(this.x-beforeX,this.z-beforeZ,dt/substeps);
     }
     let dx=this.x-oldX,dz=this.z-oldZ;
     const transform={scale:1,x:0,z:0};
@@ -200,23 +227,37 @@ export class Simulation{
     while(Math.log2(this.diameter)+this.level>=Math.log2(GOAL)+this.nextGoal){milestone=4;this.nextGoal++;}
     let unlock=null;
     while(this.scaleStage<SCALE_STAGES.length-1&&Math.log2(this.diameter)+this.level>=Math.log2(SCALE_STAGES[this.scaleStage+1].size)){this.scaleStage++;unlock=SCALE_STAGES[this.scaleStage].message;}
-    if(!this.free&&(this.nextGoal>0||this.elapsed>=ROUND_SECONDS)){this.won=this.nextGoal>0;this.mode='result';}
+    let checkpoint=null;
+    if(this.runMode==='campaign'){
+      while(this.chapter<CHAPTERS.length){
+        const goal=CHAPTERS[this.chapter],largeEnough=Math.log2(this.diameter)+this.level>=Math.log2(goal.size);
+        if(!largeEnough||this.count<goal.count||(goal.type!==null&&!this.capturedObjectives.has(this.chapter)))break;
+        const finished=this.chapter;this.chapter++;this.score+=1500*this.chapter;
+        if(this.chapter===CHAPTERS.length){this.won=true;this.mode='result';this.score+=Math.max(0,Math.ceil(this.timeLimit-this.elapsed))*50;checkpoint='THE WHOLE ISLAND. WHAT A MONSTROSITY!';break;}
+        this.timeLimit=Math.min(CAMPAIGN_MAX_SECONDS,this.timeLimit+CHAPTER_BONUS_SECONDS);checkpoint=`${CHAPTERS[finished].name} complete! +60 seconds`;
+      }
+    }else if(this.nextGoal>0){this.won=true;this.mode='result';}
+    if(this.mode==='playing'&&this.elapsed>=this.timeLimit){this.won=false;this.mode='result';}
     // Normalize the simulation as size grows; numbers and camera precision stay
     // small while the logical Katamari size continues to increase without a cap.
     while(this.diameter>=8){
-      const offset=this.world.rescale(this);this.x=this.x/2+offset.shiftX;this.z=this.z/2+offset.shiftZ;this.vx/=2;this.vz/=2;this.diameter/=2;this.volume/=8;this.visibleRadius/=2;
+      const offset=this.world.rescale(this);this.x=this.x/2+offset.shiftX;this.z=this.z/2+offset.shiftZ;this.vx/=2;this.vz/=2;this.diameter/=2;this.volume/=8;this.visibleRadius/=2;this.body.rescale(.5);
       dx/=2;dz/=2;transform.scale/=2;transform.x=transform.x/2+offset.shiftX;transform.z=transform.z/2+offset.shiftZ;
     }
+    const half=MAP_HALF_METERS*2**(-this.level),margin=Math.min(this.body.boundRadius,half*.8),ox=Number(this.world.originX)*CHUNK_SIZE,oz=Number(this.world.originZ)*CHUNK_SIZE;
+    this.x=Math.max(-half+margin-ox,Math.min(half-margin-ox,this.x));this.z=Math.max(-half+margin-oz,Math.min(half-margin-oz,this.z));
     if(Math.abs(this.x)>CHUNK_SIZE*64||Math.abs(this.z)>CHUNK_SIZE*64){
       const shift=this.world.rebase(Math.floor(this.x/CHUNK_SIZE),Math.floor(this.z/CHUNK_SIZE));this.x-=shift.dx;this.z-=shift.dz;transform.x-=shift.dx;transform.z-=shift.dz;
     }
     this.world.sync(this,this.viewRadius);
-    return{pickups,distance:Math.hypot(dx,dz),dx,dz,milestone,unlock,transform};
+    return{pickups,distance:Math.hypot(dx,dz),dx,dz,milestone,unlock,checkpoint,transform};
   }
   scaleLabel(){return SCALE_STAGES[this.scaleStage].label;}
-  progress(){const relative=this.diameter/2**(this.nextGoal-this.level);return this.nextGoal===0?Math.max(0,(relative-.32)/(GOAL-.32)):Math.max(0,(relative-3)/3);}
-  nextGoalSize(){return formatSize(GOAL,this.nextGoal);}
-  snapshot(){return{mode:this.mode,map:'Endless Sunny Side',size:formatSize(this.diameter,this.level),normalizedDiameter:this.diameter,scaleExponent:this.level,collected:this.count,nearbyRemaining:this.items.filter(i=>!i.collected).length,loadedBlocks:this.world.chunks.size,generatedBlocks:this.world.generated,seed:this.world.seed,secondsRemaining:this.free?null:Math.max(0,Math.ceil(ROUND_SECONDS-this.elapsed)),freeRoll:this.free,goalMeters:GOAL};}
+  chapterGoal(){return CHAPTERS[Math.min(this.chapter,CHAPTERS.length-1)];}
+  objective(){return this.world.legacy.find(item=>!item.collected&&item.objectiveIndex===this.chapter);}
+  progress(){if(this.mode==='result'&&this.won)return 1;const goal=this.runMode==='quick'?GOAL:this.chapterGoal().size,ratio=Math.max(0,Math.min(1,this.diameter*2**this.level/goal));if(this.runMode==='quick')return ratio;const chapter=this.chapterGoal(),values=[ratio,Math.min(1,this.count/chapter.count)];if(chapter.type!==null)values.push(this.capturedObjectives.has(this.chapter)?1:0);return values.reduce((sum,v)=>sum+v,0)/values.length;}
+  nextGoalSize(){return formatSize(this.runMode==='quick'?GOAL:this.chapterGoal().size);}
+  snapshot(){return{mode:this.mode,runMode:this.runMode,map:'Sunny Side Island',chapter:Math.min(this.chapter+1,CHAPTERS.length),chapters:CHAPTERS.length,objective:this.chapterGoal().hint,size:formatSize(this.diameter,this.level),normalizedDiameter:this.diameter,scaleExponent:this.level,collected:this.count,attachedPieces:this.body.pieces.length,score:this.score,bestCombo:this.bestCombo,nearbyRemaining:this.items.filter(i=>!i.collected).length,loadedBlocks:this.world.chunks.size,seed:this.world.seed,secondsRemaining:Math.max(0,Math.ceil(this.timeLimit-this.elapsed)),freeRoll:false,goalMeters:this.runMode==='quick'?GOAL:this.chapterGoal().size};}
 }
 export function sizeParts(d,level=0){
   const exponent=Math.log10(d)+level*Math.log10(2);
