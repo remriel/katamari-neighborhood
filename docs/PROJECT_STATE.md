@@ -16,9 +16,10 @@ User requested build-once-publish: implement, one production build, publish, sto
 - `scripts/process-assets.py` and `art/PROMPTS.md`: artwork extraction/format pipeline and exact prompts. Raw originals stay in art/; public/assets/ contains shipping textures.
 - The Sites manifest ID is `appgprj_6abd4eabb1fc8191b880958dde997a86`. Expected origin: https://katamari-neighborhood.remriel.chatgpt.site. Private GitHub backup: https://github.com/remriel/katamari-neighborhood.
 - Windows npm shim failed under the Sites installer; direct Node invocation of the installed npm CLI succeeded. Use direct Node/Vite arguments for the one production build if necessary. Do not modify the shared Sites helpers.
+- Windows packaging initially selected WSL bash, which has no installed distribution. Before launching Site workflow, prepend `C:\Program Files\Git\bin` to this process's PATH, set `TAR_OPTIONS=--force-local`, and use a forward-slash absolute Windows archive path. This permits the bundled packaging helper to use Git Bash and GNU tar. Reuse the successful dist output with empty commands; no second build was run.
 
 ## Proof boundaries
-No browser or physical-device playtesting requested. No runtime WebMCP validation. The source implements gameplay; successful build and deployment will confirm packaging/publication only.
+One production build and required packaging checks passed. No browser or physical-device playtesting requested. No runtime WebMCP validation. Build and deployment confirm packaging/publication only.
 
 ## RESUME HERE
-Artwork is integrated. Run Sites workflow with a single production build, push the same commit to the private GitHub backup, save the packaged version, set public access as explicitly requested, deploy, and confirm terminal deployment success. Return the native successful URL and stop.
+Release v1 is public and deployment succeeded at https://katamari-neighborhood.remriel.chatgpt.site. Built/source commit: b91e1ba9c7de849b171ba45452904381db4d98b2. Saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_9510834aebfc8191b32ea028e471e7b6. Deployment: appgdep_6abd558a8ea4819197e53f330a23f378. Private GitHub contains source, original artwork, prompt provenance, and these release notes. Manual device acceptance remains with the user; do not begin extra testing or changes without a new request. For a future edit, preserve the Site identity, open its existing source, and follow the current requested release workflow.
