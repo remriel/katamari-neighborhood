@@ -174,7 +174,8 @@ function tick(now){
   }
   if(sim.mode==='result'&&!resultShown)finish();
   const inMenu=sim.mode==='menu';
-  const radiusTarget=inMenu ? .55 : sim.diameter*.5;
+  const renderDiameter=inMenu ? .55 : Math.max(sim.diameter,Math.min(sim.body.boundRadius*2,sim.diameter*2.4));
+  const radiusTarget=inMenu ? .55 : renderDiameter*.5;
   visualRadius+=(radiusTarget-visualRadius)*(1-Math.exp(-dt*8));
   compoundView.sync(sim.body,now,!reducedMotion);compoundView.pose(sim.x,inMenu ? .55 : sim.body.height,sim.z,sim.body.orientation);
   ball.scale.setScalar(inMenu ? .55 : sim.body.coreRadius);ball.position.set(0,0,0);
@@ -187,7 +188,7 @@ function tick(now){
   prince.scale.set(ph*ratio,ph,1);prince.position.set(sim.x-Math.sin(moveAngle)*(visualRadius+ph*.9),.035+(!reducedMotion&&result.distance>.002?Math.abs(Math.sin(now*.015))*ph*.09:0),sim.z-Math.cos(moveAngle)*(visualRadius+ph*.9));
   follow.lerp(new THREE.Vector3(sim.x,visualRadius*.25,sim.z),1-Math.exp(-dt*5));
   yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*5));
-  const desiredSpan=inMenu?16:Math.max(6*2**(-Math.min(sim.level,32))+sim.diameter*4.1,sim.diameter*2.6/Math.max(.3,aspect));
+  const desiredSpan=inMenu?16:Math.max(6*2**(-Math.min(sim.level,32))+renderDiameter*4.1,renderDiameter*2.6/Math.max(.3,aspect));
   viewSpan+=(desiredSpan-viewSpan)*(1-Math.exp(-dt*4));
   const dist=Math.max(20,viewSpan*1.7);camera.position.set(follow.x+Math.sin(yaw)*dist,follow.y+dist*1.12,follow.z+Math.cos(yaw)*dist);camera.lookAt(follow);
   const cameraDistance=Math.hypot(dist,dist*1.12);camera.near=.05;camera.far=cameraDistance+viewSpan*4+40;

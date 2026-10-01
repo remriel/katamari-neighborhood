@@ -21,16 +21,24 @@ export class CompoundBall{
   }
   supportLocal(n){let extent=this.coreRadius;for(const p of this.points)extent=Math.max(extent,p[0]*n[0]+p[1]*n[1]+p[2]*n[2]);return extent;}
   supportWorld(x,y,z){const q=this.orientation;return this.supportLocal(rotate([x,y,z],[-q[0],-q[1],-q[2],q[3]]));}
-  attach(item,info,ratio,ballX,ballZ){
+  attach(item,info,ratio,ballX,ballZ,targetDiameter=this.boundRadius*2){
     const inverse=[-this.orientation[0],-this.orientation[1],-this.orientation[2],this.orientation[3]];
-    const incoming=rotate(normalize([item.x-ballX,item.size*.35-this.height,item.z-ballZ]),inverse);
+    // Item and ball positions share the ground plane. `height` is the ball's
+    // world-space lift and must not be subtracted from this local attachment
+    // vector; doing that stacked every new piece downward and inflated the
+    // support envelope after only a handful of pickups.
+    const incoming=rotate(normalize([item.x-ballX,item.size*.35,item.z-ballZ]),inverse);
     const seed=item.visualSeed>>>0,angle=(seed%65536)/65536*Math.PI*2;
     const noise=normalize([Math.cos(angle),((seed>>>16)/65535-.5)*2,Math.sin(angle)]);
     const direction=normalize(incoming.map((v,i)=>v*.88+noise[i]*.12));
     const height=item.size*1.05/(info.fitSize?Math.max(1,ratio):1),width=height*ratio,depth=Math.max(item.size*.13,Math.min(width,height)*.38);
     const align=direction[1]<-.9999?[1,0,0,0]:normalize([direction[2],0,-direction[0],1+direction[1]]);
     const rotation=multiply(align,[0,Math.sin(angle*.5),0,Math.cos(angle*.5)]);
-    const distance=this.supportLocal(direction)+height*.2;
+    // Keep the contact surface tied to the logical growth size. The collision
+    // envelope may be lumpy, but a small early pickup must not push every later
+    // piece farther down an already stretched stack.
+    const targetSupport=Math.max(this.coreRadius,targetDiameter*.5);
+    const distance=Math.min(this.supportLocal(direction),targetSupport)+Math.min(height*.2,targetDiameter*.15);
     const center=direction.map(v=>v*distance),dimensions=[width,height,depth];
     const source=rotate([item.x-ballX,height*.5-this.height,item.z-ballZ],inverse);
     const piece={id:item.id,type:item.type,art:info.art,name:item.name||info.name,size:item.size,center,rotation,dimensions,source,corners:[]};

@@ -198,12 +198,15 @@ export class Simulation{
     this.vx+=(input.x*speed-this.vx)*smoothing;this.vz+=(input.z*speed-this.vz)*smoothing;
     const oldX=this.x,oldZ=this.z;
     this.world.sync(this,this.viewRadius);
-    const pickups=[],nearby=this.world.nearby(this.x,this.z,this.diameter*.5);
+    const pickups=[],nearby=this.world.nearby(this.x,this.z,Math.max(this.diameter*.5,this.body.boundRadius));
     const substeps=Math.min(10,Math.max(1,Math.ceil(Math.hypot(this.vx,this.vz)*dt/Math.max(.06,this.diameter*.16))));
     for(let step=0;step<substeps;step++){
       const beforeX=this.x,beforeZ=this.z;
       this.x+=this.vx*dt/substeps;this.z+=this.vz*dt/substeps;
       for(let pass=0;pass<2;pass++)for(const item of nearby){
+        // A short pickup cadence keeps the next size band readable and stops
+        // a dense patch from consuming an entire progression in one frame.
+        if(pickups.length>=3)break;
         if(item.collected)continue;
         const dx=this.x-item.x,dz=this.z-item.z,dist=Math.hypot(dx,dz),itemRadius=item.size*footprint(item.type);
         if(dist>=this.body.boundRadius+itemRadius)continue;
@@ -211,7 +214,15 @@ export class Simulation{
         if(dist>=reach)continue;
         if(item.size*1.08<=this.diameter){
           this.world.collect(item);this.count++;this.volume+=item.size**3*.82;this.boostEnergy=Math.min(100,this.boostEnergy+7);
-          this.body.attach(item,TYPES[item.type],this.artRatios[TYPES[item.type].art]||1,this.x,this.z);this.diameter=this.body.boundRadius*2;
+          this.body.attach(item,TYPES[item.type],this.artRatios[TYPES[item.type].art]||1,this.x,this.z,this.diameter);
+          // Progression is mass based. The visible heap can protrude and bump,
+          // while pickup eligibility advances one material band at a time.
+          const materialDiameter=Math.max(.32,Math.cbrt(this.volume));
+          // Early growth is deliberately legible. A single pickup can add
+          // mass, but it cannot skip an entire size band or reveal a landmark
+          // before the player has earned the intervening trail.
+          const growthStep=this.diameter<1?.035:this.diameter<4?.09:this.diameter<12?.18:this.diameter*.1;
+          this.diameter=Math.max(this.diameter,Math.min(materialDiameter,this.diameter+growthStep));
           pickups.push({...item,owner:null,sizeLevel:this.level});
           this.combo=this.elapsed-this.lastPickup<1.5?this.combo+1:1;this.lastPickup=this.elapsed;
           this.bestCombo=Math.max(this.bestCombo,this.combo);const multiplier=Math.min(5,1+Math.floor(this.combo/4));
@@ -230,17 +241,19 @@ export class Simulation{
     let milestone=null;
     const stages=[.65,1.2,2.2,3.8];
     while(this.milestone<stages.length&&this.diameter>=stages[this.milestone]){milestone=this.milestone++;}
-    while(Math.log2(this.diameter)+this.level>=Math.log2(GOAL)+this.nextGoal){milestone=4;this.nextGoal++;}
+    if(this.nextGoal===0&&Math.log2(this.diameter)+this.level>=Math.log2(GOAL)){milestone=4;this.nextGoal=1;}
     let unlock=null;
-    while(this.scaleStage<SCALE_STAGES.length-1&&Math.log2(this.diameter)+this.level>=Math.log2(SCALE_STAGES[this.scaleStage+1].size)){this.scaleStage++;unlock=SCALE_STAGES[this.scaleStage].message;}
+    if(this.scaleStage<SCALE_STAGES.length-1&&Math.log2(this.diameter)+this.level>=Math.log2(SCALE_STAGES[this.scaleStage+1].size)){this.scaleStage++;unlock=SCALE_STAGES[this.scaleStage].message;}
     let checkpoint=null;
     if(this.runMode==='campaign'){
-      while(this.chapter<CHAPTERS.length){
+      if(this.chapter<CHAPTERS.length){
         const goal=CHAPTERS[this.chapter],largeEnough=Math.log2(this.diameter)+this.level>=Math.log2(goal.size);
-        if(!largeEnough||this.count<goal.count||(goal.type!==null&&!this.capturedObjectives.has(this.chapter)))break;
-        const finished=this.chapter;this.chapterStats.push({name:goal.name,seconds:Math.round(this.elapsed-this.chapterStarted),count:this.count,size:formatSize(this.diameter,this.level)});this.chapterStarted=this.elapsed;this.chapter++;this.score+=1500*this.chapter;
-        if(this.chapter===CHAPTERS.length){this.won=true;this.mode='result';this.score+=Math.max(0,Math.ceil(this.timeLimit-this.elapsed))*50;checkpoint='THE WHOLE ISLAND. WHAT A MONSTROSITY!';break;}
-        this.timeLimit=Math.min(CAMPAIGN_MAX_SECONDS,this.timeLimit+CHAPTER_BONUS_SECONDS);checkpoint=`${CHAPTERS[finished].name} complete! +60 seconds`;
+        const ready=largeEnough&&this.count>=goal.count&&(goal.type===null||this.capturedObjectives.has(this.chapter));
+        if(ready){
+          const finished=this.chapter;this.chapterStats.push({name:goal.name,seconds:Math.round(this.elapsed-this.chapterStarted),count:this.count,size:formatSize(this.diameter,this.level)});this.chapterStarted=this.elapsed;this.chapter++;this.score+=1500*this.chapter;
+          if(this.chapter===CHAPTERS.length){this.won=true;this.mode='result';this.score+=Math.max(0,Math.ceil(this.timeLimit-this.elapsed))*50;checkpoint='THE WHOLE ISLAND. WHAT A MONSTROSITY!';}
+          else {this.timeLimit=Math.min(CAMPAIGN_MAX_SECONDS,this.timeLimit+CHAPTER_BONUS_SECONDS);checkpoint=`${CHAPTERS[finished].name} complete! +60 seconds`;}
+        }
       }
     }else if(this.nextGoal>0){this.won=true;this.mode='result';}
     if(this.mode==='playing'&&this.elapsed>=this.timeLimit){this.won=false;this.mode='result';}
