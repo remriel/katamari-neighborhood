@@ -27,15 +27,17 @@ export class CompoundView{
     }
     batch.used++;const mesh=batch.pages[page];mesh.count=index+1;return{mesh,index};
   }
-  write(piece,slot){
-    this.position.fromArray(piece.center);this.rotation.fromArray(piece.rotation);this.scale.fromArray(piece.dimensions);
+  write(piece,slot,progress=1){
+    this.position.fromArray(piece.center);
+    if(piece.source&&progress<1){const eased=1-(1-progress)**3;this.position.fromArray(piece.source.map((v,i)=>v+(piece.center[i]-v)*eased));}
+    this.rotation.fromArray(piece.rotation);this.scale.fromArray(piece.dimensions);
     this.matrix.compose(this.position,this.rotation,this.scale);slot.mesh.setMatrixAt(slot.index,this.matrix);slot.mesh.instanceMatrix.needsUpdate=true;
   }
-  sync(body){
+  sync(body,now=performance.now(),animate=true){
     if(this.body!==body){this.reset();this.body=body;}
     const rescaled=this.scaleRevision!==body.scaleRevision;
-    for(let i=this.slots.length;i<body.pieces.length;i++){const piece=body.pieces[i],slot=this.allocate(piece.art);this.slots.push(slot);this.write(piece,slot);}
-    if(rescaled)for(let i=0;i<body.pieces.length;i++)this.write(body.pieces[i],this.slots[i]);
+    for(let i=this.slots.length;i<body.pieces.length;i++){const piece=body.pieces[i],slot=this.allocate(piece.art);slot.born=animate?now:now-180;this.slots.push(slot);this.write(piece,slot,animate?0:1);}
+    for(let i=0;i<body.pieces.length;i++){const slot=this.slots[i],progress=Math.min(1,(now-slot.born)/180);if(rescaled||progress<1||slot.animating)this.write(body.pieces[i],slot,progress);slot.animating=progress<1;}
     this.scaleRevision=body.scaleRevision;
   }
   pose(x,y,z,orientation){this.root.position.set(x,y,z);this.root.quaternion.fromArray(orientation);}

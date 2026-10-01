@@ -60,7 +60,7 @@ const floorHalf=n=>n>=0n?n/2n:(n-1n)/2n;
 function newSeed(){const values=new Uint32Array(1);if(globalThis.crypto?.getRandomValues){globalThis.crypto.getRandomValues(values);return values[0];}return(Math.random()*4294967296)>>>0;}
 
 class ProceduralWorld{
-  constructor(seed){this.seed=seed;this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.history=new Map();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.generated=0;this.opening();}
+  constructor(seed){this.seed=seed;this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.history=new Map();this.collectedIds=new Set();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.generated=0;this.opening();}
   opening(){
     const random=seededRandom(this.seed);
     for(let i=0;i<92;i++){const angle=random()*Math.PI*2,r=.65+Math.sqrt(random())*5.8,type=i%6;
@@ -104,7 +104,8 @@ class ProceduralWorld{
       for(const old of this.legacy){if(old.collected)continue;const gap=(size+old.size)*.3;if(Math.abs(x-old.x)<gap&&Math.abs(z-old.z)<gap&&Math.hypot(x-old.x,z-old.z)<gap)return;}
       for(const other of chunk.items){const gap=size*footprint(type)+other.size*footprint(other.type)+.08;if(Math.abs(x-other.x)<gap&&Math.abs(z-other.z)<gap&&Math.hypot(x-other.x,z-other.z)<gap)return;}
       const name=info.name;
-      chunk.items.push({id:`${id}:${slot}`,type,name,x,z,size,collected:Boolean(chunk.mask&(1n<<BigInt(slot))),visualSeed:hash(seed,slot),slot,owner:chunk});
+      const itemId=`${id}:${slot}`;
+      chunk.items.push({id:itemId,type,name,x,z,size,collected:this.collectedIds.has(itemId)||Boolean(chunk.mask&(1n<<BigInt(slot))),visualSeed:hash(seed,slot),slot,owner:chunk});
     };
     for(let slot=0;slot<16;slot++){
       const gx=slot%4,gz=Math.floor(slot/4);
@@ -140,7 +141,7 @@ class ProceduralWorld{
     for(const item of this.legacy){const itemReach=radius+item.size*footprint(item.type);if(Math.abs(item.x-x)<itemReach&&Math.abs(item.z-z)<itemReach)result.push(item);}
     return result;
   }
-  collect(item){item.collected=true;if(item.owner)item.owner.mask|=1n<<BigInt(item.slot);}
+  collect(item){item.collected=true;this.collectedIds.add(item.id);if(item.owner)item.owner.mask|=1n<<BigInt(item.slot);}
   rebase(sx,sz){
     this.originX+=BigInt(sx);this.originZ+=BigInt(sz);
     const dx=sx*CHUNK_SIZE,dz=sz*CHUNK_SIZE;
@@ -176,18 +177,23 @@ export class Simulation{
   get items(){return this.world.items;}
   get level(){return this.world.level;}
   reset(runMode='campaign'){
+    this.contact?.dispose();
     this.runMode=runMode==='quick'||runMode===false?'quick':'campaign';this.free=false;this.world=new ProceduralWorld(newSeed());this.body=new CompoundBall();
     if(this.runMode==='campaign')this.world.installObjectives();
     this.x=0;this.z=0;this.vx=0;this.vz=0;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.bestCombo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;
-    this.chapter=0;this.capturedObjectives=new Set();this.score=0;this.timeLimit=this.runMode==='campaign'?CAMPAIGN_START_SECONDS:ROUND_SECONDS;this.world.sync(this,this.viewRadius);
+    this.chapter=0;this.capturedObjectives=new Set();this.score=0;this.chapterStarted=0;this.chapterStats=[];this.boostEnergy=100;this.boostExhausted=false;this.timeLimit=this.runMode==='campaign'?CAMPAIGN_START_SECONDS:ROUND_SECONDS;this.world.sync(this,this.viewRadius);this.contact=this.Contact?new this.Contact(this.body,this.x,this.z):null;
   }
+  setContact(Contact){this.Contact=Contact;this.contact?.dispose();this.contact=new Contact(this.body,this.x,this.z);}
   setArtRatios(ratios){this.artRatios=ratios;}
   setViewRadius(radius){this.viewRadius=Math.max(2,Math.min(4,radius));}
   setVisibleRadius(radius){this.visibleRadius=radius;}
   step(dt,input){
     if(this.mode!=='playing')return {pickups:[],distance:0,transform:{scale:1,x:0,z:0}};
     this.elapsed+=dt;
-    const speed=(1.7+Math.sqrt(this.diameter)*1.5)*(input.boost?1.7:1)*(1-this.body.impact*.22);
+    if(this.boostEnergy<2)this.boostExhausted=true;if(this.boostEnergy>=30)this.boostExhausted=false;
+    const boosting=Boolean(input.boost)&&!this.boostExhausted;
+    this.boostEnergy=Math.max(0,Math.min(100,this.boostEnergy+dt*(boosting?-24:17)));
+    const speed=(1.7+Math.sqrt(this.diameter)*1.5)*(boosting?1.7:1)*(1-this.body.impact*.24);
     const smoothing=1-Math.exp(-dt*9);
     this.vx+=(input.x*speed-this.vx)*smoothing;this.vz+=(input.z*speed-this.vz)*smoothing;
     const oldX=this.x,oldZ=this.z;
@@ -204,7 +210,7 @@ export class Simulation{
         const reach=this.body.supportWorld(dist>.00001?-dx/dist:-1,0,dist>.00001?-dz/dist:0)+itemRadius;
         if(dist>=reach)continue;
         if(item.size*1.08<=this.diameter){
-          this.world.collect(item);this.count++;this.volume+=item.size**3*.82;
+          this.world.collect(item);this.count++;this.volume+=item.size**3*.82;this.boostEnergy=Math.min(100,this.boostEnergy+7);
           this.body.attach(item,TYPES[item.type],this.artRatios[TYPES[item.type].art]||1,this.x,this.z);this.diameter=this.body.boundRadius*2;
           pickups.push({...item,owner:null,sizeLevel:this.level});
           this.combo=this.elapsed-this.lastPickup<1.5?this.combo+1:1;this.lastPickup=this.elapsed;
@@ -217,7 +223,7 @@ export class Simulation{
           const dot=this.vx*nx+this.vz*nz;if(dot<0){this.vx-=dot*nx;this.vz-=dot*nz;}
         }
       }
-      this.body.advance(this.x-beforeX,this.z-beforeZ,dt/substeps);
+      if(this.contact){const pose=this.contact.step(dt/substeps,this.body,this.x,this.z,this.x-beforeX,this.z-beforeZ);this.x=pose.x;this.z=pose.z;}else this.body.advance(this.x-beforeX,this.z-beforeZ,dt/substeps);
     }
     let dx=this.x-oldX,dz=this.z-oldZ;
     const transform={scale:1,x:0,z:0};
@@ -232,19 +238,21 @@ export class Simulation{
       while(this.chapter<CHAPTERS.length){
         const goal=CHAPTERS[this.chapter],largeEnough=Math.log2(this.diameter)+this.level>=Math.log2(goal.size);
         if(!largeEnough||this.count<goal.count||(goal.type!==null&&!this.capturedObjectives.has(this.chapter)))break;
-        const finished=this.chapter;this.chapter++;this.score+=1500*this.chapter;
+        const finished=this.chapter;this.chapterStats.push({name:goal.name,seconds:Math.round(this.elapsed-this.chapterStarted),count:this.count,size:formatSize(this.diameter,this.level)});this.chapterStarted=this.elapsed;this.chapter++;this.score+=1500*this.chapter;
         if(this.chapter===CHAPTERS.length){this.won=true;this.mode='result';this.score+=Math.max(0,Math.ceil(this.timeLimit-this.elapsed))*50;checkpoint='THE WHOLE ISLAND. WHAT A MONSTROSITY!';break;}
         this.timeLimit=Math.min(CAMPAIGN_MAX_SECONDS,this.timeLimit+CHAPTER_BONUS_SECONDS);checkpoint=`${CHAPTERS[finished].name} complete! +60 seconds`;
       }
     }else if(this.nextGoal>0){this.won=true;this.mode='result';}
     if(this.mode==='playing'&&this.elapsed>=this.timeLimit){this.won=false;this.mode='result';}
     // Normalize the simulation as size grows; numbers and camera precision stay
-    // small while the logical Katamari size continues to increase without a cap.
+    // small throughout the finite island campaign.
     while(this.diameter>=8){
       const offset=this.world.rescale(this);this.x=this.x/2+offset.shiftX;this.z=this.z/2+offset.shiftZ;this.vx/=2;this.vz/=2;this.diameter/=2;this.volume/=8;this.visibleRadius/=2;this.body.rescale(.5);
       dx/=2;dz/=2;transform.scale/=2;transform.x=transform.x/2+offset.shiftX;transform.z=transform.z/2+offset.shiftZ;
     }
-    const half=MAP_HALF_METERS*2**(-this.level),margin=Math.min(this.body.boundRadius,half*.8),ox=Number(this.world.originX)*CHUNK_SIZE,oz=Number(this.world.originZ)*CHUNK_SIZE;
+    // Steer the seed inside the coast. Long appendages may overhang the shore;
+    // the whole outer radius must not block access to the final island target.
+    const half=MAP_HALF_METERS*2**(-this.level),margin=Math.min(this.body.coreRadius,half*.05),ox=Number(this.world.originX)*CHUNK_SIZE,oz=Number(this.world.originZ)*CHUNK_SIZE;
     this.x=Math.max(-half+margin-ox,Math.min(half-margin-ox,this.x));this.z=Math.max(-half+margin-oz,Math.min(half-margin-oz,this.z));
     if(Math.abs(this.x)>CHUNK_SIZE*64||Math.abs(this.z)>CHUNK_SIZE*64){
       const shift=this.world.rebase(Math.floor(this.x/CHUNK_SIZE),Math.floor(this.z/CHUNK_SIZE));this.x-=shift.dx;this.z-=shift.dz;transform.x-=shift.dx;transform.z-=shift.dz;

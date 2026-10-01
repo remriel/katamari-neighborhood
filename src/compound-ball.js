@@ -32,7 +32,8 @@ export class CompoundBall{
     const rotation=multiply(align,[0,Math.sin(angle*.5),0,Math.cos(angle*.5)]);
     const distance=this.supportLocal(direction)+height*.2;
     const center=direction.map(v=>v*distance),dimensions=[width,height,depth];
-    const piece={id:item.id,type:item.type,art:info.art,name:item.name||info.name,size:item.size,center,rotation,dimensions,corners:[]};
+    const source=rotate([item.x-ballX,height*.5-this.height,item.z-ballZ],inverse);
+    const piece={id:item.id,type:item.type,art:info.art,name:item.name||info.name,size:item.size,center,rotation,dimensions,source,corners:[]};
     this.pieces.push(piece);this.typeCounts[item.type]=(this.typeCounts[item.type]||0)+1;
     // Surface witnesses form a small contact envelope; interior pieces remain
     // in the complete render assembly even when they no longer support it.
@@ -68,7 +69,7 @@ export class CompoundBall{
   }
   rescale(factor){
     this.coreRadius*=factor;this.boundRadius*=factor;this.height*=factor;this.lastGround*=factor;this.verticalVelocity*=factor;
-    for(const piece of this.pieces){piece.size*=factor;for(let i=0;i<3;i++){piece.center[i]*=factor;piece.dimensions[i]*=factor;}piece.corners=piece.corners.map(p=>p.map(v=>v*factor));}
+    for(const piece of this.pieces){piece.size*=factor;for(let i=0;i<3;i++){piece.center[i]*=factor;piece.dimensions[i]*=factor;if(piece.source)piece.source[i]*=factor;}piece.corners=piece.corners.map(p=>p.map(v=>v*factor));}
     // Witness points may reference the same corner; replace each independently.
     this.points=this.points.map(point=>point.map(v=>v*factor));this.supports=this.supports.map(v=>v*factor);
     this.revision++;this.scaleRevision++;

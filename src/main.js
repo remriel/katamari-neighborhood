@@ -9,7 +9,7 @@ const $=id=>document.getElementById(id);
 const sim=new Simulation();
 const ui={size:$('size'),unit:$('unit'),timer:$('timer'),growth:$('growth'),count:$('count'),district:$('district')};
 const keys=new Set(),joystick={x:0,z:0,pointer:null};
-let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain,compoundView;
+let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain,compoundView,targetMarker;
 let yaw=0,targetYaw=0,visualRadius=.16,viewSpan=8,follow=new THREE.Vector3();
 let itemViews=new Map(),sparks=[],assets=[],lastItems=null;
 let audio=null,soundEnabled=false,pickupUntil=0,milestoneUntil=0,hintUntil=0,startedAt=0;
@@ -51,6 +51,7 @@ function createItemViews(){
 }
 async function init(){
   try{
+    const contactReady=import('./compound-contact.js').then(module=>module.initializeCompoundContact());
     renderer=new THREE.WebGLRenderer({canvas:world,antialias:true,alpha:false,powerPreference:'high-performance'});
     renderer.setPixelRatio(Math.min(devicePixelRatio,3));renderer.outputColorSpace=THREE.SRGBColorSpace;
     scene=new THREE.Scene();scene.background=new THREE.Color('#bce7a0');scene.fog=new THREE.Fog('#bce7a0',50,105);
@@ -58,7 +59,7 @@ async function init(){
     scene.add(new THREE.HemisphereLight('#fffbe4','#73935c',2.7));
     const sun=new THREE.DirectionalLight('#fff1bf',2.5);sun.position.set(-10,22,12);scene.add(sun);
     const textures=await Promise.all([...Array.from({length:PROP_ART_COUNT},(_,i)=>loadTexture(`/assets/prop-${i}.webp`)),loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp')]);
-    assets=textures.slice(0,PROP_ART_COUNT);shadowMap=shadowTexture();
+    assets=textures.slice(0,PROP_ART_COUNT);shadowMap=shadowTexture();sim.setContact(await contactReady);
     sim.setArtRatios(assets.map(texture=>texture.image.width/texture.image.height));
     terrain=createTerrain(textures[PROP_ART_COUNT],textures[PROP_ART_COUNT+1],renderer,textures[PROP_ART_COUNT+3]);scene.add(terrain.mesh);
     compoundView=new CompoundView(scene,assets);
@@ -66,6 +67,7 @@ async function init(){
     ball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshStandardMaterial({map:textures[PROP_ART_COUNT+2],roughness:.82,metalness:0}));compoundView.root.add(ball);
     ballShadow=shadow(.48);scene.add(ballShadow);
     prince=sprite(18,.34);scene.add(prince);
+    targetMarker=new THREE.Mesh(new THREE.RingGeometry(.46,.5,64),new THREE.MeshBasicMaterial({color:'#ffe278',side:THREE.DoubleSide,transparent:true,opacity:.8,depthWrite:false}));targetMarker.rotation.x=-Math.PI/2;targetMarker.visible=false;scene.add(targetMarker);
     createItemViews();resize();
     loaded=true;$('start').disabled=false;$('free').disabled=false;$('start').textContent='Roll the island · 7 stages';
     registerTools();requestAnimationFrame(tick);
@@ -99,6 +101,12 @@ function finish(){
   $('result-title').innerHTML=completedIsland?'What a<br><em>monstrosity.</em>':sim.won?'A beautiful<br><em>little monster.</em>':'One more<br><em>glorious roll?</em>';
   $('result-size').textContent=formatSize(sim.diameter,sim.level);$('result-count').textContent=String(sim.count);
   $('result-score').textContent=sim.score.toLocaleString();$('result-combo').textContent=String(sim.bestCombo);
+  const recordKey='katamari:'+sim.runMode+'-best';
+  let best=null;try{best=JSON.parse(localStorage.getItem(recordKey)||'null');}catch{}
+  const newBest=sim.won&&(!best||sim.score>best.score);
+  if(sim.won){const record={score:Math.max(best?.score||0,sim.score),seconds:Math.min(best?.seconds??Infinity,Math.round(sim.elapsed)),combo:Math.max(best?.combo||0,sim.bestCombo)};try{localStorage.setItem(recordKey,JSON.stringify(record));}catch{}best=record;}
+  $('result-record').textContent=sim.won?(newBest?'NEW PERSONAL BEST · ':'')+'Best '+best.score.toLocaleString()+' pts · Fastest '+Math.floor(best.seconds/60)+':'+String(best.seconds%60).padStart(2,'0'):best?'Your personal best: '+best.score.toLocaleString()+' pts':'';
+  $('stage-recap').replaceChildren();for(const stage of sim.chapterStats){const row=document.createElement('div');row.textContent=stage.name+' · '+stage.size+' · '+stage.seconds+' s';$('stage-recap').append(row);}
   $('result-text').textContent=completedIsland?'Candy, cars, castles, a mountain, and the whole island. Every piece is still in that ridiculous heap. You finished the level.':sim.won?'Six meters of permanently stuck stuff. Your quick challenge is finished.':`You reached ${sim.runMode==='campaign'?Math.min(sim.chapter+1,CHAPTERS.length)+' / '+CHAPTERS.length+' stages':'the quick challenge'} and built a pile of ${sim.count} things. Try again for the finish.`;
   $('again').textContent='Roll again · '+(sim.runMode==='campaign'?'the island':'quick challenge');
   melody(sim.won?[523,659,784,1047]:[440,392,330]);
@@ -106,18 +114,20 @@ function finish(){
 function inspectResult(){hideMenus();hintUntil=performance.now()+12000;$('hint').textContent='Finished. Rotate the camera to admire your heap. Tap Ⅱ for results.';}
 function updateHud(){
   const parts=sizeParts(sim.diameter,sim.level);ui.size.textContent=parts.value;ui.unit.textContent=parts.unit;ui.size.style.fontSize=parts.value.length>5?'30px':'';
-  ui.count.textContent=`${sim.count} thing${sim.count===1?'':'s'}`;
+  ui.count.textContent=`${sim.count} stuck object${sim.count===1?'':'s'}`;
+  $('boost').style.setProperty('--boost-energy',sim.boostEnergy+'%');$('boost').classList.toggle('depleted',sim.boostExhausted);$('boost').querySelector('small').textContent=sim.boostExhausted?'RECHARGE':'HOLD';
   ui.growth.style.width=`${Math.min(100,sim.progress()*100)}%`;
   $('goal-label').textContent=`GOAL · ${sim.nextGoalSize()}`;
   const t=Math.max(0,Math.ceil(sim.timeLimit-sim.elapsed));ui.timer.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;ui.timer.style.color=t<=30?'#d65374':'';
   ui.district.textContent=sim.world.district(sim.x,sim.z);
   document.querySelector('.size-sticker').innerHTML=sim.scaleLabel().replace(' ','<br>');
   const goal=sim.chapterGoal();$('chapter-title').textContent=sim.runMode==='quick'?'QUICK CHALLENGE':`${Math.min(sim.chapter+1,CHAPTERS.length)} / ${CHAPTERS.length} · ${goal.name}`;
+  $('stage-track').textContent=sim.runMode==='campaign'?CHAPTERS.map((chapter,i)=>(i<sim.chapter?'●':i===sim.chapter?'◉':'○')).join('  '):'4 MINUTE CHALLENGE';
   $('chapter-hint').textContent=sim.runMode==='quick'?'Build a 6 m heap before the four-minute clock runs out.':goal.hint;
   const multiplier=Math.min(5,1+Math.floor(sim.combo/4));$('score').textContent=sim.score.toLocaleString()+' PTS';$('combo').textContent=sim.combo>=4&&sim.elapsed-sim.lastPickup<1.5?'×'+multiplier+' COMBO':'';
   const target=sim.runMode==='campaign'?sim.objective():null;
   $('target-guide').classList.toggle('hidden',!target||sim.mode!=='playing');
-  if(target){const dx=target.x-sim.x,dz=target.z-sim.z,sx=dx*Math.cos(yaw)-dz*Math.sin(yaw),sy=dx*Math.sin(yaw)+dz*Math.cos(yaw);$('target-arrow').style.transform=`rotate(${Math.atan2(sx,-sy)*180/Math.PI}deg)`;$('target-distance').textContent=formatSize(Math.hypot(dx,dz),sim.level);}
+  if(target){const dx=target.x-sim.x,dz=target.z-sim.z,sx=dx*Math.cos(yaw)-dz*Math.sin(yaw),sy=dx*Math.sin(yaw)+dz*Math.cos(yaw);$('target-arrow').style.transform=`rotate(${Math.atan2(sx,-sy)*180/Math.PI}deg)`;$('target-distance').textContent=formatSize(Math.hypot(dx,dz),sim.level);$('target-name').textContent=target.name||TYPES[target.type].name;}
 }
 function emitSparks(item){
   if(reducedMotion)return;
@@ -166,7 +176,7 @@ function tick(now){
   const inMenu=sim.mode==='menu';
   const radiusTarget=inMenu ? .55 : sim.diameter*.5;
   visualRadius+=(radiusTarget-visualRadius)*(1-Math.exp(-dt*8));
-  compoundView.sync(sim.body);compoundView.pose(sim.x,inMenu ? .55 : sim.body.height,sim.z,sim.body.orientation);
+  compoundView.sync(sim.body,now,!reducedMotion);compoundView.pose(sim.x,inMenu ? .55 : sim.body.height,sim.z,sim.body.orientation);
   ball.scale.setScalar(inMenu ? .55 : sim.body.coreRadius);ball.position.set(0,0,0);
   if(inMenu&&!reducedMotion)compoundView.root.rotateY(now*.0002);
   ballShadow.position.set(sim.x,.018,sim.z);ballShadow.scale.setScalar(visualRadius*2.7);
@@ -184,6 +194,8 @@ function tick(now){
   camera.left=-viewSpan*aspect/2;camera.right=viewSpan*aspect/2;camera.top=viewSpan/2;camera.bottom=-viewSpan/2;camera.updateProjectionMatrix();camera.updateMatrixWorld();
   scene.fog.near=cameraDistance+viewSpan*.65;scene.fog.far=cameraDistance+viewSpan*2;
   terrain.update(sim.x,sim.z,viewSpan,aspect,cameraDistance,sim.world);
+  const missionTarget=sim.runMode==='campaign'&&sim.mode==='playing'?sim.objective():null;
+  targetMarker.visible=Boolean(missionTarget);if(missionTarget){targetMarker.position.set(missionTarget.x,Math.max(.03,sim.diameter*.002),missionTarget.z);targetMarker.scale.setScalar(missionTarget.size*1.25);}
   const candidates=[],projection=new THREE.Vector3();
   for(const item of sim.items){
     const view=itemViews.get(item.id);if(!view)continue;
@@ -233,6 +245,7 @@ const controlKeys=['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft'
 window.addEventListener('keydown',e=>{
   if(!controlKeys.includes(e.code))return;e.preventDefault();
   if(e.code==='Escape'&&!e.repeat){sim.mode==='playing'?pause():resume();return;}
+  if(sim.mode==='result'&&!e.repeat){if(e.code==='KeyQ')targetYaw-=Math.PI/4;if(e.code==='KeyE')targetYaw+=Math.PI/4;return;}
   if(sim.mode!=='playing')return;keys.add(e.code);
   if(!e.repeat&&e.code==='KeyQ')targetYaw-=Math.PI/4;if(!e.repeat&&e.code==='KeyE')targetYaw+=Math.PI/4;
 });

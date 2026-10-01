@@ -1,22 +1,17 @@
-# Eon Roll progress
+# Compound island progress
 
-Current objective: publish an ASAP working prototype, per latest user clarification; deadline removed.
-Progress: [##########] 100% of prototype build/publication workflow completed. Full production campaign balance is not verified.
+Objective: resume Katamari Neighborhood and publish persistent stuck objects, shape-driven bumpy rolling and a finite, rewarding island campaign.
+Progress: [#######---] 70% toward a built and published update.
 
-- [x] Read brief and reconcile repository; preserve/push V5 archival branch.
-- [x] Author six distinct era modules and two authored variants per era.
-- [x] Generate original artwork; process 54 silhouettes/GLBs plus six native 1254px grounds.
-- [x] Connect renderer, mobile/desktop input, persistent saves/ancestry, recovery and adaptation choices.
-- [x] Add journal, reconstructed body layers, finite ending, replay and chapter selection.
-- [x] Run one production build: Vite passed in 2.79s.
-- [x] Push exact release source, package, save version 5 and publish publicly; native deployment succeeded.
-- [x] Sync source to private GitHub main.
+- [x] Reconcile live V4, source, preserved compound draft and course change.
+- [x] Preserve Eon prototype on archive/eon-roll-prototype and restore Katamari as active source.
+- [x] Retain every object in the assembly and render all instances with rigid local transforms.
+- [x] Add Rapier compound contact, protrusion-driven bumps/traction and pickup attachment motion.
+- [x] Connect seven finite chapters, target guidance, combo/dash rewards, final heap inspection and personal bests.
+- [ ] Production build, fixing only shipping blockers.
+- [ ] Exact source push/package/save/public deployment and GitHub sync.
+- [ ] Record terminal release evidence and hand manual acceptance to user.
 
-Released source: a78ded03fc9f805401ae0ddc19cc60b692af20b8.
-Live: https://katamari-neighborhood.remriel.chatgpt.site
-Deployment: appgdep_6abd9d36e1688191b48764944be9e984, succeeded 2026-09-30 23:37:41 UTC.
-Archive: outputs/eon-roll.tar.gz; SHA256 f4518550bf1f5309b85f1b11c35424197cdf1ec01169ce76efcb81c9a7a59459.
+State: implementation connected; no build yet. Blockers: none known. Verification: source/history inspection, archival GitHub push succeeded, existing assets recovered, dependency installation completed. No automated tests, browser/gameplay checks or performance/pacing measurement under build-once-publish. Installer reported an existing dependency advisory; no unrelated dependency upgrades performed.
 
-Blockers: none for publication. Remaining prototype limitations: pacing/engagement and mobile performance unmeasured; artwork GLBs are textured sculpted silhouette volumes; ending offers per-layer reconstruction rather than a continuous six-layer cutaway. Build warned about large JS chunk. No lint, automated/gameplay/browser tests or performance audit, as requested by build-once-publish.
-
-Next steps: 1. User plays the live prototype. 2. Capture concrete feedback. 3. Implement requested fixes and publish using the same release workflow. Original full production brief remains docs/EON_ROLL_PLAN.md.
+Next: 1. Obtain fresh Sites credential. 2. Build/push/package once. 3. Save/deploy public version. 4. Confirm native terminal status. 5. Sync GitHub and record evidence. 6. Return public URL for manual play.
