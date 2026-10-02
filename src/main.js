@@ -3,6 +3,7 @@ import './style.css';
 import {Simulation,TYPES,PROP_ART_COUNT,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
 import {createTerrain} from './terrain.js';
 import {CompoundView} from './compound-view.js';
+import {WorldItemBatches} from './world-item-batches.js';
 import {CHAPTERS} from './campaign.js';
 
 const $=id=>document.getElementById(id);
@@ -11,9 +12,9 @@ const ui={size:$('size'),unit:$('unit'),timer:$('timer'),growth:$('growth'),coun
 const keys=new Set(),joystick={x:0,z:0,pointer:null};
 let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain,compoundView,targetMarker;
 let yaw=0,targetYaw=0,visualRadius=.16,viewSpan=8,follow=new THREE.Vector3();
-let itemViews=new Map(),sparks=[],assets=[],lastItems=null;
+let itemBatches,sparks=[],assets=[],lastVisibleItems=null,lastCullAt=0,lastCullX=NaN,lastCullZ=NaN,lastCullSpan=0,lastCullYaw=0;
 let audio=null,soundEnabled=false,pickupUntil=0,milestoneUntil=0,hintUntil=0,startedAt=0;
-let lastTime=performance.now(),frame=0,resultShown=false;
+let lastTime=performance.now(),frame=0,resultShown=false,averageFrameMs=16.7,nextDprCheck=0,renderDpr=1;
 const world=$('world'),loader=new THREE.TextureLoader();
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.body.classList.add('menu-open');
@@ -35,25 +36,11 @@ function sprite(art,height){
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:false,alphaTest:.28,depthWrite:true}));
   const ratio=t.image.width/t.image.height;s.center.set(.5,0);s.scale.set(height*ratio,height,1);s.frustumCulled=false;return s;
 }
-function createItemViews(){
-  const keep=new Set(sim.items.filter(item=>!item.collected).map(item=>item.id));
-  for(const[id,v]of itemViews){if(keep.has(id))continue;scene.remove(v.sprite,v.shadow);v.sprite.material.dispose();v.shadow.material.dispose();v.shadow.geometry.dispose();itemViews.delete(id);}
-  for(const item of sim.items){
-    if(item.collected)continue;
-    let view=itemViews.get(item.id);
-    if(!view){const s=sprite(TYPES[item.type].art,item.size*1.05),sh=shadow(item.size*.85);scene.add(s,sh);view={sprite:s,shadow:sh};itemViews.set(item.id,view);}
-    const ratio=assets[TYPES[item.type].art].image.width/assets[TYPES[item.type].art].image.height;
-    const height=item.size*1.05/(TYPES[item.type].fitSize?Math.max(1,ratio):1);
-    view.sprite.scale.set(height*ratio,height,1);view.sprite.position.set(item.x,.025,item.z);
-    view.shadow.scale.setScalar(item.size*.85);view.shadow.position.set(item.x,.012,item.z);
-  }
-  lastItems=sim.items;
-}
 async function init(){
   try{
     const contactReady=import('./compound-contact.js').then(module=>module.initializeCompoundContact());
     renderer=new THREE.WebGLRenderer({canvas:world,antialias:true,alpha:false,powerPreference:'high-performance'});
-    renderer.setPixelRatio(Math.min(devicePixelRatio,3));renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderDpr=Math.min(window.devicePixelRatio||1,2);renderer.setPixelRatio(renderDpr);renderer.outputColorSpace=THREE.SRGBColorSpace;
     scene=new THREE.Scene();scene.background=new THREE.Color('#bce7a0');scene.fog=new THREE.Fog('#bce7a0',50,105);
     camera=new THREE.OrthographicCamera(-5,5,5,-5,.1,150);
     scene.add(new THREE.HemisphereLight('#fffbe4','#73935c',2.7));
@@ -62,13 +49,13 @@ async function init(){
     assets=textures.slice(0,PROP_ART_COUNT);shadowMap=shadowTexture();sim.setContact(await contactReady);
     sim.setArtRatios(assets.map(texture=>texture.image.width/texture.image.height));
     terrain=createTerrain(textures[PROP_ART_COUNT],textures[PROP_ART_COUNT+1],renderer,textures[PROP_ART_COUNT+3]);scene.add(terrain.mesh);
-    compoundView=new CompoundView(scene,assets);
+    compoundView=new CompoundView(scene,assets);itemBatches=new WorldItemBatches(scene,assets,shadowMap);
     // The original seed stays small; retained objects form the entire growing heap.
     ball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshStandardMaterial({map:textures[PROP_ART_COUNT+2],roughness:.82,metalness:0}));compoundView.root.add(ball);
     ballShadow=shadow(.48);scene.add(ballShadow);
     prince=sprite(18,.34);scene.add(prince);
     targetMarker=new THREE.Mesh(new THREE.RingGeometry(.46,.5,64),new THREE.MeshBasicMaterial({color:'#ffe278',side:THREE.DoubleSide,transparent:true,opacity:.8,depthWrite:false}));targetMarker.rotation.x=-Math.PI/2;targetMarker.visible=false;scene.add(targetMarker);
-    createItemViews();resize();
+    resize();
     loaded=true;$('start').disabled=false;$('free').disabled=false;$('start').textContent='Roll the island · 7 stages';
     registerTools();requestAnimationFrame(tick);
   }catch(error){reportError(error.message||'This device could not start WebGL. Try a browser with hardware acceleration enabled.');}
@@ -80,8 +67,8 @@ function resize(){
 function resetVisuals(){
   compoundView.reset();
   for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
-  for(const v of itemViews.values()){scene.remove(v.sprite,v.shadow);v.sprite.material.dispose();v.shadow.material.dispose();v.shadow.geometry.dispose();}itemViews.clear();
-  ball.quaternion.identity();visualRadius=sim.diameter/2;viewSpan=6+sim.diameter*4.1;follow.set(sim.x,0,sim.z);yaw=targetYaw=0;createItemViews();
+  itemBatches.begin();itemBatches.end();lastVisibleItems=null;lastCullAt=0;
+  ball.quaternion.identity();visualRadius=sim.diameter/2;viewSpan=6+sim.diameter*4.1;follow.set(sim.x,0,sim.z);yaw=targetYaw=0;
 }
 function start(runMode='campaign'){
   if(!loaded)return;sim.reset(runMode);resetVisuals();resultShown=false;startedAt=performance.now();hintUntil=startedAt+9500;
@@ -146,7 +133,15 @@ function input(){
   return{x:x*Math.cos(yaw)+z*Math.sin(yaw),z:-x*Math.sin(yaw)+z*Math.cos(yaw),boost:boostHeld||keys.has('ShiftLeft')||keys.has('ShiftRight')};
 }
 function tick(now){
-  const dt=Math.min(.05,Math.max(0,(now-lastTime)/1000));lastTime=now;frame++;
+  const rawFrameMs=Math.max(0,now-lastTime),dt=Math.min(.05,rawFrameMs/1000);lastTime=now;frame++;
+  averageFrameMs+=(rawFrameMs-averageFrameMs)*.06;
+  if(now>nextDprCheck){
+    nextDprCheck=now+1200;
+    const deviceLimit=Math.min(window.devicePixelRatio||1,2);let nextDpr=renderDpr;
+    if(averageFrameMs>24&&renderDpr>1)nextDpr=Math.max(1,renderDpr-.25);
+    else if(averageFrameMs<16.5&&renderDpr<deviceLimit)nextDpr=Math.min(deviceLimit,renderDpr+.125);
+    if(nextDpr!==renderDpr){renderDpr=nextDpr;renderer.setPixelRatio(renderDpr);resize();}
+  }
   const aspect=world.clientWidth/Math.max(1,world.clientHeight);
   sim.setViewRadius(Math.ceil(viewSpan*Math.max(1,aspect)*.65/CHUNK_SIZE)+1);
   sim.setVisibleRadius(viewSpan*Math.max(1,aspect)*1.3+sim.diameter*2);
@@ -157,10 +152,9 @@ function tick(now){
     visualRadius*=transform.scale;viewSpan*=transform.scale;
     for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
   }
-  if(sim.items!==lastItems)createItemViews();
   if(result.pickups.length){
     for(const picked of result.pickups){
-      const view=itemViews.get(picked.id);if(view){view.sprite.visible=false;view.shadow.visible=false;}
+      lastVisibleItems=null;
       const item={...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale};
       emitSparks(item);
     }
@@ -197,16 +191,21 @@ function tick(now){
   terrain.update(sim.x,sim.z,viewSpan,aspect,cameraDistance,sim.world);
   const missionTarget=sim.runMode==='campaign'&&sim.mode==='playing'?sim.objective():null;
   targetMarker.visible=Boolean(missionTarget);if(missionTarget){targetMarker.position.set(missionTarget.x,Math.max(.03,sim.diameter*.002),missionTarget.z);targetMarker.scale.setScalar(missionTarget.size*1.25);}
-  const candidates=[],projection=new THREE.Vector3();
-  for(const item of sim.items){
-    const view=itemViews.get(item.id);if(!view)continue;
-    view.sprite.visible=view.shadow.visible=false;if(item.collected)continue;
-    projection.set(item.x,item.size*.4,item.z).project(camera);
-    const margin=.1+item.size/viewSpan*Math.max(1,1/aspect);
-    if(Math.abs(projection.x)<1+margin&&Math.abs(projection.y)<1+margin&&projection.z>-1&&projection.z<1)candidates.push({item,view,distance:(item.x-sim.x)**2+(item.z-sim.z)**2});
+  const moved=Math.hypot(sim.x-lastCullX,sim.z-lastCullZ)>Math.max(.35,viewSpan*.035);
+  const turned=Math.abs(yaw-lastCullYaw)>.045,zoomed=Math.abs(viewSpan-lastCullSpan)>Math.max(.25,viewSpan*.035);
+  if(now-lastCullAt>95||moved||turned||zoomed||sim.items!==lastVisibleItems){
+    const radius=viewSpan*Math.hypot(1,aspect)*.8+sim.body.boundRadius+2;
+    const nearby=sim.world.nearby(sim.x,sim.z,radius),candidates=[],projection=new THREE.Vector3();
+    for(const item of nearby){
+      if(item.collected)continue;
+      projection.set(item.x,item.size*.4,item.z).project(camera);
+      const margin=.12+item.size/viewSpan*1.5;
+      if(Math.abs(projection.x)<1+margin&&Math.abs(projection.y)<1+margin&&projection.z>-1&&projection.z<1)candidates.push(item);
+    }
+    candidates.sort((a,b)=>Number(b.objectiveIndex===sim.chapter)-Number(a.objectiveIndex===sim.chapter)||(a.x-sim.x)**2+(a.z-sim.z)**2-((b.x-sim.x)**2+(b.z-sim.z)**2));
+    itemBatches.begin();for(const item of candidates.slice(0,650)){const type=TYPES[item.type],art=type.art;itemBatches.put({...item,art,fitSize:type.fitSize},assets[art],yaw);}itemBatches.end();
+    lastVisibleItems=sim.items;lastCullAt=now;lastCullX=sim.x;lastCullZ=sim.z;lastCullSpan=viewSpan;lastCullYaw=yaw;
   }
-  candidates.sort((a,b)=>((a.item.objectiveIndex===sim.chapter)?-1:0)-((b.item.objectiveIndex===sim.chapter)?-1:0)||a.distance-b.distance);
-  for(const{item,view}of candidates.slice(0,650)){view.sprite.visible=true;view.shadow.visible=item.size>.3;}
   for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.life-=dt;s.mesh.position.y+=dt*.7;s.mesh.material.opacity=Math.max(0,s.life/.65);if(s.life<=0){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();sparks.splice(i,1);}}
   $('pickup').classList.toggle('show',now<pickupUntil&&sim.mode==='playing');$('milestone').classList.toggle('show',now<milestoneUntil&&sim.mode==='playing');$('hint').style.opacity=now<hintUntil?'1':'0';
   if(frame%5===0)updateHud();renderer.render(scene,camera);requestAnimationFrame(tick);

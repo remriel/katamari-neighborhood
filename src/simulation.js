@@ -60,7 +60,7 @@ const floorHalf=n=>n>=0n?n/2n:(n-1n)/2n;
 function newSeed(){const values=new Uint32Array(1);if(globalThis.crypto?.getRandomValues){globalThis.crypto.getRandomValues(values);return values[0];}return(Math.random()*4294967296)>>>0;}
 
 class ProceduralWorld{
-  constructor(seed){this.seed=seed;this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.history=new Map();this.collectedIds=new Set();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.generated=0;this.opening();}
+  constructor(seed){this.seed=seed;this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.preloaded=new Map();this.prefetchQueue=[];this.prefetchStamp='';this.prefetchToken=0;this.history=new Map();this.collectedIds=new Set();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.generated=0;this.opening();}
   opening(){
     const random=seededRandom(this.seed);
     for(let i=0;i<92;i++){const angle=random()*Math.PI*2,r=.65+Math.sqrt(random())*5.8,type=i%6;
@@ -126,12 +126,39 @@ class ProceduralWorld{
     const cx=Math.floor(player.x/CHUNK_SIZE),cz=Math.floor(player.z/CHUNK_SIZE),stamp=`${this.level}:${cx}:${cz}:${radius}`;
     if(stamp===this.stamp)return;this.stamp=stamp;
     for(const[key,chunk]of this.chunks){if(Math.abs(chunk.cx-cx)>radius||Math.abs(chunk.cz-cz)>radius){this.remember(chunk);this.chunks.delete(key);}}
+    for(const[id,chunk]of this.preloaded){if(Math.abs(chunk.cx-cx)>radius+1||Math.abs(chunk.cz-cz)>radius+1)this.preloaded.delete(id);}
     for(let z=cz-radius;z<=cz+radius;z++)for(let x=cx-radius;x<=cx+radius;x++){
-      const key=`${x}:${z}`;if(!this.chunks.has(key))this.chunks.set(key,this.generate(x,z,player));
+      const key=`${x}:${z}`;if(!this.chunks.has(key)){const id=`${this.level}:${this.originX+BigInt(x)}:${this.originZ+BigInt(z)}`,cached=this.preloaded.get(id);if(cached){this.preloaded.delete(id);this.chunks.set(key,cached);}else this.chunks.set(key,this.generate(x,z,player));}
     }
     this.legacy=this.legacy.filter(item=>!item.collected&&(item.objectiveIndex!==undefined||Math.hypot(item.x-player.x,item.z-player.z)<Math.max(CHUNK_SIZE*(radius+1),player.visibleRadius||0)));
     this.items=[...this.legacy,...Array.from(this.chunks.values()).flatMap(chunk=>chunk.items)];
+    this.prefetch(player,radius,cx,cz);
   }
+  prefetch(player,radius,cx=Math.floor(player.x/CHUNK_SIZE),cz=Math.floor(player.z/CHUNK_SIZE)){
+    if(typeof window==='undefined')return;
+    const stamp=`${this.seed}:${this.level}:${this.originX}:${this.originZ}:${cx}:${cz}:${radius}`;if(stamp===this.prefetchStamp)return;
+    this.prefetchStamp=stamp;const token=++this.prefetchToken,outer=radius+1,queue=[];
+    for(let z=-outer;z<=outer;z++)for(let x=-outer;x<=outer;x++){
+      if(Math.max(Math.abs(x),Math.abs(z))!==outer||this.chunks.has(`${cx+x}:${cz+z}`))continue;
+      const wx=cx+x,wz=cz+z,id=`${this.level}:${this.originX+BigInt(wx)}:${this.originZ+BigInt(wz)}`;
+      if(this.preloaded.has(id))continue;
+      const length=Math.hypot(player.vx||0,player.vz||0)||1,heading=((x*(player.vx||0)+z*(player.vz||0))/length);
+      queue.push({x:wx,z:wz,id,heading,distance:x*x+z*z});
+    }
+    queue.sort((a,b)=>b.heading-a.heading||a.distance-b.distance);this.prefetchQueue=queue;
+    const snapshot={x:player.x,z:player.z,diameter:player.diameter,visibleRadius:player.visibleRadius,viewRadius:player.viewRadius};
+    const work=deadline=>{
+      if(token!==this.prefetchToken)return;let made=0;
+      while(this.prefetchQueue.length&&made<2&&(!deadline||deadline.didTimeout||deadline.timeRemaining()>3)){
+        const next=this.prefetchQueue.shift();if(this.chunks.has(`${next.x}:${next.z}`)||this.preloaded.has(next.id))continue;
+        this.preloaded.set(next.id,this.generate(next.x,next.z,snapshot));made++;
+      }
+      while(this.preloaded.size>64)this.preloaded.delete(this.preloaded.keys().next().value);
+      if(this.prefetchQueue.length){if(window.requestIdleCallback)window.requestIdleCallback(work,{timeout:700});else window.setTimeout(()=>work(null),40);}
+    };
+    if(this.prefetchQueue.length){if(window.requestIdleCallback)window.requestIdleCallback(work,{timeout:700});else window.setTimeout(()=>work(null),40);}
+  }
+  invalidatePrefetch(){this.prefetchToken++;this.prefetchQueue=[];this.prefetchStamp='';this.preloaded.clear();}
   nearby(x,z,radius){
     const reach=radius+8,result=[];
     for(const chunk of this.chunks.values()){
@@ -143,6 +170,7 @@ class ProceduralWorld{
   }
   collect(item){item.collected=true;this.collectedIds.add(item.id);if(item.owner)item.owner.mask|=1n<<BigInt(item.slot);}
   rebase(sx,sz){
+    this.invalidatePrefetch();
     this.originX+=BigInt(sx);this.originZ+=BigInt(sz);
     const dx=sx*CHUNK_SIZE,dz=sz*CHUNK_SIZE;
     for(const item of this.items){item.x-=dx;item.z-=dz;}
@@ -151,6 +179,7 @@ class ProceduralWorld{
     return{dx,dz};
   }
   rescale(player){
+    this.invalidatePrefetch();
     const ox=floorHalf(this.originX),oz=floorHalf(this.originZ);
     const shiftX=Number(this.originX-2n*ox)*CHUNK_SIZE/2,shiftZ=Number(this.originZ-2n*oz)*CHUNK_SIZE/2;
     const retentionRadius=Math.max(player.visibleRadius||0,CHUNK_SIZE*(player.viewRadius+1));
@@ -178,6 +207,7 @@ export class Simulation{
   get level(){return this.world.level;}
   reset(runMode='campaign'){
     this.contact?.dispose();
+    this.world?.invalidatePrefetch();
     this.runMode=runMode==='quick'||runMode===false?'quick':'campaign';this.free=false;this.world=new ProceduralWorld(newSeed());this.body=new CompoundBall();
     if(this.runMode==='campaign')this.world.installObjectives();
     this.x=0;this.z=0;this.vx=0;this.vz=0;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.bestCombo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;
