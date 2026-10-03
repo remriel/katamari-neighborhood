@@ -3,3 +3,6 @@ dist/
 .sites-runtime/
 .env*
 *.tar.gz
+.playwright-cli/
+__pycache__/
+*.blend1

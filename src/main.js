@@ -1,23 +1,29 @@
 import * as THREE from 'three';
 import './style.css';
+import './performance-hud.css';
 import {Simulation,TYPES,PROP_ART_COUNT,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
 import {createTerrain} from './terrain.js';
 import {CompoundView} from './compound-view.js';
 import {WorldItemBatches} from './world-item-batches.js';
+import {ToyModelLibrary} from './toy-model-library.js';
 import {CHAPTERS} from './campaign.js';
 
 const $=id=>document.getElementById(id);
 const sim=new Simulation();
+const MAX_VISIBLE_WORLD_ITEMS=520;
 const ui={size:$('size'),unit:$('unit'),timer:$('timer'),growth:$('growth'),count:$('count'),district:$('district')};
 const keys=new Set(),joystick={x:0,z:0,pointer:null};
-let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain,compoundView,targetMarker;
+let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain,compoundView,targetMarker,modelLibrary;
 let yaw=0,targetYaw=0,visualRadius=.16,viewSpan=8,follow=new THREE.Vector3();
 let itemBatches,sparks=[],assets=[],lastVisibleItems=null,lastCullAt=0,lastCullX=NaN,lastCullZ=NaN,lastCullSpan=0,lastCullYaw=0;
 let audio=null,soundEnabled=false,pickupUntil=0,milestoneUntil=0,hintUntil=0,startedAt=0;
-let lastTime=performance.now(),frame=0,resultShown=false,averageFrameMs=16.7,nextDprCheck=0,renderDpr=1;
+let lastTime=performance.now(),frame=0,resultShown=false,averageFrameMs=16.7,averageCpuFrameMs=0,nextDprCheck=0,renderDpr=1;
 const world=$('world'),loader=new THREE.TextureLoader();
+const performanceHud=$('performance-hud');
+let performanceHudEnabled=new URLSearchParams(location.search).has('performance'),gpuTimerExtension=null,gpuQueries=[],gpuFrameMs=null,lastPerformanceHudAt=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.body.classList.add('menu-open');
+performanceHud.hidden=!performanceHudEnabled;
 
 function reportError(message){$('error-text').textContent=message;$('error').classList.remove('hidden');sim.mode='paused';document.body.classList.add('menu-open');}
 function loadTexture(url){return new Promise((resolve,reject)=>loader.load(url,t=>{t.colorSpace=THREE.SRGBColorSpace;resolve(t);},undefined,()=>reject(new Error('The game artwork could not load. Check your connection and try again.'))));}
@@ -36,20 +42,43 @@ function sprite(art,height){
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:false,alphaTest:.28,depthWrite:true}));
   const ratio=t.image.width/t.image.height;s.center.set(.5,0);s.scale.set(height*ratio,height,1);s.frustumCulled=false;return s;
 }
+function beginGpuTimer(){
+  if(!performanceHudEnabled||!gpuTimerExtension||gpuQueries.length)return null;
+  const gl=renderer.getContext(),query=gl.createQuery();gl.beginQuery(gpuTimerExtension.TIME_ELAPSED_EXT,query);return query;
+}
+function finishGpuTimer(query){if(query){const gl=renderer.getContext();gl.endQuery(gpuTimerExtension.TIME_ELAPSED_EXT);gpuQueries.push(query);}}
+function pollGpuTimer(){
+  if(!gpuTimerExtension||!gpuQueries.length)return;
+  const gl=renderer.getContext(),query=gpuQueries[0];if(!gl.getQueryParameter(query,gl.QUERY_RESULT_AVAILABLE))return;
+  if(!gl.getParameter(gpuTimerExtension.GPU_DISJOINT_EXT))gpuFrameMs=gl.getQueryParameter(query,gl.QUERY_RESULT)/1e6;
+  gl.deleteQuery(query);gpuQueries.shift();
+}
+function updatePerformanceHud(now){
+  if(!performanceHudEnabled||now-lastPerformanceHudAt<250)return;lastPerformanceHudAt=now;pollGpuTimer();
+  $('perf-fps').textContent=(1000/Math.max(1,averageFrameMs)).toFixed(0);
+  $('perf-frame').textContent=averageFrameMs.toFixed(1)+' ms';$('perf-cpu').textContent=averageCpuFrameMs.toFixed(1)+' ms';
+  $('perf-gpu').textContent=gpuFrameMs===null?'n/a':gpuFrameMs.toFixed(1)+' ms';$('perf-dpr').textContent=renderDpr.toFixed(2);
+  $('perf-draw').textContent=renderer.info.render.calls.toLocaleString();$('perf-tris').textContent=renderer.info.render.triangles.toLocaleString();
+  $('perf-visible').textContent=itemBatches.visibleCount.toLocaleString()+' ('+itemBatches.modelCount+' 3D)';
+  $('perf-chunks').textContent=sim.world.chunks.size+' + '+sim.world.preloaded.size+' warm';
+  $('perf-models').textContent=modelLibrary.models.size.toLocaleString();$('perf-pieces').textContent=sim.body.pieces.length.toLocaleString();
+}
 async function init(){
   try{
     const contactReady=import('./compound-contact.js').then(module=>module.initializeCompoundContact());
     renderer=new THREE.WebGLRenderer({canvas:world,antialias:true,alpha:false,powerPreference:'high-performance'});
+    gpuTimerExtension=renderer.getContext().getExtension('EXT_disjoint_timer_query_webgl2');
     renderDpr=Math.min(window.devicePixelRatio||1,2);renderer.setPixelRatio(renderDpr);renderer.outputColorSpace=THREE.SRGBColorSpace;
     scene=new THREE.Scene();scene.background=new THREE.Color('#bce7a0');scene.fog=new THREE.Fog('#bce7a0',50,105);
     camera=new THREE.OrthographicCamera(-5,5,5,-5,.1,150);
     scene.add(new THREE.HemisphereLight('#fffbe4','#73935c',2.7));
     const sun=new THREE.DirectionalLight('#fff1bf',2.5);sun.position.set(-10,22,12);scene.add(sun);
-    const textures=await Promise.all([...Array.from({length:PROP_ART_COUNT},(_,i)=>loadTexture(`/assets/prop-${i}.webp`)),loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp')]);
-    assets=textures.slice(0,PROP_ART_COUNT);shadowMap=shadowTexture();sim.setContact(await contactReady);
+    modelLibrary=new ToyModelLibrary();
+    const [textures,contact]=await Promise.all([Promise.all([...Array.from({length:PROP_ART_COUNT},(_,i)=>loadTexture(`/assets/prop-${i}.webp`)),loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp')]),contactReady,modelLibrary.load()]);
+    assets=textures.slice(0,PROP_ART_COUNT);shadowMap=shadowTexture();sim.setContact(contact);
     sim.setArtRatios(assets.map(texture=>texture.image.width/texture.image.height));
     terrain=createTerrain(textures[PROP_ART_COUNT],textures[PROP_ART_COUNT+1],renderer,textures[PROP_ART_COUNT+3]);scene.add(terrain.mesh);
-    compoundView=new CompoundView(scene,assets);itemBatches=new WorldItemBatches(scene,assets,shadowMap);
+    compoundView=new CompoundView(scene,assets,modelLibrary);itemBatches=new WorldItemBatches(scene,assets,shadowMap,modelLibrary);
     // The original seed stays small; retained objects form the entire growing heap.
     ball=new THREE.Mesh(new THREE.SphereGeometry(1,48,32),new THREE.MeshStandardMaterial({map:textures[PROP_ART_COUNT+2],roughness:.82,metalness:0}));compoundView.root.add(ball);
     ballShadow=shadow(.48);scene.add(ballShadow);
@@ -133,6 +162,7 @@ function input(){
   return{x:x*Math.cos(yaw)+z*Math.sin(yaw),z:-x*Math.sin(yaw)+z*Math.cos(yaw),boost:boostHeld||keys.has('ShiftLeft')||keys.has('ShiftRight')};
 }
 function tick(now){
+  const cpuStartedAt=performance.now();
   const rawFrameMs=Math.max(0,now-lastTime),dt=Math.min(.05,rawFrameMs/1000);lastTime=now;frame++;
   averageFrameMs+=(rawFrameMs-averageFrameMs)*.06;
   if(now>nextDprCheck){
@@ -203,12 +233,14 @@ function tick(now){
       if(Math.abs(projection.x)<1+margin&&Math.abs(projection.y)<1+margin&&projection.z>-1&&projection.z<1)candidates.push(item);
     }
     candidates.sort((a,b)=>Number(b.objectiveIndex===sim.chapter)-Number(a.objectiveIndex===sim.chapter)||(a.x-sim.x)**2+(a.z-sim.z)**2-((b.x-sim.x)**2+(b.z-sim.z)**2));
-    itemBatches.begin();for(const item of candidates.slice(0,650)){const type=TYPES[item.type],art=type.art;itemBatches.put({...item,art,fitSize:type.fitSize},assets[art],yaw);}itemBatches.end();
+    itemBatches.begin();for(const item of candidates.slice(0,MAX_VISIBLE_WORLD_ITEMS)){const type=TYPES[item.type],art=type.art;itemBatches.put({...item,art,fitSize:type.fitSize},assets[art],yaw,world.clientHeight/viewSpan);}itemBatches.end();
     lastVisibleItems=sim.items;lastCullAt=now;lastCullX=sim.x;lastCullZ=sim.z;lastCullSpan=viewSpan;lastCullYaw=yaw;
   }
   for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.life-=dt;s.mesh.position.y+=dt*.7;s.mesh.material.opacity=Math.max(0,s.life/.65);if(s.life<=0){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();sparks.splice(i,1);}}
   $('pickup').classList.toggle('show',now<pickupUntil&&sim.mode==='playing');$('milestone').classList.toggle('show',now<milestoneUntil&&sim.mode==='playing');$('hint').style.opacity=now<hintUntil?'1':'0';
-  if(frame%5===0)updateHud();renderer.render(scene,camera);requestAnimationFrame(tick);
+  if(frame%5===0)updateHud();
+  const gpuQuery=beginGpuTimer();renderer.render(scene,camera);finishGpuTimer(gpuQuery);pollGpuTimer();
+  const cpuMs=performance.now()-cpuStartedAt;averageCpuFrameMs+=(cpuMs-averageCpuFrameMs)*.12;updatePerformanceHud(now);requestAnimationFrame(tick);
 }
 
 function initAudio(){
@@ -250,8 +282,43 @@ window.addEventListener('keydown',e=>{
   if(!e.repeat&&e.code==='KeyQ')targetYaw-=Math.PI/4;if(!e.repeat&&e.code==='KeyE')targetYaw+=Math.PI/4;
 });
 window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',pause);
+window.addEventListener('keydown',e=>{if(e.code==='F3'){e.preventDefault();performanceHudEnabled=!performanceHudEnabled;performanceHud.hidden=!performanceHudEnabled;}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('resize',resize);
 world.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();reportError('The graphics connection paused. Reload to start a fresh roll.');});
+
+if(import.meta.env.DEV&&new URLSearchParams(location.search).has('qa')){
+  window.__katamariQa={
+    setScaleMeters(meters){
+      if(!loaded)throw new Error('Wait until the neighborhood is ready.');
+      const target=Math.max(.32,Number(meters)||.32);start('campaign');
+      const targetLevel=Math.max(0,Math.ceil(Math.log2(target/7.9)));
+      while(sim.level<targetLevel){const offset=sim.world.rescale(sim);sim.x=sim.x/2+offset.shiftX;sim.z=sim.z/2+offset.shiftZ;sim.diameter/=2;sim.volume/=8;sim.visibleRadius/=2;sim.body.rescale(.5);}
+      const normalized=target/2**sim.level,factor=normalized/sim.diameter;sim.diameter=normalized;sim.volume=normalized**3;sim.body.rescale(factor);
+      sim.contact?.dispose();sim.contact=sim.Contact?new sim.Contact(sim.body,sim.x,sim.z):null;
+      sim.scaleStage=[0,1,6,12,30,100,500,1600,4000].reduce((stage,size,index)=>target>=size?index:stage,0);
+      if(target>=8){
+        sim.world.invalidatePrefetch();sim.world.legacy=sim.world.legacy.filter(item=>item.objectiveIndex!==undefined||Math.hypot(item.x-sim.x,item.z-sim.z)>sim.body.boundRadius+item.size+1);
+        sim.world.items=sim.world.legacy;sim.world.chunks.clear();sim.world.preloaded.clear();sim.world.stamp='';
+        sim.world.guards.push({x:sim.x,z:sim.z,radius:sim.body.boundRadius+2});sim.world.sync(sim,sim.viewRadius);
+      }
+      sim.mode='paused';$('pause-menu').classList.add('hidden');document.body.classList.remove('menu-open');
+      sim.world.sync(sim,sim.viewRadius);resetVisuals();updateHud();return sim.snapshot();
+    },
+    addTestAttachments(typeIds){
+      if(!loaded)throw new Error('Wait until the neighborhood is ready.');
+      const ids=typeIds?.length?typeIds:[6,15,16];
+      for(let i=0;i<ids.length;i++){
+        const type=Number(ids[i]),info=TYPES[type];if(!info)continue;
+        const size=info.size*2**(-sim.level),angle=i*2.3999632297,orbit=Math.max(sim.body.boundRadius*.9,size*.55);
+        const item={id:'qa-piece-'+type+'-'+i,type,art:info.art,name:info.name,size,visualSeed:(type*2654435761+i)>>>0,x:sim.x+Math.cos(angle)*orbit,z:sim.z+Math.sin(angle)*orbit};
+        sim.body.attach(item,info,sim.artRatios[info.art]||1,sim.x,sim.z,sim.diameter);sim.count++;
+      }
+      sim.contact?.synchronize(sim.body,sim.x,sim.z);sim.mode='paused';compoundView.sync(sim.body,performance.now(),false);updateHud();return sim.snapshot();
+    },
+    resume(){sim.mode='playing';},
+    state:()=>sim.snapshot(),
+  };
+}
 
 function registerTools(){
   const context=document.modelContext;if(!context?.registerTool)return;

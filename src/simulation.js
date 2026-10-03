@@ -3,6 +3,7 @@ import {MAP_HALF_METERS,CHAPTERS,CAMPAIGN_START_SECONDS,CHAPTER_BONUS_SECONDS,CA
 export const CHUNK_SIZE = 18;
 export const GOAL = 6;
 export const ROUND_SECONDS = 240;
+export const REGULAR_PICKUP_DENSITY = .8;
 export const TYPES = [
   {name:'Candy',size:.12,art:0}, {name:'Cherries',size:.16,art:1},
   {name:'Mushroom',size:.23,art:2}, {name:'Donut',size:.28,art:3},
@@ -41,6 +42,12 @@ export const TYPES = [
 export const PROP_ART_COUNT=44;
 function seededRandom(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 export function hash(...parts){let h=2166136261;for(const ch of parts.join(':')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+function reducePopulation(items){
+  const keep=Math.round(items.length*REGULAR_PICKUP_DENSITY);
+  const ranked=items.map(item=>({id:item.id,rank:hash(item.visualSeed,item.id,'density')})).sort((a,b)=>a.rank-b.rank);
+  const ids=new Set(ranked.slice(0,keep).map(item=>item.id));
+  return items.filter(item=>ids.has(item.id));
+}
 const DISTRICTS=['Pocket Parks','Flower Market','Sunny Side Streets','Orchard Walk'];
 const FOOTPRINT=[.28,.3,.3,.33,.32,.32,.48,.38,.38,.4,.43,.54,.45,.42,.52,.52,.44,.6];
 const footprint=type=>TYPES[type].footprint??FOOTPRINT[type]??.4;
@@ -65,6 +72,7 @@ class ProceduralWorld{
     const random=seededRandom(this.seed);
     for(let i=0;i<92;i++){const angle=random()*Math.PI*2,r=.65+Math.sqrt(random())*5.8,type=i%6;
       this.legacy.push({id:`opening:${i}`,type,x:Math.cos(angle)*r,z:Math.sin(angle)*r,size:TYPES[type].size,collected:false,visualSeed:hash(this.seed,i),owner:null});}
+    this.legacy=reducePopulation(this.legacy);
   }
   installObjectives(){
     const positions=[[0,0],[28,-6],[145,-35],[640,130],[1700,-340],[2900,800],[3800,-1600]];
@@ -120,6 +128,7 @@ class ProceduralWorld{
       add(select(random()<.25?medium:small),x,z,slot);
     }
     for(let slot=80;slot<96;slot++){const x=cx*CHUNK_SIZE+1.8+random()*14.4,z=cz*CHUNK_SIZE+1.8+random()*14.4;add(select(medium),x,z,slot);}
+    chunk.items=reducePopulation(chunk.items);
     return chunk;
   }
   sync(player,radius){

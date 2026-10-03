@@ -1,7 +1,26 @@
-# Compound island performance update
+# Toy-town graphics upgrade and density release
 
-Objective: reduce Katamari rendering cost and prepare nearby chunks before they enter view.
-Progress: [##########] 100% of the implementation/build/publication workflow. Runtime benefit remains unmeasured.
+Objective: complete the full Blender toy-town graphics brief in the referenced pasted text, preserving the finite campaign and physical accumulation. Latest user steering: reduce regular objects by 20%, then use build-once-publish for the current graphics pass.
+Progress: [######----] 60% toward the full verified art-system objective. The current release is ready for its one production build; the complete original brief is not yet proven.
+
+- [x] Inspect the complete active repository and reconcile V8 baseline, source, and archived directions.
+- [x] Create a Blender MCP library with 79 variants across 31 existing gameplay types, shared vertex colors, GLB and editable Blender source.
+- [x] Integrate cached GLB models, instanced world/attachment rendering, billboard LOD and bottom-centered pivots.
+- [x] Keep predictive chunk warming, spatial visibility queries, adaptive DPR and shared fake shadows.
+- [x] Add F3 / ?performance HUD with FPS, frame/CPU/GPU times, DPR, draw calls, triangles, visible objects, chunks, models and retained pieces.
+- [x] Run initial local browser checks at 1280 x 720 and 390 x 844; loader reported all 79 models, and warmed samples reached 60 FPS.
+- [x] Implement the latest 20% regular-population reduction and reduce the visible ceiling from 650 to 520; preserve surviving IDs/positions and authored objectives.
+- [ ] Run the required production build once, push exact source, and package its output.
+- [ ] Save a Sites version, publish publicly and confirm terminal deployment status.
+- [ ] Synchronize finished source and release notes to private GitHub.
+
+Current implementation: production model assets exist. The initial diorama was rendered, then the source preview placements/lighting were corrected. The interrupted rebuild's Blender job handle is missing and the corrected preview render is unverified. No physical-phone benchmark, complete campaign playthrough, fast-movement pop-in proof, or final late-scale art review exists. Street categories absent from the current gameplay catalog (truck, mailbox, sign, trash can, hydrant) and more authored clustering remain unfinished in the broad brief.
+
+Current blockers: none for the requested current-state release. The full goal stays active because the outstanding broad requirements above are not proven. The user's latest build-once-publish invocation ends further polish/validation in this release turn.
+
+Exact ordered next steps: 1. Run the existing one-build release helper with a fresh Sites credential. 2. Save and deploy the matching archive/source. 3. Record the version/deployment result, synchronize GitHub, and return the public URL and both project docs. 4. Stop and hand manual acceptance to the user.
+
+## Previous completed release history
 
 - [x] Reconcile live V4, source, preserved compound draft and course change.
 - [x] Preserve Eon prototype on archive/eon-roll-prototype and restore Katamari as active source.
@@ -34,4 +53,4 @@ Deployment: appgdep_6ac01ba5e0208191b85f1b1519bdc4be succeeded 2026-10-02 21:01:
 Live: https://katamari-neighborhood.remriel.chatgpt.site
 Archive: outputs/katamari-render-optimized.tar.gz; SHA256 11fe9b3d6dda0eda7483a832ea28c7d8fd1143627341035c0d7de3c8a0916309.
 
-Next: 1. User plays on phone and desktop to assess draw smoothness and pop-in. 2. Capture feedback; if startup remains slow, split/lazy-load Rapier separately in a later measured update.
+The active objective and current ordered next steps are at the top of this document.

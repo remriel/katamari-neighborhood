@@ -46,7 +46,7 @@ export function createTerrain(grass,paving,renderer,ocean){
         vec3 fineGrass=texture2D(grass,groundPosition/grassUnits.x+grassPhases[0]).rgb;
         vec3 coarseGrass=texture2D(grass,groundPosition/grassUnits.y+grassPhases[1]).rgb;
         vec3 meadow=mix(fineGrass,coarseGrass,grassBlend);
-        float coverage=0.0;vec2 pavingUv=vec2(0.0);
+        float coverage=0.0;float curbCoverage=0.0;vec2 pavingUv=vec2(0.0);
         for(int i=0;i<5;i++){
           float unit=roads[i].x,ratio=unit/viewSpan;
           // Coarser/finer fixed road networks fade at the edges of their useful
@@ -57,9 +57,12 @@ export function createTerrain(grass,paving,renderer,ocean){
           float aa=max(fwidth(distance),.04);
           float width=1.05+.16*sin(point.y*TAU/128.0+roads[i].w);
           float road=(1.0-smoothstep(width-aa,width+aa,distance))*weight;
+          float curb=smoothstep(width+.035-aa,width+.035+aa,distance)*(1.0-smoothstep(width+.24-aa,width+.24+aa,distance))*weight;
+          curbCoverage=max(curbCoverage,curb);
           if(road>coverage){coverage=road;pavingUv=groundPosition/(unit*2.1)+pavingPhases[i];}
         }
         vec3 street=texture2D(paving,pavingUv).rgb;
+        street=mix(street,vec3(.76,.70,.50),curbCoverage*.82);
         vec3 color=mix(meadow,street,coverage);
         vec2 coast=abs(groundPosition-mapCenter)/mapHalf;
         float edge=max(coast.x,coast.y);

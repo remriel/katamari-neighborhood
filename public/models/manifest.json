@@ -1,0 +1,1252 @@
+{
+  "version": 1,
+  "library": "/models/toy-town.glb",
+  "types": {
+    "6": {
+      "family": "car",
+      "models": [
+        "pickup_06_0",
+        "pickup_06_1",
+        "pickup_06_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-6.webp"
+    },
+    "8": {
+      "family": "cat",
+      "models": [
+        "pickup_08_0",
+        "pickup_08_1"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-8.webp"
+    },
+    "9": {
+      "family": "cone",
+      "models": [
+        "pickup_09_0",
+        "pickup_09_1"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-9.webp"
+    },
+    "10": {
+      "family": "stool",
+      "models": [
+        "pickup_10_0",
+        "pickup_10_1"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-10.webp"
+    },
+    "11": {
+      "family": "bike",
+      "models": [
+        "pickup_11_0",
+        "pickup_11_1"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-11.webp"
+    },
+    "12": {
+      "family": "bush",
+      "models": [
+        "pickup_12_0",
+        "pickup_12_1",
+        "pickup_12_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-12.webp"
+    },
+    "13": {
+      "family": "vending",
+      "models": [
+        "pickup_13_0",
+        "pickup_13_1"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-13.webp"
+    },
+    "14": {
+      "family": "van",
+      "models": [
+        "pickup_14_0",
+        "pickup_14_1"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-14.webp"
+    },
+    "15": {
+      "family": "house",
+      "models": [
+        "pickup_15_0",
+        "pickup_15_1",
+        "pickup_15_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-15.webp"
+    },
+    "16": {
+      "family": "tree",
+      "models": [
+        "pickup_16_0",
+        "pickup_16_1",
+        "pickup_16_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-16.webp"
+    },
+    "17": {
+      "family": "bench",
+      "models": [
+        "pickup_17_0",
+        "pickup_17_1"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-17.webp"
+    },
+    "22": {
+      "family": "skateboard",
+      "models": [
+        "pickup_22_0",
+        "pickup_22_1"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-24.webp"
+    },
+    "23": {
+      "family": "dog",
+      "models": [
+        "pickup_23_0",
+        "pickup_23_1"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-25.webp"
+    },
+    "24": {
+      "family": "armchair",
+      "models": [
+        "pickup_24_0",
+        "pickup_24_1"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-26.webp"
+    },
+    "25": {
+      "family": "suitcase",
+      "models": [
+        "pickup_25_0",
+        "pickup_25_1"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-27.webp"
+    },
+    "26": {
+      "family": "lamp",
+      "models": [
+        "pickup_26_0",
+        "pickup_26_1",
+        "pickup_26_2"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-28.webp"
+    },
+    "27": {
+      "family": "cart",
+      "models": [
+        "pickup_27_0",
+        "pickup_27_1",
+        "pickup_27_2"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-29.webp"
+    },
+    "28": {
+      "family": "booth",
+      "models": [
+        "pickup_28_0",
+        "pickup_28_1"
+      ],
+      "minScreenPixels": 34,
+      "sourceArtwork": "/assets/prop-30.webp"
+    },
+    "29": {
+      "family": "convertible",
+      "models": [
+        "pickup_29_0",
+        "pickup_29_1",
+        "pickup_29_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-31.webp"
+    },
+    "30": {
+      "family": "bus",
+      "models": [
+        "pickup_30_0",
+        "pickup_30_1",
+        "pickup_30_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-32.webp"
+    },
+    "31": {
+      "family": "oak",
+      "models": [
+        "pickup_31_0",
+        "pickup_31_1",
+        "pickup_31_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-33.webp"
+    },
+    "32": {
+      "family": "apartment",
+      "models": [
+        "pickup_32_0",
+        "pickup_32_1",
+        "pickup_32_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-34.webp"
+    },
+    "33": {
+      "family": "windmill",
+      "models": [
+        "pickup_33_0",
+        "pickup_33_1"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-35.webp"
+    },
+    "34": {
+      "family": "ferris",
+      "models": [
+        "pickup_34_0",
+        "pickup_34_1",
+        "pickup_34_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-36.webp"
+    },
+    "35": {
+      "family": "watertower",
+      "models": [
+        "pickup_35_0",
+        "pickup_35_1",
+        "pickup_35_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-37.webp"
+    },
+    "36": {
+      "family": "clocktower",
+      "models": [
+        "pickup_36_0",
+        "pickup_36_1",
+        "pickup_36_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-38.webp"
+    },
+    "37": {
+      "family": "castle",
+      "models": [
+        "pickup_37_0",
+        "pickup_37_1",
+        "pickup_37_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-39.webp"
+    },
+    "38": {
+      "family": "stadium",
+      "models": [
+        "pickup_38_0",
+        "pickup_38_1"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-40.webp"
+    },
+    "39": {
+      "family": "skyscraper",
+      "models": [
+        "pickup_39_0",
+        "pickup_39_1",
+        "pickup_39_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-41.webp"
+    },
+    "40": {
+      "family": "mountain",
+      "models": [
+        "pickup_40_0",
+        "pickup_40_1",
+        "pickup_40_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-42.webp"
+    },
+    "41": {
+      "family": "island",
+      "models": [
+        "pickup_41_0",
+        "pickup_41_1",
+        "pickup_41_2"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": "/assets/prop-43.webp"
+    }
+  },
+  "models": {
+    "pickup_06_0": {
+      "type": 6,
+      "family": "car",
+      "variant": 0,
+      "triangles": 420,
+      "bounds": [
+        1.0,
+        0.6430477117818889,
+        0.7144595910418695
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_06_1": {
+      "type": 6,
+      "family": "car",
+      "variant": 1,
+      "triangles": 420,
+      "bounds": [
+        1.0,
+        0.6430477117818889,
+        0.7144595910418695
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_06_2": {
+      "type": 6,
+      "family": "car",
+      "variant": 2,
+      "triangles": 420,
+      "bounds": [
+        1.0,
+        0.6430477117818889,
+        0.7144595910418695
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_08_0": {
+      "type": 8,
+      "family": "cat",
+      "variant": 0,
+      "triangles": 274,
+      "bounds": [
+        1.0,
+        0.5439507290804816,
+        0.8579154652124855
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_08_1": {
+      "type": 8,
+      "family": "cat",
+      "variant": 1,
+      "triangles": 274,
+      "bounds": [
+        1.0,
+        0.5439507290804816,
+        0.8579154652124855
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_09_0": {
+      "type": 9,
+      "family": "cone",
+      "variant": 0,
+      "triangles": 84,
+      "bounds": [
+        0.7391304347826088,
+        0.7391304347826088,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_09_1": {
+      "type": 9,
+      "family": "cone",
+      "variant": 1,
+      "triangles": 84,
+      "bounds": [
+        0.7391304347826088,
+        0.7391304347826088,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_10_0": {
+      "type": 10,
+      "family": "stool",
+      "variant": 0,
+      "triangles": 136,
+      "bounds": [
+        0.868421052631579,
+        0.8157894736842105,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_10_1": {
+      "type": 10,
+      "family": "stool",
+      "variant": 1,
+      "triangles": 136,
+      "bounds": [
+        0.868421052631579,
+        0.8157894736842105,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_11_0": {
+      "type": 11,
+      "family": "bike",
+      "variant": 0,
+      "triangles": 388,
+      "bounds": [
+        1.0,
+        0.10471203954432022,
+        0.455543273406503
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_11_1": {
+      "type": 11,
+      "family": "bike",
+      "variant": 1,
+      "triangles": 388,
+      "bounds": [
+        1.0,
+        0.10471203954432022,
+        0.455543273406503
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_12_0": {
+      "type": 12,
+      "family": "bush",
+      "variant": 0,
+      "triangles": 180,
+      "bounds": [
+        1.0,
+        0.7623691031684491,
+        0.7551090251554826
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_12_1": {
+      "type": 12,
+      "family": "bush",
+      "variant": 1,
+      "triangles": 180,
+      "bounds": [
+        1.0,
+        0.7623691031684491,
+        0.7551090251554826
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_12_2": {
+      "type": 12,
+      "family": "bush",
+      "variant": 2,
+      "triangles": 180,
+      "bounds": [
+        1.0,
+        0.7623691031684491,
+        0.7551090251554826
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_13_0": {
+      "type": 13,
+      "family": "vending",
+      "variant": 0,
+      "triangles": 388,
+      "bounds": [
+        0.6434782608695653,
+        0.41478260869565226,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_13_1": {
+      "type": 13,
+      "family": "vending",
+      "variant": 1,
+      "triangles": 388,
+      "bounds": [
+        0.6434782608695653,
+        0.41478260869565226,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_14_0": {
+      "type": 14,
+      "family": "van",
+      "variant": 0,
+      "triangles": 448,
+      "bounds": [
+        1.0,
+        0.612059574468085,
+        0.7021276595744682
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_14_1": {
+      "type": 14,
+      "family": "van",
+      "variant": 1,
+      "triangles": 448,
+      "bounds": [
+        1.0,
+        0.612059574468085,
+        0.7021276595744682
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_15_0": {
+      "type": 15,
+      "family": "house",
+      "variant": 0,
+      "triangles": 390,
+      "bounds": [
+        0.8955223880597014,
+        0.9900497512437809,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_15_1": {
+      "type": 15,
+      "family": "house",
+      "variant": 1,
+      "triangles": 334,
+      "bounds": [
+        0.9045226130653268,
+        1.0,
+        0.9095477386934674
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_15_2": {
+      "type": 15,
+      "family": "house",
+      "variant": 2,
+      "triangles": 418,
+      "bounds": [
+        0.8955223880597014,
+        0.9900497512437809,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_16_0": {
+      "type": 16,
+      "family": "tree",
+      "variant": 0,
+      "triangles": 190,
+      "bounds": [
+        0.7972228396175565,
+        0.5287175604818206,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_16_1": {
+      "type": 16,
+      "family": "tree",
+      "variant": 1,
+      "triangles": 190,
+      "bounds": [
+        0.7972228396175565,
+        0.5287175604818206,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_16_2": {
+      "type": 16,
+      "family": "tree",
+      "variant": 2,
+      "triangles": 190,
+      "bounds": [
+        0.7972228396175565,
+        0.5287175604818206,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_17_0": {
+      "type": 17,
+      "family": "bench",
+      "variant": 0,
+      "triangles": 252,
+      "bounds": [
+        1.0,
+        0.7093023255813954,
+        0.6046511627906977
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_17_1": {
+      "type": 17,
+      "family": "bench",
+      "variant": 1,
+      "triangles": 252,
+      "bounds": [
+        1.0,
+        0.7093023255813954,
+        0.6046511627906977
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_22_0": {
+      "type": 22,
+      "family": "skateboard",
+      "variant": 0,
+      "triangles": 180,
+      "bounds": [
+        1.0,
+        0.42000000000000004,
+        0.4126181516572732
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_22_1": {
+      "type": 22,
+      "family": "skateboard",
+      "variant": 1,
+      "triangles": 180,
+      "bounds": [
+        1.0,
+        0.42000000000000004,
+        0.4126181516572732
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_23_0": {
+      "type": 23,
+      "family": "dog",
+      "variant": 0,
+      "triangles": 326,
+      "bounds": [
+        1.0,
+        0.4160958761249389,
+        0.5520948108703582
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_23_1": {
+      "type": 23,
+      "family": "dog",
+      "variant": 1,
+      "triangles": 326,
+      "bounds": [
+        1.0,
+        0.4160958761249389,
+        0.5520948108703582
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_24_0": {
+      "type": 24,
+      "family": "armchair",
+      "variant": 0,
+      "triangles": 192,
+      "bounds": [
+        0.7355371900826446,
+        0.5371900826446281,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_24_1": {
+      "type": 24,
+      "family": "armchair",
+      "variant": 1,
+      "triangles": 192,
+      "bounds": [
+        0.7355371900826446,
+        0.5371900826446281,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_25_0": {
+      "type": 25,
+      "family": "suitcase",
+      "variant": 0,
+      "triangles": 244,
+      "bounds": [
+        0.6115171828206405,
+        0.2801143224533257,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_25_1": {
+      "type": 25,
+      "family": "suitcase",
+      "variant": 1,
+      "triangles": 244,
+      "bounds": [
+        0.6115171828206405,
+        0.2801143224533257,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_26_0": {
+      "type": 26,
+      "family": "lamp",
+      "variant": 0,
+      "triangles": 160,
+      "bounds": [
+        0.49707602339181295,
+        0.3508771929824561,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_26_1": {
+      "type": 26,
+      "family": "lamp",
+      "variant": 1,
+      "triangles": 160,
+      "bounds": [
+        0.49707602339181295,
+        0.3508771929824561,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_26_2": {
+      "type": 26,
+      "family": "lamp",
+      "variant": 2,
+      "triangles": 160,
+      "bounds": [
+        0.49707602339181295,
+        0.3508771929824561,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_27_0": {
+      "type": 27,
+      "family": "cart",
+      "variant": 0,
+      "triangles": 308,
+      "bounds": [
+        1.0,
+        0.6595092024539878,
+        0.9969325153374232
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_27_1": {
+      "type": 27,
+      "family": "cart",
+      "variant": 1,
+      "triangles": 308,
+      "bounds": [
+        1.0,
+        0.6595092024539878,
+        0.9969325153374232
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_27_2": {
+      "type": 27,
+      "family": "cart",
+      "variant": 2,
+      "triangles": 308,
+      "bounds": [
+        1.0,
+        0.6595092024539878,
+        0.9969325153374232
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_28_0": {
+      "type": 28,
+      "family": "booth",
+      "variant": 0,
+      "triangles": 440,
+      "bounds": [
+        0.6,
+        0.5375000000000001,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_28_1": {
+      "type": 28,
+      "family": "booth",
+      "variant": 1,
+      "triangles": 440,
+      "bounds": [
+        0.6,
+        0.5375000000000001,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_29_0": {
+      "type": 29,
+      "family": "convertible",
+      "variant": 0,
+      "triangles": 476,
+      "bounds": [
+        1.0,
+        0.7002629016553066,
+        0.7874878286270691
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_29_1": {
+      "type": 29,
+      "family": "convertible",
+      "variant": 1,
+      "triangles": 476,
+      "bounds": [
+        1.0,
+        0.7002629016553066,
+        0.7874878286270691
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_29_2": {
+      "type": 29,
+      "family": "convertible",
+      "variant": 2,
+      "triangles": 476,
+      "bounds": [
+        1.0,
+        0.7002629016553066,
+        0.7874878286270691
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_30_0": {
+      "type": 30,
+      "family": "bus",
+      "variant": 0,
+      "triangles": 588,
+      "bounds": [
+        1.0,
+        0.612059574468085,
+        0.7021276595744682
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_30_1": {
+      "type": 30,
+      "family": "bus",
+      "variant": 1,
+      "triangles": 588,
+      "bounds": [
+        1.0,
+        0.612059574468085,
+        0.7021276595744682
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_30_2": {
+      "type": 30,
+      "family": "bus",
+      "variant": 2,
+      "triangles": 588,
+      "bounds": [
+        1.0,
+        0.612059574468085,
+        0.7021276595744682
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_31_0": {
+      "type": 31,
+      "family": "oak",
+      "variant": 0,
+      "triangles": 212,
+      "bounds": [
+        0.795105573734192,
+        0.6405074497497973,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_31_1": {
+      "type": 31,
+      "family": "oak",
+      "variant": 1,
+      "triangles": 212,
+      "bounds": [
+        0.795105573734192,
+        0.6405074497497973,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_31_2": {
+      "type": 31,
+      "family": "oak",
+      "variant": 2,
+      "triangles": 212,
+      "bounds": [
+        0.795105573734192,
+        0.6405074497497973,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_32_0": {
+      "type": 32,
+      "family": "apartment",
+      "variant": 0,
+      "triangles": 1300,
+      "bounds": [
+        0.6370967741935483,
+        0.6311358472993296,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_32_1": {
+      "type": 32,
+      "family": "apartment",
+      "variant": 1,
+      "triangles": 1300,
+      "bounds": [
+        0.6370967741935483,
+        0.6311358472993296,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_32_2": {
+      "type": 32,
+      "family": "apartment",
+      "variant": 2,
+      "triangles": 1300,
+      "bounds": [
+        0.6370967741935483,
+        0.6311358472993296,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_33_0": {
+      "type": 33,
+      "family": "windmill",
+      "variant": 0,
+      "triangles": 548,
+      "bounds": [
+        0.5671702226459779,
+        0.4801230184539421,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_33_1": {
+      "type": 33,
+      "family": "windmill",
+      "variant": 1,
+      "triangles": 548,
+      "bounds": [
+        0.5671702226459779,
+        0.4801230184539421,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_34_0": {
+      "type": 34,
+      "family": "ferris",
+      "variant": 0,
+      "triangles": 900,
+      "bounds": [
+        0.8889191093117519,
+        0.333344665991907,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_34_1": {
+      "type": 34,
+      "family": "ferris",
+      "variant": 1,
+      "triangles": 900,
+      "bounds": [
+        0.8889191093117519,
+        0.333344665991907,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_34_2": {
+      "type": 34,
+      "family": "ferris",
+      "variant": 2,
+      "triangles": 900,
+      "bounds": [
+        0.8889191093117519,
+        0.333344665991907,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_35_0": {
+      "type": 35,
+      "family": "watertower",
+      "variant": 0,
+      "triangles": 396,
+      "bounds": [
+        0.5644000114440918,
+        0.48694093634311864,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_35_1": {
+      "type": 35,
+      "family": "watertower",
+      "variant": 1,
+      "triangles": 396,
+      "bounds": [
+        0.5644000114440918,
+        0.48694093634311864,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_35_2": {
+      "type": 35,
+      "family": "watertower",
+      "variant": 2,
+      "triangles": 396,
+      "bounds": [
+        0.5644000114440918,
+        0.48694093634311864,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_36_0": {
+      "type": 36,
+      "family": "clocktower",
+      "variant": 0,
+      "triangles": 488,
+      "bounds": [
+        0.5172413793103449,
+        0.5172413793103449,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_36_1": {
+      "type": 36,
+      "family": "clocktower",
+      "variant": 1,
+      "triangles": 488,
+      "bounds": [
+        0.5172413793103449,
+        0.5172413793103449,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_36_2": {
+      "type": 36,
+      "family": "clocktower",
+      "variant": 2,
+      "triangles": 488,
+      "bounds": [
+        0.5172413793103449,
+        0.5172413793103449,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_37_0": {
+      "type": 37,
+      "family": "castle",
+      "variant": 0,
+      "triangles": 768,
+      "bounds": [
+        0.6553265244760486,
+        0.5145563772452123,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_37_1": {
+      "type": 37,
+      "family": "castle",
+      "variant": 1,
+      "triangles": 768,
+      "bounds": [
+        0.6553265244760486,
+        0.5145563772452123,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_37_2": {
+      "type": 37,
+      "family": "castle",
+      "variant": 2,
+      "triangles": 768,
+      "bounds": [
+        0.6553265244760486,
+        0.5145563772452123,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_38_0": {
+      "type": 38,
+      "family": "stadium",
+      "variant": 0,
+      "triangles": 392,
+      "bounds": [
+        0.9885057471264368,
+        0.9770114942528736,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_38_1": {
+      "type": 38,
+      "family": "stadium",
+      "variant": 1,
+      "triangles": 392,
+      "bounds": [
+        0.9885057471264368,
+        0.9770114942528736,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_39_0": {
+      "type": 39,
+      "family": "skyscraper",
+      "variant": 0,
+      "triangles": 496,
+      "bounds": [
+        0.5526315789473684,
+        0.5285087719298245,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_39_1": {
+      "type": 39,
+      "family": "skyscraper",
+      "variant": 1,
+      "triangles": 496,
+      "bounds": [
+        0.5526315789473684,
+        0.5285087719298245,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_39_2": {
+      "type": 39,
+      "family": "skyscraper",
+      "variant": 2,
+      "triangles": 496,
+      "bounds": [
+        0.5526315789473684,
+        0.5285087719298245,
+        1.0
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_40_0": {
+      "type": 40,
+      "family": "mountain",
+      "variant": 0,
+      "triangles": 82,
+      "bounds": [
+        1.0,
+        0.9375000000000001,
+        0.421875
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_40_1": {
+      "type": 40,
+      "family": "mountain",
+      "variant": 1,
+      "triangles": 82,
+      "bounds": [
+        1.0,
+        0.9375000000000001,
+        0.421875
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_40_2": {
+      "type": 40,
+      "family": "mountain",
+      "variant": 2,
+      "triangles": 82,
+      "bounds": [
+        1.0,
+        0.9375000000000001,
+        0.421875
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_41_0": {
+      "type": 41,
+      "family": "island",
+      "variant": 0,
+      "triangles": 244,
+      "bounds": [
+        0.9938185546219909,
+        1.0,
+        0.6065813914549498
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_41_1": {
+      "type": 41,
+      "family": "island",
+      "variant": 1,
+      "triangles": 312,
+      "bounds": [
+        1.0,
+        0.9431266965273398,
+        0.5985104844434715
+      ],
+      "pivot": "bottom center"
+    },
+    "pickup_41_2": {
+      "type": 41,
+      "family": "island",
+      "variant": 2,
+      "triangles": 380,
+      "bounds": [
+        1.0,
+        0.9654559706875819,
+        0.573856411182475
+      ],
+      "pivot": "bottom center"
+    }
+  }
+}

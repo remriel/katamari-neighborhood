@@ -41,7 +41,7 @@ export class CompoundBall{
     const distance=Math.min(this.supportLocal(direction),targetSupport)+Math.min(height*.2,targetDiameter*.15);
     const center=direction.map(v=>v*distance),dimensions=[width,height,depth];
     const source=rotate([item.x-ballX,height*.5-this.height,item.z-ballZ],inverse);
-    const piece={id:item.id,type:item.type,art:info.art,name:item.name||info.name,size:item.size,center,rotation,dimensions,source,corners:[]};
+    const piece={id:item.id,type:item.type,art:info.art,name:item.name||info.name,size:item.size,visualSeed:item.visualSeed>>>0,center,rotation,dimensions,source,corners:[]};
     this.pieces.push(piece);this.typeCounts[item.type]=(this.typeCounts[item.type]||0)+1;
     // Surface witnesses form a small contact envelope; interior pieces remain
     // in the complete render assembly even when they no longer support it.
