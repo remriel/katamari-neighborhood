@@ -1,7 +1,7 @@
 # Toy-town graphics upgrade and density release
 
 Objective: complete the full Blender toy-town graphics brief in the referenced pasted text, preserving the finite campaign and physical accumulation. Latest user steering: reduce regular objects by 20%, then use build-once-publish for the current graphics pass.
-Progress: [######----] 60% toward the full verified art-system objective. The current release is ready for its one production build; the complete original brief is not yet proven.
+Progress: [#######---] 75% toward the full verified art-system objective. The user-requested current-state build/publication workflow is complete; the complete original brief is not yet proven.
 
 - [x] Inspect the complete active repository and reconcile V8 baseline, source, and archived directions.
 - [x] Create a Blender MCP library with 79 variants across 31 existing gameplay types, shared vertex colors, GLB and editable Blender source.
@@ -10,15 +10,17 @@ Progress: [######----] 60% toward the full verified art-system objective. The cu
 - [x] Add F3 / ?performance HUD with FPS, frame/CPU/GPU times, DPR, draw calls, triangles, visible objects, chunks, models and retained pieces.
 - [x] Run initial local browser checks at 1280 x 720 and 390 x 844; loader reported all 79 models, and warmed samples reached 60 FPS.
 - [x] Implement the latest 20% regular-population reduction and reduce the visible ceiling from 650 to 520; preserve surviving IDs/positions and authored objectives.
-- [ ] Run the required production build once, push exact source, and package its output.
-- [ ] Save a Sites version, publish publicly and confirm terminal deployment status.
-- [ ] Synchronize finished source and release notes to private GitHub.
+- [x] Run the required production build once, push exact source, and package its output: 19 modules, 2.19 seconds.
+- [x] Save Sites version 9, publish publicly and confirm terminal succeeded status.
+- [x] Synchronize finished source to private GitHub; release notes are included in the handoff documentation commit.
 
 Current implementation: production model assets exist. The initial diorama was rendered, then the source preview placements/lighting were corrected. The interrupted rebuild's Blender job handle is missing and the corrected preview render is unverified. No physical-phone benchmark, complete campaign playthrough, fast-movement pop-in proof, or final late-scale art review exists. Street categories absent from the current gameplay catalog (truck, mailbox, sign, trash can, hydrant) and more authored clustering remain unfinished in the broad brief.
 
-Current blockers: none for the requested current-state release. The full goal stays active because the outstanding broad requirements above are not proven. The user's latest build-once-publish invocation ends further polish/validation in this release turn.
+Current blockers: none for the published current-state release. The full goal stays active because the outstanding broad requirements above are not proven. The user's latest build-once-publish invocation ends further polish/validation in this release turn.
 
-Exact ordered next steps: 1. Run the existing one-build release helper with a fresh Sites credential. 2. Save and deploy the matching archive/source. 3. Record the version/deployment result, synchronize GitHub, and return the public URL and both project docs. 4. Stop and hand manual acceptance to the user.
+Release: source b296457b6fcde6f6e1cbf8263cd235c963fd82d2; saved version appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_019b68f6f9c48191b2e401803da0378b (9); deployment appgdep_6ac06f77362c81918771f508c7842b4a succeeded 2026-10-03 02:59:11 UTC / 2026-10-02 19:59 PDT. Live: https://katamari-neighborhood.remriel.chatgpt.site. Archive outputs/katamari-toy-town-density.tar.gz: 60 files, 11,386,880 bytes, SHA256 5e8ee330218c654a3e55ed806a4a6d2ec295c99e2b6bb0b047c253eaaffb471b. Warnings: main JS 632.24 kB and physics JS 4,336.63 kB minified; neither blocked the build.
+
+Exact ordered next steps: 1. User manually accepts or reports defects in version 9. 2. When authorized to resume the broad art brief, address the recorded missing art/composition requirements and complete late-scale, fast-motion and phone evidence. 3. Build and publish that later code state under the user's selected workflow. This release turn stops after the handoff; no post-publication browser test or second build was run.
 
 ## Previous completed release history
 
