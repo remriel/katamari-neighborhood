@@ -45,9 +45,11 @@ button:active{transform:translateY(4px)!important;box-shadow:0 1px 0 var(--shado
 .icon-button{position:relative;display:grid;place-items:center;width:37px;height:37px;border:3px solid var(--paper);border-radius:35% 46% 38% 45%;background:var(--purple);color:var(--paper);box-shadow:0 4px 0 var(--shadow);font-size:19px;font-weight:900}
 .sound-slash{position:absolute;top:0;right:7px;color:var(--pink);font-size:27px}
 .hud{position:absolute;z-index:3;left:3px;top:max(1px,env(safe-area-inset-top));width:158px;height:158px;padding:48px 19px 0;color:white;text-align:center;text-shadow:0 2px 2px #211b46;pointer-events:none;isolation:isolate;transform:scale(var(--hud-scale,.58));transform-origin:top left;transition:transform .5s ease-out}
-.size-flower{position:absolute;inset:4px;z-index:-1;border:4px solid var(--paper);border-radius:50%;background:radial-gradient(circle at 34% 26%,#a87bea,var(--purple) 72%);box-shadow:0 0 0 3px var(--ink),0 5px 0 var(--shadow);animation:bubble-breathe 3s ease-in-out infinite}
+.size-flower{position:absolute;inset:4px;z-index:-1;overflow:hidden;border:4px solid var(--paper);border-radius:50%;background:radial-gradient(circle at 32% 22%,#dfbbff 0%,#9a68e8 28%,#6536b5 68%,#3d247d 100%);box-shadow:0 0 0 3px var(--ink),0 5px 0 var(--shadow),0 0 16px #ffe14a99;animation:bubble-breathe 3.2s ease-in-out infinite}
+.size-flower:before{content:"";position:absolute;inset:-30%;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 38%,#fff4a866 46%,#ffffff88 50%,transparent 59% 100%);animation:bubble-shimmer 8s linear infinite}
 .size-flower i,.size-flower:after{display:none}
-@keyframes bubble-breathe{50%{filter:brightness(1.13);box-shadow:0 0 0 3px var(--ink),0 5px 0 var(--shadow),0 0 18px #ffe14a88}}
+@keyframes bubble-breathe{50%{filter:brightness(1.17) saturate(1.15);box-shadow:0 0 0 3px var(--ink),0 5px 0 var(--shadow),0 0 28px #ffe14acc}}
+@keyframes bubble-shimmer{to{transform:rotate(360deg)}}
 .size-flower i{position:absolute;left:calc(50% - 14px);top:calc(50% - 42px);width:28px;height:84px;border:2px solid var(--ink);border-radius:50%;background:var(--pink);box-shadow:inset 0 2px 0 #fff7a766;transform:rotate(var(--angle))}
 .size-flower i:nth-child(3n){background:var(--sun)}
 .size-flower i:nth-child(3n + 1){background:var(--blue)}
