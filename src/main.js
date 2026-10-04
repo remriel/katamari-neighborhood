@@ -138,7 +138,7 @@ function showIslandMenu(){
 function start(runMode='campaign',islandId=selectedIsland,seed){
   if(!loaded)return;resetInput();selectIsland(islandId);qaOverview=false;performanceSamples.length=0;sim.reset(runMode,selectedIsland,seed);resetVisuals();resultShown=false;startedAt=performance.now();hintUntil=startedAt+6000;
   previousRecord=readRecord(recordStorage,sim.islandId,sim.runMode);recordSplits=[];
-  $('hint').textContent=runMode==='campaign'?'Four stops · one minute each · keep your growing heap.':'Follow the treats. The toys are next.';
+  $('hint').textContent=runMode==='campaign'?'Four stops · 30 seconds each · keep your growing heap.':'Follow the treats. The toys are next.';
   $('goal-label').textContent='GOAL · '+sim.nextGoalSize();
   hideMenus();updateHud();initAudio();world.focus({preventScroll:true});
 }
@@ -160,10 +160,10 @@ function finish(){
   $('result-hooks').replaceChildren();for(const text of report.nextTry){const row=document.createElement('p');row.textContent=text;$('result-hooks').append(row);}
   $('stage-recap').replaceChildren();for(const [i,stage] of sim.chapterStats.entries()){
     const row=document.createElement('div'),goal=stage.goalSeconds===null?'': ' · goal in '+Math.ceil(stage.goalSeconds)+'s';
-    row.textContent=stage.medal+' · '+stage.name+' · 1 min · '+stage.pickups+' pickups · '+stage.combo+' chain'+goal;$('stage-recap').append(row);
+    row.textContent=stage.medal+' · '+stage.name+' · 30 sec · '+stage.pickups+' pickups · '+stage.combo+' chain'+goal;$('stage-recap').append(row);
   }
   $('medal-summary').textContent=sim.chapterStats.length+' stage medals · highlights';$('result-accomplishments').textContent=sim.engagement.accomplishments.slice(-4).join(' · ');
-  $('result-text').textContent=completedIsland?'Four places on '+sim.world.layout.name+', four minutes, and one growing heap. Every collected piece is still attached.':sim.won?'Six meters of permanently stuck stuff. Your quick challenge is finished.':`You reached ${sim.runMode==='campaign'?Math.min(sim.chapter+1,sim.chapters.length)+' / '+sim.chapters.length+' stages':'the quick challenge'} and built a pile of ${sim.count} things. Try again for the finish.`;
+  $('result-text').textContent=completedIsland?'Four places on '+sim.world.layout.name+', two minutes, and one growing heap. Every collected piece is still attached.':sim.won?'Six meters of permanently stuck stuff. Your quick challenge is finished.':`You reached ${sim.runMode==='campaign'?Math.min(sim.chapter+1,sim.chapters.length)+' / '+sim.chapters.length+' stages':'the quick challenge'} and built a pile of ${sim.count} things. Try again for the finish.`;
   $('again').textContent='Beat this route · '+sim.world.layout.name;
   $('next-island').textContent='Next island · '+islandConfig(sim.islandId==='oahu'?'lanai':'oahu').name;$('next-island').classList.toggle('hidden',!completedIsland);
   melody(sim.won?[523,659,784,1047]:[440,392,330]);
@@ -178,14 +178,14 @@ function updateHud(){
   $('boost').style.setProperty('--boost-energy',sim.boostEnergy+'%');$('boost').classList.toggle('depleted',sim.boostExhausted);$('boost').querySelector('small').textContent=sim.boostExhausted?'RECHARGE':'HOLD';
   ui.growth.style.width=`${Math.min(100,sim.progress()*100)}%`;
   $('goal-label').textContent=`GOAL · ${sim.nextGoalSize()}`;
-  const t=Math.max(0,Math.ceil(sim.timeLimit-sim.elapsed));ui.timer.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;ui.timer.style.color=t<=30?'#d65374':'';
+  const t=Math.max(0,Math.ceil(sim.timeLimit-sim.elapsed));ui.timer.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;ui.timer.style.color=t<=(sim.runMode==='campaign'?10:30)?'#d65374':'';
   ui.district.textContent=sim.world.layout.name+' · '+sim.world.district(sim.x,sim.z);
   document.querySelector('.size-sticker').innerHTML=sim.scaleLabel().replace(' ','<br>');
   const goal=sim.chapterGoal();$('chapter-title').textContent=sim.runMode==='quick'?'QUICK CHALLENGE':`${Math.min(sim.chapter+1,sim.chapters.length)} / ${sim.chapters.length} · ${goal.name}`;
-  const stageTrack=$('stage-track'),quick=sim.runMode==='quick';stageTrack.classList.toggle('quick',quick);stageTrack.setAttribute('aria-label',quick?'Four minute heap challenge':'Four stages on the same island, one minute each');
+  const stageTrack=$('stage-track'),quick=sim.runMode==='quick';stageTrack.classList.toggle('quick',quick);stageTrack.setAttribute('aria-label',quick?'Four minute heap challenge':'Four stages on the same island, 30 seconds each');
   for(const [i,stamp] of [...stageTrack.children].entries()){
     stamp.classList.toggle('done',!quick&&i<sim.chapter);stamp.classList.toggle('current',!quick&&i===sim.chapter);
-    stamp.title=sim.chapters[i].name+' · 1 min';stamp.textContent=sim.chapters[i].icon;
+    stamp.title=sim.chapters[i].name+' · 30 sec';stamp.textContent=sim.chapters[i].icon;
   }
   $('chapter-hint').textContent=quick?'4 min · 6 m heap':(sim.stageGoalReachedAt!==null?'Goal reached · keep rolling':'1 min · '+goal.count+' pickups');
   const chain=sim.engagement.chain;$('score').textContent=sim.score.toLocaleString()+' PTS';$('score').style.setProperty('--score-pulse',reducedMotion?1:1+feedback.pulse*.08);
@@ -390,7 +390,7 @@ if(import.meta.env.DEV&&new URLSearchParams(location.search).has('qa')){
     endingFixture(island){
       this.setScaleMeters(120,island);this.addTestAttachments([...Array(90).fill(0),32,37,48]);
       sim.chapter=sim.chapters.length-1;sim.chapterStarted=sim.chapter*STAGE_SECONDS;sim.elapsed=sim.timeLimit=sim.chapters.length*STAGE_SECONDS;
-      sim.elapsed-=.05;sim.chapterStats=sim.chapters.slice(0,-1).map(goal=>({name:goal.name,seconds:60,goalSeconds:null,medal:'Played',pickups:0,combo:0,score:0}));
+      sim.elapsed-=.05;sim.chapterStats=sim.chapters.slice(0,-1).map(goal=>({name:goal.name,seconds:STAGE_SECONDS,goalSeconds:null,medal:'Played',pickups:0,combo:0,score:0}));
       sim.moveToStage();sim.world.stamp='';resetVisuals();this.resume();return this.state();
     },
     navigationFixture(kind='corridor'){
@@ -457,7 +457,7 @@ function registerTools(){
   const lifecycle=new AbortController();
   const register=tool=>{try{Promise.resolve(context.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'read_roll_status',description:'Read the current neighborhood game status, size, timer and collection count.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:()=>sim.snapshot()});
-  register({name:'start_neighborhood_roll',description:'Start four one-minute stages around the same Oahu or Lanai map, or the separate four-minute quick challenge. Resets the heap and collection.',inputSchema:{type:'object',properties:{runMode:{type:'string',enum:['campaign','quick']},island:{type:'string',enum:['oahu','lanai']}},required:['runMode'],additionalProperties:false},annotations:{readOnlyHint:false},execute:input=>{if(!['campaign','quick'].includes(input?.runMode))throw new Error('runMode must be campaign or quick');if(input.island&&!ISLANDS[input.island])throw new Error('Unknown island');start(input.runMode,input.island||selectedIsland);return sim.snapshot();}});
+  register({name:'start_neighborhood_roll',description:'Start four 30-second stages around the same Oahu or Lanai map, or the separate four-minute quick challenge. Resets the heap and collection.',inputSchema:{type:'object',properties:{runMode:{type:'string',enum:['campaign','quick']},island:{type:'string',enum:['oahu','lanai']}},required:['runMode'],additionalProperties:false},annotations:{readOnlyHint:false},execute:input=>{if(!['campaign','quick'].includes(input?.runMode))throw new Error('runMode must be campaign or quick');if(input.island&&!ISLANDS[input.island])throw new Error('Unknown island');start(input.runMode,input.island||selectedIsland);return sim.snapshot();}});
   window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
 }
 init();

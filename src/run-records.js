@@ -1,6 +1,6 @@
 import {runGrade} from './campaign.js';
 const finite=(v,fallback=0)=>Number.isFinite(v)&&v>=0?v:fallback;
-const recordKey=(island,mode)=>'katamari:'+island+':'+(mode==='campaign'?'four-stage-tour':mode)+'-best';
+const recordKey=(island,mode)=>'katamari:'+island+':'+(mode==='campaign'?'four-stage-tour-30s':mode)+'-best';
 export function readRecord(storage,island,mode){
   try{
     const raw=JSON.parse(storage.getItem(recordKey(island,mode))||(mode==='quick'&&island==='oahu'?storage.getItem('katamari:'+mode+'-best'):null)||'null');

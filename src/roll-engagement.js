@@ -73,7 +73,7 @@ export class RollEngagement{
   observe(sim){
     const physical=2**sim.level,ox=Number(sim.world.originX)*18,oz=Number(sim.world.originZ)*18;
     const radius=Math.min(sim.visibleRadius*.55,Math.max(sim.diameter*2.5,3/physical));
-    const items=sim.world.nearby(sim.x,sim.z,radius).filter(i=>!i.collected&&!i.powerup&&(!sim.stageAllows||sim.stageAllows(i))&&i.size*1.08>sim.diameter&&i.size*1.08<sim.diameter*1.6);
+    const items=sim.world.nearby(sim.x,sim.z,radius).filter(i=>!i.collected&&!i.powerup&&i.size*1.08>sim.diameter&&i.size*1.08<sim.diameter*1.6);
     items.sort((a,b)=>Math.hypot(a.x-sim.x,a.z-sim.z)-Math.hypot(b.x-sim.x,b.z-sim.z));
     for(const item of items.slice(0,3)){
       this.memories.delete(item.id);this.memories.set(item.id,{id:item.id,type:item.type,name:item.name,size:item.size*physical,x:(item.x+ox)*physical,z:(item.z+oz)*physical,seen:sim.elapsed,blocked:true});

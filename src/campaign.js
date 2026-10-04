@@ -1,5 +1,5 @@
 export const MAP_HALF_METERS=6000;
-export const STAGE_SECONDS=60;
+export const STAGE_SECONDS=30;
 export const STAGE_COUNT=4;
 export const CAMPAIGN_START_SECONDS=STAGE_SECONDS;
 export const CAMPAIGN_MAX_SECONDS=STAGE_SECONDS*STAGE_COUNT;
@@ -23,14 +23,11 @@ const LANAI_CHAPTERS=CHAPTERS.map((chapter,i)=>({...chapter,
   type:i===3?48:chapter.type,
 }));
 export function chaptersForIsland(id){return id==='lanai'?LANAI_CHAPTERS:CHAPTERS;}
-for(const chapters of [CHAPTERS,LANAI_CHAPTERS])chapters.forEach((chapter,i)=>{
-  chapter.radius=[180,360,500,1100][i];chapter.maxObjectSize=[.8,6,30,900][i];
-});
 
-export const STAGE_GOLD_SECONDS=[20,35,40,45];
+export const STAGE_GOLD_SECONDS=[10,17.5,20,22.5];
 export function stageMedal(seconds,index){
   if(seconds===null)return'Played';
-  const gold=STAGE_GOLD_SECONDS[index]||45;
+  const gold=STAGE_GOLD_SECONDS[index]||22.5;
   return seconds<=gold?'Gold':seconds<=STAGE_SECONDS*.85?'Silver':'Bronze';
 }
 export function runGrade(stages,won){if(!won)return'Keep rolling';const points=stages.reduce((sum,s)=>sum+({Gold:3,Silver:2,Bronze:1}[s.medal]||0),0)/Math.max(1,stages.length);return points>=2.6?'S':points>=2?'A':points>=1?'B':'C';}

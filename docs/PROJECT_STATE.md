@@ -1,3 +1,17 @@
+# Thirty-second stages, restored scenery and mountain relief (2026-10-04)
+
+The latest user requests supersede the stage-based population and collection restrictions below. Both islands now run four 30-second stages, travel at 30/60/90 seconds and finish at 120 seconds. Stage medals use proportionally shorter thresholds; menu, HUD, result text, QA fixtures and WebMCP descriptions match. Campaign records use a new 30-second-tour key. The independent four-minute quick challenge is retained.
+
+Restored the complete ordinary scenery catalog, buildings, plants, actors and regional dressing in early areas. Authored stage trails still supply increasingly large themed pickups, but no stage or destination can block collection: physical ball size alone determines eligibility everywhere, including magnets, obstacles and actor yielding. The existing .8 ordinary population pass, physical object sizes, collected IDs and heap retention remain intact.
+
+Mountain amplitudes rise from 250/180 m to 620/420 m on Oʻahu/Lānaʻi, broad hills become taller, and an additional foothill wave creates smaller rises and valleys. Heights stay in physical meters across normalization and rebasing. Desktop and mobile terrain shade the real slopes and tint high peaks with rock colors. Test ridge samples reach approximately 569/408 m; town sampling shows 3.1/7.2 m relief.
+
+Validation: exact stage boundaries, pause/early goals, persistent world/heap, physical-size collection of formerly stage-locked vans, old-record separation, restored early-area counts (1,887/2,012 objects in 49 sampled chunks, including 945/955 larger props), terrain/powers, anchored vertices, navigation, actors, 170-model/island invariants and engagement checks pass. Ordinary-control route simulation completes both 120-second tours. These are deterministic simulation checks, not browser or physical-phone acceptance. Browser QA remains unavailable through the supported preview workflow.
+
+Release uses one production build, identical source on GitHub feature/living-neighborhoods (PR #2) and the existing public Sites project. Bundled Sites workflow helpers remain absent from this cloud image; source is reconciled by authenticated fetch and published through native archive save/deploy. Keep the native terminal receipt at outputs/katamari-30s-terrain-release.json, outside tracked source, to avoid desynchronizing release heads.
+
+Previous history follows.
+
 # Four one-minute stops on the same map (2026-10-04)
 
 The user selected four stages of 60 active seconds each, automatic travel to different places on the same map, increasingly larger objects, and a growing ball with its attachments and collected-map progress retained. This supersedes the seven goal-gated stages and accumulated time bonuses described below. Both island choices use snack market / town square, beach, neighborhood / resort, and highland stops. Travel occurs at 60, 120 and 180 seconds; the run ends at 240 seconds. Early goals earn medals/score bonuses without ending the minute; missing a bonus goal does not skip a stop.

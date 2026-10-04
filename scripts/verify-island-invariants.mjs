@@ -38,7 +38,7 @@ for(const island of ['oahu','lanai']){
   for(let i=0;i<4;i++){
     sim.elapsed=sim.timeLimit-.01;sim.step(.02,{x:0,z:0,boost:false});
   }
-  assert.equal(sim.mode,'result');assert.equal(sim.won,true);assert.equal(sim.chapter,4);assert.equal(sim.elapsed,240);
+  assert.equal(sim.mode,'result');assert.equal(sim.won,true);assert.equal(sim.chapter,4);assert.equal(sim.elapsed,120);
   const terminal=sim.snapshot();sim.step(1,{x:1,z:1,boost:true});assert.deepEqual(sim.snapshot(),terminal,'Finished level continued running');
   evidence.push({island,opening:74,goals:3,ordinarySample:ca.items.length,finiteEnding:true});
 }

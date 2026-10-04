@@ -2,9 +2,9 @@
 
 https://katamari-neighborhood.remriel.chatgpt.site/
 
-A mobile-first Katamari-inspired fan game with original artwork and Blender-authored 3D objects. Choose Oʻahu or Lānaʻi and play four one-minute stages on that same island. The game moves your growing ball to a new area at 1:00, 2:00 and 3:00, then finishes after four minutes.
+A mobile-first Katamari-inspired fan game with original artwork and Blender-authored 3D objects. Choose Oʻahu or Lānaʻi and play four 30-second stages on that same island. The game moves your growing ball to a new area at 0:30, 1:00 and 1:30, then finishes after two minutes.
 
-Each stop offers larger pickups: snacks and toys, beach furniture and boats, vehicles and houses, then large buildings and landmarks. The ball, attached objects, score and collected-map progress carry between stops. Objects keep their physical sizes; the first three stages unlock pickup tiers up to 0.8 m, 6 m and 30 m, and the final stage unlocks the larger catalog. Stage goals earn bonus points and medals while the one-minute clock continues. The optional single four-minute quick challenge is also available.
+Each stop offers larger pickups: snacks and toys, beach furniture and boats, vehicles and houses, then large buildings and landmarks. The ball, attached objects, score and collected-map progress carry between stops. Objects keep their physical sizes; you can collect any object anywhere once the ball is large enough. Stage goals earn bonus points and medals while the 30-second clock continues. The optional single four-minute quick challenge is also available.
 
 Touch controls: drag the thumbstick, hold GO! to dash, and tap the circular arrow to rotate the camera. Desktop: WASD/arrows to roll, Shift to dash, Q/E to rotate and Escape to pause. Sound begins muted. Changing tabs or losing focus pauses active play.
 

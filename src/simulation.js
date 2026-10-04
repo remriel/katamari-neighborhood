@@ -181,17 +181,14 @@ class ProceduralWorld{
       return !old.collected&&Math.abs(old.x-(cx*CHUNK_SIZE+9))<range&&Math.abs(old.z-(cz*CHUNK_SIZE+9))<range;
     });
     const ruralExcluded=this.islandId==='lanai'?[34,36,37,38,39]:[];
-    // Region tiers belong to physical places, so revisiting a place never
-    // changes its objects just because the one-minute clock advanced.
-    const physicalX=(cx*CHUNK_SIZE+9+originX)*physical,physicalZ=(cz*CHUNK_SIZE+9+originZ)*physical;
-    const region=chaptersForIsland(this.islandId).filter(stage=>Math.hypot(physicalX-stage.start[0],physicalZ-stage.start[1])<stage.radius)
-      .sort((a,b)=>Math.hypot(physicalX-a.start[0],physicalZ-a.start[1])-Math.hypot(physicalX-b.start[0],physicalZ-b.start[1]))[0];
-    const catalogue=TYPES.map((_,type)=>type).filter(type=>{const size=localSize(type,this.level);return (region?region.props.includes(type):type<52)&&type!==41&&size>=.1&&size<=12&&(!region||TYPES[type].size<=region.maxObjectSize)&&!ruralExcluded.includes(type);});
+    // The full scenery catalog is present from the start. Stage themes belong
+    // to the authored trails; collection depends only on the growing ball.
+    const catalogue=TYPES.map((_,type)=>type).filter(type=>{const size=localSize(type,this.level);return type<52&&type!==41&&size>=.1&&size<=12&&!ruralExcluded.includes(type);});
     if(!catalogue.length)return chunk;
     const urban=this.islandId==='lanai'?[7,12,14,15,17,23,26,27,32,42,43,44,45,46,48,50,51]:
       [7,9,11,13,14,15,17,22,24,26,27,28,29,30,32,36,38,39,42,43,44,45,46,51];
     const natural=zone.ridge>.28?[2,7,12,16,23,31,33,35,40,47,49,50]:zone.coast<160?[7,12,14,23,29,31,48,49,51]:[1,2,7,12,15,16,23,31,33,35,47,50];
-    const theme=region?.props||(zone.city>.28?urban:natural);
+    const theme=zone.city>.28?urban:natural;
     const themed=theme.filter(type=>catalogue.includes(type));
     const large=catalogue.filter(type=>localSize(type,this.level)>=1.6);
     const small=catalogue.filter(type=>localSize(type,this.level)<=1.6&&(themed.includes(type)||type<6||[18,19,20,21].includes(type)));
@@ -253,8 +250,8 @@ class ProceduralWorld{
     }
     for(let slot=80;slot<96;slot++){const x=cx*CHUNK_SIZE+1.8+random()*14.4,z=cz*CHUNK_SIZE+1.8+random()*14.4;add(select(medium),x,z,slot);}
     chunk.items=reducePopulation(chunk.items);
-    populateActors(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level,maxObjectSize:region?.maxObjectSize},TYPES,hash);
-    dressRegion(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level,chunkId:chunk.id,maxObjectSize:region?.maxObjectSize},TYPES,hash);
+    populateActors(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level},TYPES,hash);
+    dressRegion(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level,chunkId:chunk.id},TYPES,hash);
     arrangeChunkRoute(chunk.items,{islandId:this.islandId,physical,originX,originZ,cx,cz},TYPES,hash,this.guards,legacyNearby);
     for(const item of chunk.items){const pulled=this.magnetPositions.get(item.id);if(pulled){item.x=pulled.x/physical-originX;item.z=pulled.z/physical-originZ;item.magnetized=true;}}
     return chunk;
@@ -386,8 +383,7 @@ export class Simulation{
   setModelBounds(resolver){this.modelBounds=resolver;}
   setViewRadius(radius){this.viewRadius=Math.max(2,Number.isFinite(radius)?Math.ceil(radius):2);}
   setVisibleRadius(radius){this.visibleRadius=radius;}
-  stageAllows(item){return Boolean(item.powerup)||this.runMode==='quick'||this.chapter>=this.chapters.length-1||item.size*2**this.level<=this.chapterGoal().maxObjectSize+1e-8;}
-  canCollect(item){return Boolean(item.powerup)||this.stageAllows(item)&&item.size*1.08<=this.diameter;}
+  canCollect(item){return Boolean(item.powerup)||item.size*1.08<=this.diameter;}
   moveToStage(){
     const chapter=this.chapterGoal(),street=nearestStreet(...chapter.start,this.islandId);
     const point=constrainToIsland(street.x,street.z,Math.max(.25,this.body.coreRadius*2**this.level),this.islandId);
@@ -403,7 +399,7 @@ export class Simulation{
   }
   step(dt,input){
     if(this.mode!=='playing')return {pickups:[],distance:0,transform:{scale:1,x:0,z:0}};
-    // A stage consumes exactly 60 active seconds. Do not let a long frame use
+    // A stage consumes exactly 30 active seconds. Do not let a long frame use
     // time from the next stop or carry overshoot into its clock.
     dt=Math.max(0,Math.min(dt,this.timeLimit-this.elapsed));
     this.elapsed+=dt;
