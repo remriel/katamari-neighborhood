@@ -101,14 +101,6 @@
       "minScreenPixels": 30,
       "sourceArtwork": "/assets/prop-23.webp"
     },
-    "52": {
-      "family": "guide",
-      "models": [
-        "pickup_52_0"
-      ],
-      "minScreenPixels": 30,
-      "sourceArtwork": null
-    },
     "6": {
       "family": "car",
       "models": [
@@ -504,6 +496,166 @@
       ],
       "minScreenPixels": 30,
       "sourceArtwork": "/assets/prop-53.webp"
+    },
+    "guide": {
+      "family": "guide",
+      "models": [
+        "pickup_52_0"
+      ],
+      "minScreenPixels": 30,
+      "sourceArtwork": null
+    },
+    "52": {
+      "family": "neighbor",
+      "models": [
+        "living_52_0",
+        "living_52_1",
+        "living_52_2",
+        "living_52_3"
+      ],
+      "minScreenPixels": 30
+    },
+    "53": {
+      "family": "chicken",
+      "models": [
+        "living_53_0",
+        "living_53_1",
+        "living_53_2"
+      ],
+      "minScreenPixels": 30
+    },
+    "54": {
+      "family": "umbrella",
+      "models": [
+        "map_54_0",
+        "map_54_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "55": {
+      "family": "lounge",
+      "models": [
+        "map_55_0",
+        "map_55_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "56": {
+      "family": "surfboard",
+      "models": [
+        "map_56_0",
+        "map_56_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "57": {
+      "family": "lifeguard",
+      "models": [
+        "map_57_0",
+        "map_57_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "58": {
+      "family": "canoe",
+      "models": [
+        "map_58_0",
+        "map_58_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "59": {
+      "family": "shell",
+      "models": [
+        "map_59_0",
+        "map_59_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "60": {
+      "family": "crab",
+      "models": [
+        "map_60_0",
+        "map_60_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "61": {
+      "family": "sandcastle",
+      "models": [
+        "map_61_0",
+        "map_61_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "62": {
+      "family": "crate",
+      "models": [
+        "map_62_0",
+        "map_62_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "63": {
+      "family": "market",
+      "models": [
+        "map_63_0",
+        "map_63_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "64": {
+      "family": "planter",
+      "models": [
+        "map_64_0",
+        "map_64_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "65": {
+      "family": "lava",
+      "models": [
+        "map_65_0",
+        "map_65_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "66": {
+      "family": "fence",
+      "models": [
+        "map_66_0",
+        "map_66_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "67": {
+      "family": "boat",
+      "models": [
+        "map_67_0",
+        "map_67_1"
+      ],
+      "minScreenPixels": 30
+    },
+    "68": {
+      "family": "magnet",
+      "models": [
+        "map_68_0"
+      ],
+      "minScreenPixels": 30
+    },
+    "69": {
+      "family": "turbo",
+      "models": [
+        "map_69_0"
+      ],
+      "minScreenPixels": 30
+    },
+    "70": {
+      "family": "star",
+      "models": [
+        "map_70_0"
+      ],
+      "minScreenPixels": 30
     }
   },
   "models": {
@@ -772,7 +924,7 @@
       "pivot": "bottom center"
     },
     "pickup_52_0": {
-      "type": 52,
+      "type": "guide",
       "family": "guide",
       "variant": 0,
       "triangles": 430,
@@ -2090,6 +2242,500 @@
         1.0
       ],
       "pivot": "bottom center"
+    },
+    "living_52_0": {
+      "type": 52,
+      "family": "neighbor",
+      "variant": 0,
+      "triangles": 348,
+      "bounds": [
+        0.28308629780322037,
+        0.5162175642241031,
+        1.0
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "living_52_1": {
+      "type": 52,
+      "family": "neighbor",
+      "variant": 1,
+      "triangles": 416,
+      "bounds": [
+        0.3228699551569506,
+        0.504643179376029,
+        1.0
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "living_52_2": {
+      "type": 52,
+      "family": "neighbor",
+      "variant": 2,
+      "triangles": 348,
+      "bounds": [
+        0.28308629780322037,
+        0.5162175642241031,
+        1.0
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "living_52_3": {
+      "type": 52,
+      "family": "neighbor",
+      "variant": 3,
+      "triangles": 416,
+      "bounds": [
+        0.3228699551569506,
+        0.504643179376029,
+        1.0
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "living_53_0": {
+      "type": 53,
+      "family": "chicken",
+      "variant": 0,
+      "triangles": 346,
+      "bounds": [
+        1.0,
+        0.5066768346997286,
+        0.9154618191463312
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "living_53_1": {
+      "type": 53,
+      "family": "chicken",
+      "variant": 1,
+      "triangles": 346,
+      "bounds": [
+        1.0,
+        0.5066768346997286,
+        0.9154618191463312
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "living_53_2": {
+      "type": 53,
+      "family": "chicken",
+      "variant": 2,
+      "triangles": 346,
+      "bounds": [
+        1.0,
+        0.5066768346997286,
+        0.9154618191463312
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_54_0": {
+      "type": 54,
+      "family": "umbrella",
+      "variant": 0,
+      "triangles": 58,
+      "bounds": [
+        1.0,
+        0.9510565162951536,
+        0.9331730769230768
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_54_1": {
+      "type": 54,
+      "family": "umbrella",
+      "variant": 1,
+      "triangles": 58,
+      "bounds": [
+        1.0,
+        0.9510565162951536,
+        0.9331730769230768
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_55_0": {
+      "type": 55,
+      "family": "lounge",
+      "variant": 0,
+      "triangles": 136,
+      "bounds": [
+        1.0,
+        0.4774769880259945,
+        0.7107545812323521
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_55_1": {
+      "type": 55,
+      "family": "lounge",
+      "variant": 1,
+      "triangles": 136,
+      "bounds": [
+        1.0,
+        0.4774769880259945,
+        0.7107545812323521
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_56_0": {
+      "type": 56,
+      "family": "surfboard",
+      "variant": 0,
+      "triangles": 64,
+      "bounds": [
+        1.0,
+        0.24,
+        0.14
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_56_1": {
+      "type": 56,
+      "family": "surfboard",
+      "variant": 1,
+      "triangles": 64,
+      "bounds": [
+        1.0,
+        0.24,
+        0.14
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_57_0": {
+      "type": 57,
+      "family": "lifeguard",
+      "variant": 0,
+      "triangles": 290,
+      "bounds": [
+        0.8416139267694648,
+        0.6259584959813213,
+        1.0
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_57_1": {
+      "type": 57,
+      "family": "lifeguard",
+      "variant": 1,
+      "triangles": 290,
+      "bounds": [
+        0.8416139267694648,
+        0.6259584959813213,
+        1.0
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_58_0": {
+      "type": 58,
+      "family": "canoe",
+      "variant": 0,
+      "triangles": 172,
+      "bounds": [
+        1.0,
+        0.535,
+        0.23750000000000004
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_58_1": {
+      "type": 58,
+      "family": "canoe",
+      "variant": 1,
+      "triangles": 172,
+      "bounds": [
+        1.0,
+        0.535,
+        0.23750000000000004
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_59_0": {
+      "type": 59,
+      "family": "shell",
+      "variant": 0,
+      "triangles": 120,
+      "bounds": [
+        1.0,
+        0.6661578710423235,
+        0.36998488443253935
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_59_1": {
+      "type": 59,
+      "family": "shell",
+      "variant": 1,
+      "triangles": 120,
+      "bounds": [
+        1.0,
+        0.6661578710423235,
+        0.36998488443253935
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_60_0": {
+      "type": 60,
+      "family": "crab",
+      "variant": 0,
+      "triangles": 280,
+      "bounds": [
+        0.9272363033078572,
+        1.0,
+        0.5214901557474426
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_60_1": {
+      "type": 60,
+      "family": "crab",
+      "variant": 1,
+      "triangles": 280,
+      "bounds": [
+        0.9272363033078572,
+        1.0,
+        0.5214901557474426
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_61_0": {
+      "type": 61,
+      "family": "sandcastle",
+      "variant": 0,
+      "triangles": 301,
+      "bounds": [
+        1.0,
+        0.8470588235294118,
+        0.7647058823529412
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_61_1": {
+      "type": 61,
+      "family": "sandcastle",
+      "variant": 1,
+      "triangles": 301,
+      "bounds": [
+        1.0,
+        0.8470588235294118,
+        0.7647058823529412
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_62_0": {
+      "type": 62,
+      "family": "crate",
+      "variant": 0,
+      "triangles": 256,
+      "bounds": [
+        1.0,
+        0.8163636363636363,
+        0.7272727272727273
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_62_1": {
+      "type": 62,
+      "family": "crate",
+      "variant": 1,
+      "triangles": 256,
+      "bounds": [
+        1.0,
+        0.8163636363636363,
+        0.7272727272727273
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_63_0": {
+      "type": 63,
+      "family": "market",
+      "variant": 0,
+      "triangles": 348,
+      "bounds": [
+        0.9582172701949861,
+        0.6685236768802229,
+        1.0
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_63_1": {
+      "type": 63,
+      "family": "market",
+      "variant": 1,
+      "triangles": 348,
+      "bounds": [
+        0.9582172701949861,
+        0.6685236768802229,
+        1.0
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_64_0": {
+      "type": 64,
+      "family": "planter",
+      "variant": 0,
+      "triangles": 272,
+      "bounds": [
+        1.0,
+        0.625,
+        0.9624999999999998
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_64_1": {
+      "type": 64,
+      "family": "planter",
+      "variant": 1,
+      "triangles": 272,
+      "bounds": [
+        1.0,
+        0.625,
+        0.9624999999999998
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_65_0": {
+      "type": 65,
+      "family": "lava",
+      "variant": 0,
+      "triangles": 76,
+      "bounds": [
+        1.0,
+        0.7913974822322205,
+        0.7457410080347059
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_65_1": {
+      "type": 65,
+      "family": "lava",
+      "variant": 1,
+      "triangles": 76,
+      "bounds": [
+        1.0,
+        0.7913974822322205,
+        0.7457410080347059
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_66_0": {
+      "type": 66,
+      "family": "fence",
+      "variant": 0,
+      "triangles": 140,
+      "bounds": [
+        1.0,
+        0.065,
+        0.6
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_66_1": {
+      "type": 66,
+      "family": "fence",
+      "variant": 1,
+      "triangles": 140,
+      "bounds": [
+        1.0,
+        0.065,
+        0.6
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_67_0": {
+      "type": 67,
+      "family": "boat",
+      "variant": 0,
+      "triangles": 181,
+      "bounds": [
+        1.0,
+        0.28,
+        0.6600000286102294
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_67_1": {
+      "type": 67,
+      "family": "boat",
+      "variant": 1,
+      "triangles": 181,
+      "bounds": [
+        1.0,
+        0.28,
+        0.6600000286102294
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_68_0": {
+      "type": 68,
+      "family": "magnet",
+      "variant": 0,
+      "triangles": 140,
+      "bounds": [
+        1.0,
+        0.734375,
+        0.3125
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_69_0": {
+      "type": 69,
+      "family": "turbo",
+      "variant": 0,
+      "triangles": 24,
+      "bounds": [
+        0.8636363636363635,
+        1.0,
+        0.3181818181818182
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
+    },
+    "map_70_0": {
+      "type": 70,
+      "family": "star",
+      "variant": 0,
+      "triangles": 36,
+      "bounds": [
+        1.0,
+        0.9510565162951536,
+        0.18025066701227438
+      ],
+      "pivot": "bottom center",
+      "supplemental": true
     }
   },
   "lod": "/models/toy-town-lod.glb",
@@ -2149,5 +2795,9 @@
     1.3511904761904763,
     0.643598615916955,
     0.9375
+  ],
+  "extraLibraries": [
+    "/models/living-island.glb",
+    "/models/island-variety.glb"
   ]
 }

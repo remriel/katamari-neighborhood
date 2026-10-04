@@ -44,15 +44,16 @@ const data=readFileSync(new URL('../public/models/toy-town.glb',import.meta.url)
 assert.equal(data.readUInt32LE(0),0x46546c67);assert.equal(data.readUInt32LE(4),2);
 const length=data.readUInt32LE(12),gltf=JSON.parse(data.subarray(20,20+length).toString('utf8'));
 const manifest=JSON.parse(readFileSync(new URL('../public/models/manifest.json',import.meta.url),'utf8'));
-const named=new Map(gltf.nodes.filter(n=>n.mesh!==undefined).map(n=>[n.name,n]));
+const libraries=[gltf,...(manifest.extraLibraries||[]).map(path=>{const bytes=readFileSync(new URL('../public'+path,import.meta.url));return JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString('utf8'));})];
+const named=new Map(libraries.flatMap(lib=>lib.nodes.filter(n=>n.mesh!==undefined).map(n=>[n.name,{node:n,lib}])));
 let triangles=0,maxTriangles=0;
 for(const [name,meta] of Object.entries(manifest.models)){
-  const node=named.get(name);assert.ok(node,'Missing GLB model '+name);
+  const entry=named.get(name);assert.ok(entry,'Missing GLB model '+name);const {node,lib}=entry;
   let count=0;
-  for(const p of gltf.meshes[node.mesh].primitives){
+  for(const p of lib.meshes[node.mesh].primitives){
     assert.ok(p.attributes.COLOR_0!==undefined,'Model lost shared vertex colors');
     assert.ok(p.attributes.NORMAL!==undefined,'Model has no normals');
-    count+=(p.indices!==undefined?gltf.accessors[p.indices].count:gltf.accessors[p.attributes.POSITION].count)/3;
+    count+=(p.indices!==undefined?lib.accessors[p.indices].count:lib.accessors[p.attributes.POSITION].count)/3;
   }
   assert.ok(count<=3000,'Model exceeds the landmark budget');
   if([42,43,44,45].includes(meta.type))assert.ok(count<=500,'Street prop exceeds normal prop budget');
@@ -63,13 +64,13 @@ for(const [name,meta] of Object.entries(manifest.models)){
 assert.equal(named.size,Object.keys(manifest.models).length);
 assert.equal(gltf.materials.length,1,'Palette was split into unique materials');
 assert.ok(!gltf.images?.length,'Model kit unexpectedly uses bitmap textures');
-assert.equal(PROP_ART_COUNT,54);assert.equal(TYPES.length,52);
+assert.equal(PROP_ART_COUNT,54);assert.equal(TYPES.length,71);
 for(let type=0;type<TYPES.length;type++)assert.ok(manifest.types[String(type)]?.models.length,'Missing collectible 3D family '+type);
-assert.ok(manifest.types['52']?.models.length,'Rolling guide has no 3D mesh');
+assert.ok(manifest.types.guide?.models.length,'Rolling guide has no 3D mesh');
 assert.equal(manifest.artRatios.length,54,'Original physical attachment proportions were lost');
 const farData=readFileSync(new URL('../public'+manifest.lod,import.meta.url));
 const far=JSON.parse(farData.subarray(20,20+farData.readUInt32LE(12)).toString('utf8'));
-assert.equal(far.nodes.filter(n=>n.mesh!==undefined).length,named.size,'Far LOD dropped a model');
+assert.equal(far.nodes.filter(n=>n.mesh!==undefined).length,Object.values(manifest.models).filter(m=>!m.supplemental).length,'Far LOD dropped a model');
 let farTriangles=0;for(const mesh of far.meshes)for(const p of mesh.primitives)farTriangles+=far.accessors[p.indices].count/3;
 assert.ok(farTriangles<triangles*.65,'Far LOD is not materially cheaper');
 console.log(JSON.stringify({simulation:evidence,models:named.size,materials:gltf.materials.length,triangles,farTriangles,maxTriangles,bytes:data.length,farBytes:farData.length},null,2));

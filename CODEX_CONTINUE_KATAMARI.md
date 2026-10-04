@@ -1,3 +1,17 @@
+# Latest power-up visibility and source synchronization
+
+Power-up art is now 3x larger with a 38 CSS-pixel floor, camera-facing 3D symbols, emissive materials, halos, fading beacons and colored ground rings. The original three powers and physical collection behavior are retained. Read the newest entries in docs/PROJECT_STATE.md and docs/PROGRESS.md; run `node scripts/verify-living-world.mjs` for rendering/cleanup/reduced-motion regression checks alongside the terrain/power checks when changing powers.
+
+The user explicitly requests that every release be pushed to GitHub as well as Sites. Push the same full release commit to GitHub `feature/living-neighborhoods` (review PR #2) and the configured Sites source branch. Include continuation documentation before building/publishing; record the native version/deployment receipt locally rather than adding a later documentation-only commit that desynchronizes those release heads. Preserve the existing public Site identity/audience. Current package/receipt names are `outputs/katamari-neighborhood-v13.tar.gz` and `outputs/katamari-neighborhood-v13-release.json`.
+
+# Latest terrain and power-up continuation
+
+Read the top of docs/PROJECT_STATE.md and docs/PROGRESS.md for the current combined release. Active additions are real rolling hills, grass/sand/beaches, regional map dressing, the first-game HUD reference, and exactly three powers (magnet/turbo/lucky star). Run `node scripts/verify-terrain-powerups.mjs` with the existing actor/navigation/island checks when changing them. Preserve physical-meter terrain/routes, .8 density, original coasts/finite campaigns, and 170 shared-palette models. Regenerate scenery with `blender -b --python scripts/build_map_variety.py` after any base/living-library regeneration. Browser and physical-device acceptance remain pending.
+
+# Latest cloud continuation
+
+The living-neighborhood feature is implemented on `feature/living-neighborhoods`. Read the top of docs/PROJECT_STATE.md and docs/PROGRESS.md for current publication evidence and limitations; the older next-priority list below is historical. Run `node scripts/verify-living-world.mjs` alongside the existing navigation/island invariant checks when changing actors. Run cloud Blender with `blender -b --python scripts/build_living_asset_kit.py` to regenerate only the supplemental models. Preserve the original GLBs, the dedicated `guide` manifest key, the .8 ordinary density pass, deterministic physical-meter routes and actor delay/collection identity. Browser and handset acceptance remain outstanding.
+
 # Continue Katamari Neighborhood
 
 Continue developing the public repository https://github.com/remriel/katamari-neighborhood and its existing public Site, https://katamari-neighborhood.remriel.chatgpt.site/.

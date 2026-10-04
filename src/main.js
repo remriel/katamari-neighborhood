@@ -3,23 +3,35 @@ import './style.css';
 import './performance-hud.css';
 import './island-menu.css';
 import './notifications.css';
+import './original-hud.css';
+import './engagement.css';
 import {Simulation,TYPES,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
 import {createTerrain} from './terrain.js';
 import {CompoundView} from './compound-view.js';
 import {WorldItemBatches} from './model-batches.js';
 import {ToyModelLibrary} from './toy-model-library.js';
 import {ISLANDS,islandConfig} from './island-layout.js';
+import {activePowers} from './powerups.js';
+import {surfaceHeight} from './terrain-height.js';
+import {itemDisplaySize,itemVisibilitySphere} from './powerup-visuals.js';
+import {PickupFeedback} from './pickup-feedback.js';
+import {RollAudio} from './roll-audio.js';
+import {readRecord,saveRecord,finishRecord,scorePace} from './run-records.js';
+import {RoutePilot} from './diagnostics/route-pilot.js';
 
 const $=id=>document.getElementById(id);
+for(let i=0;i<12;i++){const petal=document.createElement('i');petal.style.setProperty('--angle',(i*30)+'deg');document.querySelector('.size-flower').append(petal);}
 const sim=new Simulation();
 let selectedIsland='oahu',qaOverview=false,lastRenderedItems=[];
 const performanceSamples=[];
 const ui={size:$('size'),unit:$('unit'),timer:$('timer'),growth:$('growth'),count:$('count'),district:$('district')};
 const keys=new Set(),joystick={x:0,z:0,pointer:null};
-let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain,compoundView,targetMarker,modelLibrary;
+let boostHeld=false,loaded=false,scene,renderer,camera,ball,prince,ballShadow,terrain,compoundView,targetMarker,prizeMarker,modelLibrary,feedback;
 let yaw=0,targetYaw=0,visualRadius=.16,viewSpan=8,follow=new THREE.Vector3();
-let itemBatches,sparks=[],lastVisibleItems=null,lastCullAt=0,lastCullX=NaN,lastCullZ=NaN,lastCullSpan=0,lastCullYaw=0;
-let audio=null,soundEnabled=false,pickupUntil=0,milestoneUntil=0,hintUntil=0,startedAt=0;
+let itemBatches,lastVisibleItems=null,lastCullAt=0,lastCullX=NaN,lastCullZ=NaN,lastCullSpan=0,lastCullYaw=0;
+let soundEnabled=false,pickupUntil=0,milestoneUntil=0,hintUntil=0,startedAt=0,lastVibration=0,previousRecord=null,recordSplits=[];
+const rollAudio=new RollAudio();sim.setDiagnostics(import.meta.env.DEV);
+const recordStorage={getItem:key=>{try{return localStorage.getItem(key);}catch{return null;}},setItem:(key,value)=>localStorage.setItem(key,value)};
 let lastTime=performance.now(),frame=0,resultShown=false,averageFrameMs=16.7,averageCpuFrameMs=0,nextDprCheck=0,renderDpr=1;
 const world=$('world'),loader=new THREE.TextureLoader();
 const performanceHud=$('performance-hud');
@@ -71,17 +83,19 @@ async function init(){
     scene.add(new THREE.HemisphereLight('#fffbe4','#73935c',1.35));
     const sun=new THREE.DirectionalLight('#fff1bf',1.85);sun.position.set(-10,22,12);scene.add(sun);
     modelLibrary=new ToyModelLibrary();
-    const [textures]=await Promise.all([Promise.all([loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp'),loadTexture('/assets/oahu-field.png',THREE.NoColorSpace),loadTexture('/assets/lanai-field.png',THREE.NoColorSpace)]),modelLibrary.load()]);
+    const [textures]=await Promise.all([Promise.all([loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp'),loadTexture('/assets/oahu-field.png',THREE.NoColorSpace),loadTexture('/assets/lanai-field.png',THREE.NoColorSpace),loadTexture('/assets/sand.webp')]),modelLibrary.load()]);
     shadowMap=shadowTexture();sim.setArtRatios(modelLibrary.manifest.artRatios);
     sim.setModelBounds((type,seed)=>modelLibrary.pick(type,seed)?.bounds.toArray());
-    terrain=createTerrain(textures[0],textures[1],renderer,textures[3],{oahu:textures[4],lanai:textures[5]});scene.add(terrain.mesh);
+    terrain=createTerrain(textures[0],textures[1],renderer,textures[3],{oahu:textures[4],lanai:textures[5]},textures[6]);scene.add(terrain.mesh);
     compoundView=new CompoundView(scene,modelLibrary);itemBatches=new WorldItemBatches(scene,modelLibrary,shadowMap);
+    itemBatches.heightAt=(x,z)=>surfaceHeight(sim.world,x,z);
     // The original seed stays small; retained objects form the entire growing heap.
     ball=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),new THREE.MeshStandardMaterial({map:textures[2],roughness:.82,metalness:0}));compoundView.root.add(ball);
     ballShadow=shadow(.48);scene.add(ballShadow);
-    const guide=modelLibrary.pick(52,0);if(!guide)throw new Error('The rolling guide model could not load.');
+    const guide=modelLibrary.pick('guide',0);if(!guide)throw new Error('The rolling guide model could not load.');
     prince=new THREE.Mesh(guide.geometry,modelLibrary.material);scene.add(prince);
     targetMarker=new THREE.Mesh(new THREE.RingGeometry(.46,.5,64),new THREE.MeshBasicMaterial({color:'#ffe278',side:THREE.DoubleSide,transparent:true,opacity:.8,depthWrite:false}));targetMarker.rotation.x=-Math.PI/2;targetMarker.visible=false;scene.add(targetMarker);
+    prizeMarker=new THREE.Mesh(new THREE.RingGeometry(.43,.48,48),new THREE.MeshBasicMaterial({color:'#ffd969',side:THREE.DoubleSide,transparent:true,opacity:.9,depthWrite:false}));prizeMarker.rotation.x=-Math.PI/2;prizeMarker.visible=false;scene.add(prizeMarker);feedback=new PickupFeedback(scene);
     resize();
     for(const texture of textures)renderer.initTexture(texture);
     itemBatches.begin();
@@ -89,7 +103,7 @@ async function init(){
       const info=TYPES[type],variants=modelLibrary.manifest.types[String(type)]?.models.length||1;
       for(let seed=0;seed<variants;seed++)for(const detail of [1,1000])itemBatches.put({id:'warm:'+type+':'+seed,type,size:1,x:0,z:0,visualSeed:seed},detail);
     }
-    itemBatches.end();camera.position.set(0,20,20);camera.lookAt(0,0,0);
+    itemBatches.end();camera.position.set(0,20,20);camera.lookAt(0,0,0);itemBatches.updateMotion(0,false,camera.quaternion);
     compoundView.prewarm();
     await renderer.compileAsync(scene,camera);
     renderer.render(scene,camera);
@@ -108,7 +122,7 @@ function resetVisuals(){
   const deviceDpr=Math.min(window.devicePixelRatio||1,2);
   if(renderDpr!==deviceDpr){renderDpr=deviceDpr;renderer.setPixelRatio(renderDpr);resize();}
   compoundView.reset();
-  for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
+  feedback?.reset();
   itemBatches.begin();itemBatches.end();lastVisibleItems=null;lastRenderedItems=[];lastCullAt=0;
   ball.quaternion.identity();visualRadius=sim.diameter/2;viewSpan=6+sim.diameter*4.1;follow.set(sim.x,0,sim.z);yaw=targetYaw=0;
 }
@@ -116,15 +130,17 @@ function selectIsland(id){
   selectedIsland=islandConfig(id).id;
   for(const key of Object.keys(ISLANDS)){const button=$('island-'+key);button.setAttribute('aria-pressed',String(key===selectedIsland));button.classList.toggle('selected',key===selectedIsland);}
   $('selected-island-name').textContent=islandConfig(selectedIsland).name;
+  const record=readRecord(recordStorage,selectedIsland,'campaign');$('menu-record').textContent=record?.score?'Your best · '+record.score.toLocaleString()+' pts · '+record.combo+' chain':'';
   if(loaded)$('start').textContent='Roll '+islandConfig(selectedIsland).name+' · 7 stages';
 }
 function showIslandMenu(){
   resetInput();sim.reset('campaign',selectedIsland);sim.mode='menu';qaOverview=false;resetVisuals();hideMenus();
   $('menu').classList.remove('hidden');document.body.classList.add('menu-open');selectIsland(selectedIsland);
 }
-function start(runMode='campaign',islandId=selectedIsland){
-  if(!loaded)return;resetInput();selectIsland(islandId);qaOverview=false;performanceSamples.length=0;sim.reset(runMode,selectedIsland);resetVisuals();resultShown=false;startedAt=performance.now();hintUntil=startedAt+9500;
-  $('hint').textContent='Everything sticks. Follow the goal and build a monster.';
+function start(runMode='campaign',islandId=selectedIsland,seed){
+  if(!loaded)return;resetInput();selectIsland(islandId);qaOverview=false;performanceSamples.length=0;sim.reset(runMode,selectedIsland,seed);resetVisuals();resultShown=false;startedAt=performance.now();hintUntil=startedAt+6000;
+  previousRecord=readRecord(recordStorage,sim.islandId,sim.runMode);recordSplits=[];
+  $('hint').textContent='Follow the treats. The toys are next.';
   $('goal-label').textContent='GOAL · '+sim.nextGoalSize();
   hideMenus();updateHud();initAudio();world.focus({preventScroll:true});
 }
@@ -140,19 +156,24 @@ function finish(){
   $('result-title').innerHTML=completedIsland?'What a<br><em>monstrosity.</em>':sim.won?'A beautiful<br><em>little monster.</em>':'One more<br><em>glorious roll?</em>';
   $('result-size').textContent=formatSize(sim.diameter,sim.level);$('result-count').textContent=String(sim.count);
   $('result-score').textContent=sim.score.toLocaleString();$('result-combo').textContent=String(sim.bestCombo);
-  const recordKey='katamari:'+sim.islandId+':'+sim.runMode+'-best';
-  let best=null;try{best=JSON.parse(localStorage.getItem(recordKey)||(sim.islandId==='oahu'?localStorage.getItem('katamari:'+sim.runMode+'-best'):null)||'null');}catch{}
-  const newBest=sim.won&&(!best||sim.score>best.score);
-  if(sim.won){const record={score:Math.max(best?.score||0,sim.score),seconds:Math.min(best?.seconds??Infinity,Math.round(sim.elapsed)),combo:Math.max(best?.combo||0,sim.bestCombo)};try{localStorage.setItem(recordKey,JSON.stringify(record));}catch{}best=record;}
-  $('result-record').textContent=sim.won?(newBest?'NEW PERSONAL BEST · ':'')+'Best '+best.score.toLocaleString()+' pts · Fastest '+Math.floor(best.seconds/60)+':'+String(best.seconds%60).padStart(2,'0'):best?'Your personal best: '+best.score.toLocaleString()+' pts':'';
-  $('stage-recap').replaceChildren();for(const stage of sim.chapterStats){const row=document.createElement('div');row.textContent=stage.name+' · '+stage.size+' · '+stage.seconds+' s';$('stage-recap').append(row);}
+  recordSplits.push({time:sim.elapsed,score:sim.score});const report=finishRecord(sim,previousRecord,recordSplits);saveRecord(recordStorage,sim,report.record);
+  $('result-record').textContent=report.labels.join(' · ')||report.comparisons[0]||'Your next best roll starts here.';
+  const seconds=Math.round(sim.elapsed);$('result-time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+' · '+Math.round(sim.count/Math.max(1,sim.elapsed)*60)+' things/min'+(completedIsland?' · Grade '+report.grade:'');
+  $('result-hooks').replaceChildren();for(const text of report.nextTry){const row=document.createElement('p');row.textContent=text;$('result-hooks').append(row);}
+  $('stage-recap').replaceChildren();for(const [i,stage] of sim.chapterStats.entries()){
+    const row=document.createElement('div'),old=previousRecord?.stages?.[i]?.seconds,delta=Number.isFinite(old)?' · '+(stage.seconds<old?old-stage.seconds+'s faster':stage.seconds-old+'s from best'):'';
+    row.textContent=stage.medal+' · '+stage.name+' · '+stage.seconds+'s · '+stage.combo+' chain'+delta;$('stage-recap').append(row);
+  }
+  $('medal-summary').textContent=sim.chapterStats.length+' stage medals · highlights';$('result-accomplishments').textContent=sim.engagement.accomplishments.slice(-4).join(' · ');
   $('result-text').textContent=completedIsland?sim.world.layout.name+' is rolled. Every piece is still in that ridiculous heap. You finished this island.':sim.won?'Six meters of permanently stuck stuff. Your quick challenge is finished.':`You reached ${sim.runMode==='campaign'?Math.min(sim.chapter+1,sim.chapters.length)+' / '+sim.chapters.length+' stages':'the quick challenge'} and built a pile of ${sim.count} things. Try again for the finish.`;
-  $('again').textContent='Roll again · '+sim.world.layout.name;
-  $('next-island').classList.toggle('hidden',!(completedIsland&&sim.islandId==='oahu'));
+  $('again').textContent='Beat this route · '+sim.world.layout.name;
+  $('next-island').textContent='Next island · '+islandConfig(sim.islandId==='oahu'?'lanai':'oahu').name;$('next-island').classList.toggle('hidden',!completedIsland);
   melody(sim.won?[523,659,784,1047]:[440,392,330]);
 }
 function inspectResult(){hideMenus();hintUntil=performance.now()+12000;$('hint').textContent='Finished. Rotate the camera to admire your heap. Tap Ⅱ for results.';}
 function updateHud(){
+  const powers=activePowers(sim);$('power-status').innerHTML=powers.map(p=>'<div class="power-pill '+p.id+'"><b>'+(p.id==='magnet'?'∩':p.id==='turbo'?'ϟ':'★')+'</b><span>'+p.name+'<small>'+p.seconds+'s</small></span></div>').join('');
+  document.querySelector('.timer-dial').style.setProperty('--clock-turn',(sim.elapsed/Math.max(1,sim.timeLimit)*360)+'deg');
   const parts=sizeParts(sim.diameter,sim.level);ui.size.textContent=parts.value;ui.unit.textContent=parts.unit;ui.size.style.fontSize=parts.value.length>5?'30px':'';
   ui.count.textContent=`${sim.count} stuck object${sim.count===1?'':'s'}`;
   $('boost').style.setProperty('--boost-energy',sim.boostEnergy+'%');$('boost').classList.toggle('depleted',sim.boostExhausted);$('boost').querySelector('small').textContent=sim.boostExhausted?'RECHARGE':'HOLD';
@@ -164,18 +185,19 @@ function updateHud(){
   const goal=sim.chapterGoal();$('chapter-title').textContent=sim.runMode==='quick'?'QUICK CHALLENGE':`${Math.min(sim.chapter+1,sim.chapters.length)} / ${sim.chapters.length} · ${goal.name}`;
   $('stage-track').textContent=sim.runMode==='campaign'?sim.chapters.map((chapter,i)=>(i<sim.chapter?'●':i===sim.chapter?'◉':'○')).join('  '):'4 MINUTE CHALLENGE';
   $('chapter-hint').textContent=sim.runMode==='quick'?'Build a 6 m heap before the four-minute clock runs out.':goal.hint;
-  const multiplier=Math.min(5,1+Math.floor(sim.combo/4));$('score').textContent=sim.score.toLocaleString()+' PTS';$('combo').textContent=sim.combo>=4&&sim.elapsed-sim.lastPickup<1.5?'×'+multiplier+' COMBO':'';
+  const chain=sim.engagement.chain;$('score').textContent=sim.score.toLocaleString()+' PTS';$('score').style.setProperty('--score-pulse',reducedMotion?1:1+feedback.pulse*.08);
+  $('combo').classList.toggle('hidden',chain.count<2);$('combo').classList.toggle('fading',chain.remaining<0);$('combo-text').textContent=chain.count+' CHAIN · ×'+chain.multiplier;$('chain-fill').style.width=chain.charge*100+'%';
+  const prize=sim.prize();$('next-prize').classList.toggle('hidden',!prize);$('next-prize').classList.toggle('ready',Boolean(prize?.ready));
+  if(prize)$('next-prize').textContent=prize.ready?'NOW · '+prize.name:prize.name+' · '+formatSize(prize.neededMeters)+' to go';
+  const pace=scorePace(previousRecord,sim);$('record-pace').classList.toggle('hidden',pace===null);$('record-pace').classList.toggle('ahead',pace>0);if(pace!==null)$('record-pace').textContent=(pace>=0?'+':'−')+Math.abs(pace).toLocaleString()+' vs your score best';
+  if(sim.mode==='playing'&&sim.elapsed>=(recordSplits.length+1)*15)recordSplits.push({time:sim.elapsed,score:sim.score});
   const target=sim.runMode==='campaign'?sim.objective():null;
   $('target-guide').classList.toggle('hidden',!target||sim.mode!=='playing');
   if(target){const dx=target.x-sim.x,dz=target.z-sim.z,sx=dx*Math.cos(yaw)-dz*Math.sin(yaw),sy=dx*Math.sin(yaw)+dz*Math.cos(yaw);$('target-arrow').style.transform=`rotate(${Math.atan2(sx,-sy)*180/Math.PI}deg)`;$('target-distance').textContent=formatSize(Math.hypot(dx,dz),sim.level);$('target-name').textContent=target.name||TYPES[target.type].name;}
 }
 function emitSparks(item){
   if(reducedMotion)return;
-  const points=[];for(let i=0;i<9;i++)points.push((Math.random()-.5)*item.size*2,Math.random()*item.size,(Math.random()-.5)*item.size*2);
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
-  const mesh=new THREE.Points(g,new THREE.PointsMaterial({color:['#fff8b5','#ff7793','#b7ffff'][item.visualSeed%3],size:Math.max(.025,sim.diameter*.055),transparent:true,depthWrite:false}));
-  mesh.position.set(item.x,sim.diameter*.25,item.z);scene.add(mesh);sparks.push({mesh,life:.65});
-  if(sparks.length>12){const old=sparks.shift();scene.remove(old.mesh);old.mesh.geometry.dispose();old.mesh.material.dispose();}
+  feedback.collect(item,surfaceHeight(sim.world,item.x,item.z),sim.diameter);
 }
 function input(){
   let x=joystick.x,z=joystick.z;
@@ -184,6 +206,29 @@ function input(){
   const length=Math.hypot(x,z);if(length>1){x/=length;z/=length;}
   // Use current camera yaw so up always rolls toward the top of the screen.
   return{x:x*Math.cos(yaw)+z*Math.sin(yaw),z:-x*Math.sin(yaw)+z*Math.cos(yaw),boost:boostHeld||keys.has('ShiftLeft')||keys.has('ShiftRight')};
+}
+function handleRollResult(result,now){
+  const transform=result.transform;
+  if(transform.scale!==1||transform.x!==0||transform.z!==0){
+    lastVisibleItems=null;follow.multiplyScalar(transform.scale);follow.x+=transform.x;follow.z+=transform.z;
+    visualRadius*=transform.scale;viewSpan*=transform.scale;feedback.transform(transform);
+  }
+  if(result.pickups.length){
+    let importance=1;
+    for(const picked of result.pickups){
+      lastVisibleItems=null;importance=Math.max(importance,picked.importance||1);
+      emitSparks({...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale});
+    }
+    const last=result.pickups.reduce((best,p)=>p.importance>best.importance||p.importance===best.importance&&p.size>best.size?p:best);$('pickup').textContent=`+ ${last.name||TYPES[last.type].name} · ${formatSize(last.size,last.sizeLevel??sim.level)}${importance>=2&&last.points?' · +'+last.points+' pts':''}`;pickupUntil=now+(importance>=2?1100:650);
+    rollAudio.pickup(sim.combo,importance,now/1000);
+    if(navigator.vibrate&&now-lastVibration>100){navigator.vibrate(importance>=3?[18,20,25]:importance>=2?16:7);lastVibration=now;}
+  }
+  if(result.checkpoint||result.celebration||result.unlock||(result.milestone!==null&&result.milestone!==undefined)){
+    // Stage/size fantasy takes priority; one notice strip protects the playfield.
+    const text=result.checkpoint||result.celebration?.text||result.unlock;
+    if(text){$('milestone').textContent=text;milestoneUntil=now+(result.checkpoint?2200:1700);rollAudio.stinger(Boolean(result.checkpoint));}
+  }
+  if(sim.mode==='result'&&!resultShown)finish();
 }
 function tick(now){
   const cpuStartedAt=performance.now();
@@ -207,65 +252,49 @@ function tick(now){
   if(sim.mode!=='playing')sim.world.sync(sim,sim.viewRadius);
   const result=sim.step(dt,input());
   const simulationFinishedAt=performance.now();
-  const transform=result.transform;
-  if(transform.scale!==1||transform.x!==0||transform.z!==0){
-    follow.multiplyScalar(transform.scale);follow.x+=transform.x;follow.z+=transform.z;
-    visualRadius*=transform.scale;viewSpan*=transform.scale;
-    for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
-  }
-  if(result.pickups.length){
-    for(const picked of result.pickups){
-      lastVisibleItems=null;
-      const item={...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale};
-      emitSparks(item);
-    }
-    const last=result.pickups[result.pickups.length-1];$('pickup').textContent=`+ ${last.name||TYPES[last.type].name} · ${formatSize(last.size,last.sizeLevel??sim.level)}${sim.combo>=3?' · '+sim.combo+' in a row!':''}`;pickupUntil=now+1500;
-    tone(350+Math.min(sim.combo,12)*45,.09);
-    if(navigator.vibrate)navigator.vibrate(12);
-  }
-  if(result.checkpoint||result.unlock||(result.milestone!==null&&result.milestone!==undefined)){
-    const messages=['A little bigger!','Look at you grow!','Bicycles? Absolutely.','Here come the vans!'];
-    $('milestone').textContent=result.checkpoint||result.unlock||messages[result.milestone]||`${formatSize(sim.diameter,sim.level)} of glorious stuff!`;milestoneUntil=now+2800;melody([392,523,659]);
-  }
-  if(sim.mode==='result'&&!resultShown)finish();
+  handleRollResult(result,now);feedback.update(dt,sim.diameter,!reducedMotion);
   const inMenu=sim.mode==='menu';
   const renderDiameter=inMenu ? .55 : Math.max(sim.diameter,Math.min(sim.body.boundRadius*2,sim.diameter*2.4));
   const radiusTarget=inMenu ? .55 : renderDiameter*.5;
   visualRadius+=(radiusTarget-visualRadius)*(1-Math.exp(-dt*8));
-  compoundView.sync(sim.body,now,!reducedMotion,viewportHeight/viewSpan);compoundView.pose(sim.x,inMenu ? .55 : sim.body.height,sim.z,sim.body.orientation);
+  const groundHeight=surfaceHeight(sim.world,sim.x,sim.z);
+  compoundView.sync(sim.body,now,!reducedMotion,viewportHeight/viewSpan);compoundView.pose(sim.x,groundHeight+(inMenu ? .55 : sim.body.height)+visualRadius*feedback.pulse*.035,sim.z,sim.body.orientation);
   ball.scale.setScalar(inMenu ? .55 : sim.body.coreRadius);ball.position.set(0,0,0);
   if(inMenu&&!reducedMotion)compoundView.root.rotateY(now*.0002);
-  ballShadow.position.set(sim.x,.018,sim.z);ballShadow.scale.setScalar(visualRadius*2.7);
+  ballShadow.position.set(sim.x,groundHeight+.018,sim.z);ballShadow.scale.setScalar(visualRadius*2.7);
   ballShadow.material.opacity=.72/(1+Math.max(0,sim.body.height-sim.body.lastGround)/Math.max(.1,visualRadius));
   // Prince follows behind the rolling direction and remains readable at every size.
   const moveAngle=Math.hypot(sim.vx,sim.vz)>.1?Math.atan2(sim.vx,sim.vz):yaw+Math.PI;
   const ph=Math.max(.29,visualRadius*.63);
   prince.scale.setScalar(ph);prince.rotation.y=moveAngle;
-  prince.position.set(sim.x-Math.sin(moveAngle)*(visualRadius+ph*.9),.015+(!reducedMotion&&result.distance>.002?Math.abs(Math.sin(now*.015))*ph*.09:0),sim.z-Math.cos(moveAngle)*(visualRadius+ph*.9));
-  follow.lerp(qaOverview?new THREE.Vector3(-Number(sim.world.originX)*CHUNK_SIZE,0,-Number(sim.world.originZ)*CHUNK_SIZE+(sim.islandId==='oahu'?-1500:0)*2**(-sim.level)):new THREE.Vector3(sim.x,visualRadius*.25,sim.z),1-Math.exp(-dt*5));
+  const guideX=sim.x-Math.sin(moveAngle)*(visualRadius+ph*.9),guideZ=sim.z-Math.cos(moveAngle)*(visualRadius+ph*.9);
+  prince.position.set(guideX,surfaceHeight(sim.world,guideX,guideZ)+.015+(!reducedMotion&&result.distance>.002?Math.abs(Math.sin(now*.015))*ph*.09:0),guideZ);
+  follow.lerp(qaOverview?new THREE.Vector3(-Number(sim.world.originX)*CHUNK_SIZE,0,-Number(sim.world.originZ)*CHUNK_SIZE+(sim.islandId==='oahu'?-1500:0)*2**(-sim.level)):new THREE.Vector3(sim.x,groundHeight+visualRadius*.25,sim.z),1-Math.exp(-dt*5));
   yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*5));
   const desiredSpan=qaOverview?sim.world.layout.half*2.1*Math.max(1,1/aspect)*2**(-sim.level):inMenu?16:Math.max(6*2**(-Math.min(sim.level,32))+renderDiameter*4.1,renderDiameter*2.6/Math.max(.3,aspect));
-  viewSpan+=(desiredSpan-viewSpan)*(1-Math.exp(-dt*4));
+  viewSpan+=(desiredSpan*(1-feedback.pulse*.018)-viewSpan)*(1-Math.exp(-dt*4));
   const dist=Math.max(20,viewSpan*1.7);camera.position.set(follow.x+Math.sin(yaw)*dist,follow.y+dist*1.12,follow.z+Math.cos(yaw)*dist);camera.lookAt(follow);
   const cameraDistance=Math.hypot(dist,dist*1.12);camera.near=.05;camera.far=cameraDistance+viewSpan*4+40;
   camera.left=-viewSpan*aspect/2;camera.right=viewSpan*aspect/2;camera.top=viewSpan/2;camera.bottom=-viewSpan/2;camera.updateProjectionMatrix();camera.updateMatrixWorld();
   scene.fog.near=cameraDistance+viewSpan*.65;scene.fog.far=cameraDistance+viewSpan*2;
   terrain.update(sim.x,sim.z,viewSpan,aspect,cameraDistance,sim.world);
   const missionTarget=sim.runMode==='campaign'&&sim.mode==='playing'?sim.objective():null;
-  targetMarker.visible=Boolean(missionTarget);if(missionTarget){targetMarker.position.set(missionTarget.x,Math.max(.03,sim.diameter*.002),missionTarget.z);targetMarker.scale.setScalar(missionTarget.size*1.25);}
+  targetMarker.visible=Boolean(missionTarget);if(missionTarget){targetMarker.position.set(missionTarget.x,surfaceHeight(sim.world,missionTarget.x,missionTarget.z)+Math.max(.03,sim.diameter*.002),missionTarget.z);targetMarker.scale.setScalar(missionTarget.size*1.25);}
+  if(missionTarget)targetMarker.material.color.set(missionTarget.size*1.08<=sim.diameter?'#a8ffdb':'#ffe278');
+  const prize=sim.mode==='playing'?sim.prize():null;prizeMarker.visible=Boolean(prize&&prize.id!==missionTarget?.id);
+  if(prize){prizeMarker.position.set(prize.x,surfaceHeight(sim.world,prize.x,prize.z)+Math.max(.015,sim.diameter*.004),prize.z);prizeMarker.scale.setScalar(prize.size*1.5);prizeMarker.material.color.set(prize.ready?'#a8ffdb':'#ffda68');}
   const moved=Math.hypot(sim.x-lastCullX,sim.z-lastCullZ)>Math.max(.35,viewSpan*.035);
   const turned=Math.abs(yaw-lastCullYaw)>.045,zoomed=Math.abs(viewSpan-lastCullSpan)>Math.max(.25,viewSpan*.035);
+  const pixelsPerUnit=viewportHeight/viewSpan;
   if(now-lastCullAt>95||moved||turned||zoomed||lastVisibleItems===null){
-    const pixelsPerUnit=viewportHeight/viewSpan;
     const radius=viewSpan*Math.hypot(aspect,1.5)*.65+sim.body.boundRadius+4;
     const nearby=sim.world.nearby(sim.x,sim.z,radius),candidates=[];
     const frustum=new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
     const sphere=new THREE.Sphere();
     for(const item of nearby){
-      if(item.collected||item.size*pixelsPerUnit<1.2)continue;
+      if(item.collected||itemDisplaySize(item,pixelsPerUnit)*pixelsPerUnit<1.2)continue;
       const bounds=modelLibrary.pick(item.type,item.visualSeed).bounds;
-      sphere.center.set(item.x,item.size*1.05*bounds.y*.5,item.z);
-      sphere.radius=item.size*1.12*bounds.length()*.5+viewSpan*.08;
+      itemVisibilitySphere(item,bounds,pixelsPerUnit,surfaceHeight(sim.world,item.x,item.z),viewSpan*.08,sphere);
       if(frustum.intersectsSphere(sphere))candidates.push(item);
     }
     // Culling is geometric. A nearest-N budget made visible props blink when
@@ -274,7 +303,7 @@ function tick(now){
     itemBatches.begin();for(const item of lastRenderedItems)itemBatches.put(item,pixelsPerUnit);itemBatches.end();
     lastVisibleItems=sim.items;lastCullAt=now;lastCullX=sim.x;lastCullZ=sim.z;lastCullSpan=viewSpan;lastCullYaw=yaw;
   }
-  for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.life-=dt;s.mesh.position.y+=dt*.7;s.mesh.material.opacity=Math.max(0,s.life/.65);if(s.life<=0){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();sparks.splice(i,1);}}
+  itemBatches.updateMotion(sim.elapsed,!reducedMotion,camera.quaternion,pixelsPerUnit);
   const milestoneActive=now<milestoneUntil&&sim.mode==='playing';
   const pickupActive=!milestoneActive&&now<pickupUntil&&sim.mode==='playing';
   $('milestone').classList.toggle('show',milestoneActive);$('pickup').classList.toggle('show',pickupActive);
@@ -288,23 +317,20 @@ function tick(now){
 }
 
 function initAudio(){
-  if(!soundEnabled)return;
-  const AudioContext=window.AudioContext||window.webkitAudioContext;if(!AudioContext)return;
-  audio??=new AudioContext();if(audio.state==='suspended')audio.resume().catch(()=>{});
+  rollAudio.enable(soundEnabled);
 }
 function tone(freq,duration=.12,delay=0){
-  if(!soundEnabled||!audio)return;
-  const t=audio.currentTime+delay,o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.06,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+duration);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+duration+.02);
+  rollAudio.tone(freq,duration,delay);
 }
 function melody(notes){notes.forEach((n,i)=>tone(n,.19,i*.1));}
 
 $('island-oahu').addEventListener('click',()=>selectIsland('oahu'));
 $('island-lanai').addEventListener('click',()=>selectIsland('lanai'));
 $('choose-island').addEventListener('click',showIslandMenu);
-$('next-island').addEventListener('click',()=>start('campaign','lanai'));
+$('next-island').addEventListener('click',()=>start('campaign',sim.islandId==='oahu'?'lanai':'oahu'));
 $('start').addEventListener('click',()=>start('campaign'));$('free').addEventListener('click',()=>start('quick'));
 $('pause').addEventListener('click',()=>{if(sim.mode==='result'){$('result-menu').classList.remove('hidden');document.body.classList.add('menu-open');}else sim.mode==='paused'?resume():pause();});$('resume').addEventListener('click',resume);
-$('restart').addEventListener('click',()=>start(sim.runMode));$('again').addEventListener('click',()=>start(sim.runMode));$('continue').addEventListener('click',inspectResult);
+$('restart').addEventListener('click',()=>start(sim.runMode));$('again').addEventListener('click',()=>start(sim.runMode,sim.islandId,sim.world.seed));$('continue').addEventListener('click',inspectResult);
 $('camera').addEventListener('click',()=>{if(sim.mode==='playing'||sim.mode==='result')targetYaw+=Math.PI/4;});
 $('sound').addEventListener('click',()=>{soundEnabled=!soundEnabled;$('sound').setAttribute('aria-label',soundEnabled?'Turn sound off':'Turn sound on');$('sound').title=soundEnabled?'Sound on':'Sound off';$('sound').querySelector('.sound-slash').style.display=soundEnabled?'none':'';initAudio();if(soundEnabled)tone(523,.15);});
 const joy=$('joystick');
@@ -336,6 +362,18 @@ world.addEventListener('webglcontextlost',e=>{e.preventDefault();pause();reportE
 
 if(import.meta.env.DEV&&new URLSearchParams(location.search).has('qa')){
   window.__katamariQa={
+    startSeed(island='oahu',seed=123456){start('campaign',island,seed);return this.state();},
+    autoplaySteps(frames=120){
+      if(!this.pilot||this.pilot.world!==sim.world)this.pilot=new RoutePilot(sim);
+      for(let i=0;i<Math.min(120,Math.max(1,frames));i++){
+        if(sim.mode!=='playing')break;
+        const before=sim.chapter,result=sim.step(1/60,this.pilot.input(1/60));handleRollResult(result,performance.now());
+        if(sim.chapter!==before){updateHud();break;}
+      }
+      updateHud();return this.state();
+    },
+    pacingMetrics(){return sim.engagement.report(sim);},
+    warming(){return {active:sim.world.prefetchQueue.filter(q=>q.active).length,pending:[...sim.world.chunks.values()].filter(c=>c.pending).length};},
     endingFixture(island){
       this.setScaleMeters(2500,island);this.addTestAttachments([...Array(143).fill(0),37,39,40,47,48,49]);
       sim.chapter=6;const target=sim.objective();sim.x=target.x;sim.z=target.z;sim.world.stamp='';resetVisuals();this.resume();return this.state();
@@ -394,7 +432,7 @@ if(import.meta.env.DEV&&new URLSearchParams(location.search).has('qa')){
       const eventStats=source=>{const values=[...(source||[])].sort((a,b)=>a-b);return{count:values.length,median:values[Math.floor(values.length*.5)]??null,p95:values[Math.floor(values.length*.95)]??null,max:values.at(-1)??null};};
       return{frames:samples.length,frame:stats('frame'),cpu:stats('cpu'),simulation:stats('simulation'),prepare:stats('prepare'),draw:stats('draw'),gpu:stats('gpu'),drawCalls:stats('calls'),triangles:stats('triangles'),generationMs:eventStats(sim.world.generationTimes),syncMs:eventStats(sim.world.syncTimes),dpr:renderDpr,models:modelLibrary.models.size,visible:itemBatches.visibleCount,attachments:sim.body.pieces.length,preloadHits:sim.world.syncHits,synchronousChunks:sim.world.syncMisses,lastChunkSyncMs:sim.world.lastSyncMs};
     },
-    state:()=>({...sim.snapshot(),x:sim.x,z:sim.z,renderedPieces:[...compoundView.modelBatches.values()].reduce((total,batch)=>total+batch.pages.reduce((sum,mesh)=>sum+mesh.count,0),0),coreDiameterMeters:sim.body.coreRadius*2*2**sim.level,capturedIsland:sim.body.pieces.some(p=>p.id==='objective:6'),physicalX:(sim.x+Number(sim.world.originX)*CHUNK_SIZE)*2**sim.level,physicalZ:(sim.z+Number(sim.world.originZ)*CHUNK_SIZE)*2**sim.level}),
+    state:()=>({...sim.snapshot(),elapsed:sim.elapsed,combo:sim.combo,chainCharge:sim.engagement.chain.charge,boostEnergy:sim.boostEnergy,stages:sim.chapterStats,x:sim.x,z:sim.z,renderedPieces:[...compoundView.modelBatches.values()].reduce((total,batch)=>total+batch.pages.reduce((sum,mesh)=>sum+mesh.count,0),0),coreDiameterMeters:sim.body.coreRadius*2*2**sim.level,capturedIsland:sim.body.pieces.some(p=>p.id==='objective:6'),physicalX:(sim.x+Number(sim.world.originX)*CHUNK_SIZE)*2**sim.level,physicalZ:(sim.z+Number(sim.world.originZ)*CHUNK_SIZE)*2**sim.level}),
   };
 }
 

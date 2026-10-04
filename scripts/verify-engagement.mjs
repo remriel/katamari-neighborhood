@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import {RollChain,RollEngagement} from '../src/roll-engagement.js';
+import {Simulation,TYPES,hash,REGULAR_PICKUP_DENSITY} from '../src/simulation.js';
+import {arrangeChunkRoute} from '../src/pickup-routes.js';
+import {readRecord,finishRecord,saveRecord,scorePace} from '../src/run-records.js';
+const chain=new RollChain();
+for(let i=0;i<10;i++){chain.step(.2);chain.pickup(i*.2);}
+assert.equal(chain.count,10);chain.step(2.5);assert.equal(chain.count,10,'A short route gap destroyed the chain');
+chain.step(chain.remaining+.4);assert.ok(chain.fade>0&&chain.fade<1);assert.ok(chain.multiplier<3,'Combo multiplier did not decay gracefully');
+chain.pickup(6);assert.equal(chain.count,11);assert.equal(chain.fade,1);chain.step(8);assert.equal(chain.count,0);
+assert.equal(chain.pickup(20),undefined);assert.equal(chain.count,1);
+const openings=[];
+for(const island of ['oahu','lanai'])for(const seed of [123456,98765,42]){
+ const sim=new Simulation();sim.reset('campaign',island,seed);sim.setDiagnostics(true);
+ const opening=sim.items.filter(i=>i.id.startsWith('opening:'));
+ assert.equal(opening.length,74);assert.equal(REGULAR_PICKUP_DENSITY,.8);
+ assert.ok(opening.filter(i=>i.route==='opening-prize').every(i=>i.size*1.08>.32),'Opening prizes are not honest future targets');
+ for(let i=0;i<240;i++)sim.step(1/60,{x:0,z:-1,boost:false});
+ const metrics=sim.engagement.report(sim);assert.ok(Number.isFinite(metrics.firstPickup)&&metrics.firstPickup<.5,'No immediate collection on the first trail');assert.ok(Number.isFinite(metrics.firstHalfMeter)&&metrics.firstHalfMeter<4,'Opening growth took too long');
+ assert.equal(sim.body.pieces.length,sim.count);assert.equal(sim.body.coreRadius,.16);
+ const remaining=sim.engagement.chain.remaining,elapsed=sim.elapsed;sim.mode='paused';sim.step(5,{x:1,z:0,boost:true});assert.equal(sim.elapsed,elapsed);assert.equal(sim.engagement.chain.remaining,remaining);
+ openings.push({island,seed,firstPickup:metrics.firstPickup,halfMeter:metrics.firstHalfMeter,collected:sim.count});
+ const a=new sim.world.constructor(seed,island),b=new sim.world.constructor(seed,island);
+ a.installObjectives(sim.chapters);b.installObjectives(sim.chapters);a.installLandmarks();b.installLandmarks();
+ const player={x:0,z:0,diameter:.32,visibleRadius:18},ca=a.generate(2,2,player),cb=b.generate(2,2,player);
+ assert.deepEqual(ca.items.map(i=>[i.id,i.type,i.size,i.x,i.z]),cb.items.map(i=>[i.id,i.type,i.size,i.x,i.z]));
+ const ids=ca.items.map(i=>[i.id,i.type,i.size]);arrangeChunkRoute(ca.items,{islandId:island,physical:1,originX:0,originZ:0,cx:2,cz:2},TYPES,hash,[],[]);
+ assert.deepEqual(ca.items.map(i=>[i.id,i.type,i.size]),ids,'Route dressing changed population or physical sizes');
+}
+const sim=new Simulation();sim.reset('quick','oahu',123);sim.world.invalidatePrefetch();sim.world.chunks.clear();sim.world.guards=[{x:0,z:0,radius:10000}];sim.world.legacy=[];sim.world.items=[];sim.world.stamp='';
+for(let i=0;i<600;i++)sim.world.legacy.push({id:'energy:'+i,type:0,size:.12,x:0,z:0,collected:false,visualSeed:0,owner:null});
+sim.world.items=sim.world.legacy;
+for(let i=0;i<120;i++)sim.step(1/60,{x:0,z:0,boost:true});assert.ok(sim.boostEnergy<85,'Pickup chains sustain infinite held dash');assert.ok(sim.boostPickupAwarded<=12);
+const memory=new RollEngagement();
+const fake={elapsed:5,level:0,x:0,z:0,diameter:.5,visibleRadius:18,world:{originX:0n,originZ:0n,collectedIds:new Set(),nearby:()=>[{id:'prize',type:6,name:'Toy car',size:.62,x:.7,z:0}]}};
+memory.observe(fake);assert.ok(memory.prize.blocked);fake.diameter=.62*1.08-.00001;memory.observe(fake);assert.ok(memory.prize.blocked,'Future target unlocked before actual eligibility');
+fake.diameter=.62*1.08;fake.elapsed=6;memory.observe(fake);assert.equal(memory.prize.blocked,false);assert.ok(memory.notice(6).text.includes('now'));
+fake.level=1;fake.diameter/=2;fake.x=-18;fake.world.originX=1n;fake.world.nearby=()=>[];memory.observe(fake);assert.equal(memory.prize.id,'prize','Target memory did not survive rescaling/rebase');
+const data=new Map(),storage={getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)};
+data.set('katamari:oahu:campaign-best',JSON.stringify({score:1000,combo:25,seconds:90}));const previous=readRecord(storage,'oahu','campaign');assert.equal(previous.score,1000);
+const fixture={islandId:'oahu',runMode:'campaign',won:true,score:1100,bestCombo:30,count:200,elapsed:87,chapterStats:[{name:'Snack attack',seconds:18,medal:'Gold'}]};
+const result=finishRecord(fixture,previous,[{time:15,score:100},{time:30,score:200}]);assert.ok(result.labels.includes('FASTEST FINISH'));assert.ok(saveRecord(storage,fixture,result.record));assert.equal(readRecord(storage,'oahu','campaign').seconds,87);
+assert.equal(scorePace(result.record,{elapsed:22.5,score:175}),25);assert.equal(readRecord({getItem:()=>'{broken'},'oahu','campaign'),null);
+const failed=finishRecord({...fixture,won:false,elapsed:10},result.record);assert.equal(failed.record.seconds,87,'A failed run replaced the fastest completion');
+console.log(JSON.stringify({openings,chainGraceDecay:true,finiteDash:true,physicalPrizeEligibility:true,memoryAcrossScale:true,localRecordMigrationAndDeltas:true},null,2));

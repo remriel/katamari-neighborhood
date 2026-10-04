@@ -21,3 +21,9 @@ const LANAI_CHAPTERS=[
   {name:'All of Lānaʻi',size:2500,count:150,type:41,hint:'Collect 150 things, reach 2.5 km, and roll up the marked island.'},
 ];
 export function chaptersForIsland(id){return id==='lanai'?LANAI_CHAPTERS:CHAPTERS;}
+
+const ARCS=['Chain the snack trail. The toys are next.','Turn the traffic into a feast.','The houses have become snacks.','Sweep the landmarks. Leave a ridiculous skyline.','Devour the skyline. Look toward the ridges.','Mountains are food. The island is next.','Finish the island. Make the whole map yours.'];
+export const STAGE_GOLD_SECONDS=[20,40,45,60,65,75,65];
+for(const chapters of [CHAPTERS,LANAI_CHAPTERS])chapters.forEach((chapter,i)=>{chapter.arc=ARCS[i];});
+export function stageMedal(seconds,index){const gold=STAGE_GOLD_SECONDS[index]||60;return seconds<=gold?'Gold':seconds<=gold*1.6?'Silver':seconds<=gold*2.5?'Bronze':'Cleared';}
+export function runGrade(stages,won){if(!won)return'Keep rolling';const points=stages.reduce((sum,s)=>sum+({Gold:3,Silver:2,Bronze:1}[s.medal]||0),0)/Math.max(1,stages.length);return points>=2.6?'S':points>=2?'A':points>=1?'B':'C';}

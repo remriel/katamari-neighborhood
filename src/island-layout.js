@@ -92,20 +92,37 @@ export function islandDistrict(x,z,island='oahu'){
 }
 export function nearestStreet(x,z,island='oahu'){
   let best={distance:Infinity,x,z,nx:1,nz:0,width:3.15};
-  for(const n of islandConfig(island).streets){
+  for(const [network,n] of islandConfig(island).streets.entries()){
     const px=x/n.unit+n.shift[0],pz=z/n.unit+n.shift[1],seed=n.seed;
     const bend=Math.sin(pz*TAU/128+seed)*14+Math.sin(pz*TAU/64+seed*1.7)*5;
     const start=Math.sin(seed)*14+Math.sin(seed*1.7)*5;
     const main=wrap(px-bend+start,64);
     const derivative=14*TAU/128*Math.cos(pz*TAU/128+seed)+5*TAU/64*Math.cos(pz*TAU/64+seed*1.7);
     const norm=Math.hypot(1,derivative),distance=Math.abs(main)*n.unit/norm;
-    if(distance<best.distance)best={distance,x:x-main*n.unit,z,nx:1/norm,nz:-derivative/norm,width:n.width*n.unit*2};
+    if(distance<best.distance)best={distance,x:x-main*n.unit,z,nx:1/norm,nz:-derivative/norm,width:n.width*n.unit*2,network,branch:false,line:Math.round((px-bend+start-main)/64)};
     const branchBend=Math.sin(px*TAU/256+seed*1.3)*15+Math.sin(px*TAU/128+seed)*6;
     const branch=wrap(pz-px*.5-branchBend-32,128),slope=.5+15*TAU/256*Math.cos(px*TAU/256+seed*1.3)+6*TAU/128*Math.cos(px*TAU/128+seed);
     const bn=Math.hypot(1,slope),bd=Math.abs(branch)*n.unit/bn;
-    if(bd<best.distance)best={distance:bd,x,z:z-branch*n.unit,nx:-slope/bn,nz:1/bn,width:n.width*n.unit*2};
+    if(bd<best.distance)best={distance:bd,x,z:z-branch*n.unit,nx:-slope/bn,nz:1/bn,width:n.width*n.unit*2,network,branch:true,line:Math.round((pz-px*.5-branchBend-32-branch)/128)};
   }
   return best;
+}
+// Evaluate one street continuously. Holding the street identity avoids snapping
+// to a different road at intersections while the world streams or normalizes.
+export function streetRoutePoint(route,t,island='oahu'){
+  const n=islandConfig(island).streets[route.network],seed=n.seed;
+  let x,z,tx,tz;
+  if(route.branch){
+    x=t;const px=x/n.unit+n.shift[0];
+    z=(px*.5+Math.sin(px*TAU/256+seed*1.3)*15+Math.sin(px*TAU/128+seed)*6+32+route.line*128-n.shift[1])*n.unit;
+    tx=1;tz=.5+15*TAU/256*Math.cos(px*TAU/256+seed*1.3)+6*TAU/128*Math.cos(px*TAU/128+seed);
+  }else{
+    z=t;const pz=z/n.unit+n.shift[1];
+    x=(Math.sin(pz*TAU/128+seed)*14+Math.sin(pz*TAU/64+seed*1.7)*5-Math.sin(seed)*14-Math.sin(seed*1.7)*5+route.line*64-n.shift[0])*n.unit;
+    tx=14*TAU/128*Math.cos(pz*TAU/128+seed)+5*TAU/64*Math.cos(pz*TAU/64+seed*1.7);tz=1;
+  }
+  const length=Math.hypot(tx,tz);tx/=length;tz/=length;
+  return{x:x+tz*(route.lane||0),z:z-tx*(route.lane||0),tx,tz};
 }
 export const ISLAND_LANDMARKS=[
   ...ISLAND_RIDGES.flatMap((path,range)=>path.map((p,index)=>({type:40,x:p[0],z:p[1],name:(range?'Windward':'Leeward')+' Peak '+(index+1)}))),

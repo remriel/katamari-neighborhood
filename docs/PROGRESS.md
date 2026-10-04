@@ -1,3 +1,56 @@
+# Power-up visibility
+
+- [x] Enlarge all three power models to 3x their previous art scale.
+- [x] Keep a 38 CSS-pixel minimum through zoom/growth and camera-facing symbols.
+- [x] Add emissive models, soft halos, fading beacons and colored ground rings.
+- [x] Include effects in culling, collection/reset cleanup and reduced-motion behavior.
+- [x] Verify real meshes, actor streaming, power behavior, navigation and both island endings.
+- [x] Compile/render the glow shaders offline and inspect the power-up preview.
+
+Release source must be identical on GitHub and Sites, per the user's latest instruction. Publication uses the single production build and `outputs/katamari-neighborhood-v13.tar.gz`; native terminal status, exact commit and version/deployment IDs are recorded in the local `outputs/katamari-neighborhood-v13-release.json` receipt. This lets tracked release notes travel with the same commit as the deployed code. Browser/mobile acceptance remains unverified; the offline preview uses approximate model lighting.
+
+Previous checkpoints follow below.
+
+# Terrain, beaches, variety, HUD and three powers
+
+- [x] Replace grass and add sand artwork with smaller mobile texture payloads.
+- [x] Build beaches with surf/wet sand and 3D coastal collectibles.
+- [x] Add distinct market/garden/highland scenery on both islands without increasing population.
+- [x] Implement real up/down hill rolling, camera/prop elevation and slope effects.
+- [x] Restyle HUD around the first-game reference.
+- [x] Implement exactly three powers: magnet, turbo, lucky star.
+- [x] Verify terrain/powers, actors, navigation, finite campaigns, 170 models and density.
+- [x] Compile/render terrain offline and inspect Blender scenery preview.
+- [x] Build, package, push exact source and publish public Sites version 12.
+- [x] Update GitHub review PR #2 and release evidence.
+
+Public Sites version 12 deployed successfully at 2026-10-03 21:59 PDT / 2026-10-04T04:59:02.951104+00:00. Live: https://katamari-neighborhood.remriel.chatgpt.site. Exact built/pushed source: `b6ee4f3122c5403660c82bac0a0f218cf2b93fff`. Saved version: `appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_a768d1ca8e38819183d5ef982748be2e`. Deployment: `appgdep_6ac1dd069f60819190db38036470280a`, terminal status `succeeded`. Vite transformed 25 modules in one 1.39s production build; the 655.12 kB JS chunk warning is nonfatal.
+
+Local package `outputs/katamari-neighborhood-v12.tar.gz`: 77 files, 5,221,833 compressed bytes, SHA256 `908abe5ca1bb2ae87185509c8128a368f107a24f90f199fc22cdc5271863d956`. Sites normalized tar: 7,823,360 bytes, SHA256 `4b5d9f01759451531f9a53205ed2d5d1a2a95e433430125056173dcbd9f70e67`, artifact `file_000000004dcc81f4850b9f267a8c9f8c`. Review PR #2: https://github.com/remriel/katamari-neighborhood/pull/2, updated to the full living-islands/terrain/power scope, open and unmerged. This release documentation follow-up leaves built game source unchanged.
+
+Browser/mobile gameplay acceptance remains unverified; the linked original UI page is blocked by the cloud proxy. See PROJECT_STATE.md for precise evidence boundaries.
+
+Previous checkpoints follow below.
+
+# Living neighborhoods — cloud update
+
+- [x] Reconcile cloud checkout, GitHub main, and public Sites version 10.
+- [x] Replace surviving props with moving cars, neighbors, cats, dogs, and chickens while preserving .8 population thinning.
+- [x] Create seven supplemental Blender meshes and editable source; inspect asset preview.
+- [x] Verify actor routes, yielding, collection, pile retention, streaming and normalization.
+- [x] Verify navigation recovery, both finite campaigns, and all 139 model meshes.
+- [x] Compare 392 chunks / 13,693 slots to V10: counts and non-actor placements preserved.
+- [x] Build, package, push exact source, and publish public Sites version 11.
+- [x] Push GitHub branch and open review PR #2; record release evidence.
+
+Release: public Sites version 11 deployed successfully on 2026-10-03 at 21:31 PDT (2026-10-04T04:31:07.848047+00:00). Live: https://katamari-neighborhood.remriel.chatgpt.site. Exact built/pushed source: `3863a0d2d0574bb6986675dbb497b8fcfba533eb`. Saved version: `appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_552ec1112f388191a534d7bfc2ec9e4a`. Deployment: `appgdep_6ac1d67c2c008191971e9f52abff08cc`, terminal status `succeeded`. One Vite production build transformed 21 modules in 1.36 seconds; the 647.06 kB main JS chunk warning remains.
+
+Local package `outputs/katamari-neighborhood-v11.tar.gz`: 75 files, 5,407,627 compressed bytes, SHA256 `4a9d1bf76305375e6ff496e16b6bee4916f738ef795825202a77291c95202076`. Sites stores its normalized tar as 7,598,080 bytes, SHA256 `a7398bb3049b3b36d99a3167abe6c724880431d44c3393ba4e822612b95e4dcf`, artifact `file_0000000032cc8210880204f54ccf0b2f`. GitHub review PR #2: https://github.com/remriel/katamari-neighborhood/pull/2, branch `feature/living-neighborhoods`, open and unmerged. This documentation follow-up changes no built game source and does not require a second build or deployment.
+
+Browser/mobile QA is unavailable in this cloud runtime. Physical-device performance and natural campaign pacing remain unverified. The prior build-once restriction belongs to the completed V10 release; this follow-up performed meaningful checks before its production build.
+
+Previous checkpoints follow below.
+
 # Katamari Neighborhood — V10 release complete
 
 Objective: publish the completed Oʻahu/Lānaʻi all-3D game state to Sites, package the production output, push it to GitHub, and merge before further development.

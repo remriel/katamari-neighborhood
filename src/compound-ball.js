@@ -27,7 +27,7 @@ export class CompoundBall{
     // world-space lift and must not be subtracted from this local attachment
     // vector; doing that stacked every new piece downward and inflated the
     // support envelope after only a handful of pickups.
-    const incoming=rotate(normalize([item.x-ballX,item.size*.35,item.z-ballZ]),inverse);
+    const incoming=rotate(normalize([item.x-ballX,item.size*.35+(item.groundOffset||0),item.z-ballZ]),inverse);
     const seed=item.visualSeed>>>0,angle=(seed%65536)/65536*Math.PI*2;
     const noise=normalize([Math.cos(angle),((seed>>>16)/65535-.5)*2,Math.sin(angle)]);
     const direction=normalize(incoming.map((v,i)=>v*.88+noise[i]*.12));
@@ -42,8 +42,8 @@ export class CompoundBall{
     const targetSupport=Math.max(this.coreRadius,targetDiameter*.5);
     const distance=Math.min(this.supportLocal(direction),targetSupport)+Math.min(height*.2,targetDiameter*.15);
     const center=direction.map(v=>v*distance),dimensions=[width,height,depth];
-    const source=rotate([item.x-ballX,height*.5-this.height,item.z-ballZ],inverse);
-    const piece={id:item.id,type:item.type,art:info.art,name:item.name||info.name,size:item.size,visualSeed:item.visualSeed>>>0,center,rotation,dimensions,source,corners:[]};
+    const source=rotate([item.x-ballX,height*.5-this.height+(item.groundOffset||0),item.z-ballZ],inverse);
+    const piece={id:item.id,type:item.type,art:info.art,name:item.name||info.name,size:item.size,importance:item.importance||1,visualSeed:item.visualSeed>>>0,center,rotation,dimensions,source,corners:[]};
     this.pieces.push(piece);this.typeCounts[item.type]=(this.typeCounts[item.type]||0)+1;
     // Surface witnesses form a small contact envelope; interior pieces remain
     // in the complete render assembly even when they no longer support it.
@@ -58,15 +58,15 @@ export class CompoundBall{
     return piece;
   }
   groundSupport(){
-    const q=this.orientation,n=rotate([0,-1,0],[-q[0],-q[1],-q[2],q[3]]);let height=this.coreRadius;
+    const slope=this.slope||[0,0],q=this.orientation,n=rotate([slope[0],-1,slope[1]],[-q[0],-q[1],-q[2],q[3]]);let height=this.coreRadius*Math.hypot(1,...slope);
     for(const piece of this.pieces)for(const p of piece.corners)height=Math.max(height,p[0]*n[0]+p[1]*n[1]+p[2]*n[2]);
     return height;
   }
-  advance(dx,dz,dt){
-    const distance=Math.hypot(dx,dz),speed=distance/Math.max(.001,dt);
-    if(distance>.000001){
+  advance(dx,dz,dt,dy=0){
+    const horizontal=Math.hypot(dx,dz),distance=Math.hypot(dx,dz,dy),speed=distance/Math.max(.001,dt);
+    if(horizontal>.000001){
       const radius=Math.max(this.coreRadius,this.groundSupport()),half=distance/radius*.5;
-      this.orientation=multiply([dz/distance*Math.sin(half),0,-dx/distance*Math.sin(half),Math.cos(half)],this.orientation);
+      this.orientation=multiply([dz/horizontal*Math.sin(half),0,-dx/horizontal*Math.sin(half),Math.cos(half)],this.orientation);
     }
     const ground=this.groundSupport()+Math.max(.0005,this.coreRadius*.1);
     const rise=Math.max(0,ground-this.lastGround);
