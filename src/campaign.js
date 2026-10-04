@@ -11,3 +11,13 @@ export const CHAPTERS=[
 export const CAMPAIGN_START_SECONDS=150;
 export const CHAPTER_BONUS_SECONDS=60;
 export const CAMPAIGN_MAX_SECONDS=600;
+const LANAI_CHAPTERS=[
+  {name:'Town square snacks',size:1,count:20,type:null,hint:'Collect 20 little things in Lānaʻi City and reach 1 m.'},
+  {name:'Village wanderer',size:6,count:45,type:14,hint:'Roll up the village van. Reach 6 m and 45 things.'},
+  {name:'Highland houses',size:30,count:70,type:32,hint:'Roll up the marked village building. Reach 30 m and 70 things.'},
+  {name:'Resort roller',size:120,count:95,type:48,hint:'Roll up the coastal resort. Reach 120 m and 95 things.'},
+  {name:'Rock garden giant',size:500,count:115,type:47,hint:'Roll up a rock spire. Reach 500 m and 115 things.'},
+  {name:'Lānaʻihale lift',size:1800,count:135,type:40,hint:'Roll up Lānaʻihale. Reach 1.8 km and 135 things.'},
+  {name:'All of Lānaʻi',size:2500,count:150,type:41,hint:'Collect 150 things, reach 2.5 km, and roll up the marked island.'},
+];
+export function chaptersForIsland(id){return id==='lanai'?LANAI_CHAPTERS:CHAPTERS;}

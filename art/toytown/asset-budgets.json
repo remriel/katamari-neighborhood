@@ -1,13 +1,396 @@
 {
+  "pickup_00_0": {
+    "type": 0,
+    "family": "candy",
+    "variant": 0,
+    "triangles": 68,
+    "bounds": [
+      1.0,
+      0.6132352941176472,
+      0.5882352941176472
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_00_1": {
+    "type": 0,
+    "family": "candy",
+    "variant": 1,
+    "triangles": 68,
+    "bounds": [
+      1.0,
+      0.6132352941176472,
+      0.5882352941176472
+    ],
+    "pivot": "bottom center"
+  },
+  "0": {
+    "family": "candy",
+    "models": [
+      "pickup_00_0",
+      "pickup_00_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-0.webp"
+  },
+  "pickup_01_0": {
+    "type": 1,
+    "family": "cherries",
+    "variant": 0,
+    "triangles": 82,
+    "bounds": [
+      0.8739559219462828,
+      0.3642857142857143,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_01_1": {
+    "type": 1,
+    "family": "cherries",
+    "variant": 1,
+    "triangles": 82,
+    "bounds": [
+      0.8739559219462828,
+      0.3642857142857143,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "1": {
+    "family": "cherries",
+    "models": [
+      "pickup_01_0",
+      "pickup_01_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-1.webp"
+  },
+  "pickup_02_0": {
+    "type": 2,
+    "family": "mushroom",
+    "variant": 0,
+    "triangles": 104,
+    "bounds": [
+      0.976246818811549,
+      0.9447549859466604,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_02_1": {
+    "type": 2,
+    "family": "mushroom",
+    "variant": 1,
+    "triangles": 104,
+    "bounds": [
+      0.976246818811549,
+      0.9447549859466604,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "2": {
+    "family": "mushroom",
+    "models": [
+      "pickup_02_0",
+      "pickup_02_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-2.webp"
+  },
+  "pickup_03_0": {
+    "type": 3,
+    "family": "donut",
+    "variant": 0,
+    "triangles": 116,
+    "bounds": [
+      1.0,
+      0.9510565162951538,
+      0.2986111044883728
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_03_1": {
+    "type": 3,
+    "family": "donut",
+    "variant": 1,
+    "triangles": 116,
+    "bounds": [
+      1.0,
+      0.9510565162951538,
+      0.2986111044883728
+    ],
+    "pivot": "bottom center"
+  },
+  "3": {
+    "family": "donut",
+    "models": [
+      "pickup_03_0",
+      "pickup_03_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-3.webp"
+  },
+  "pickup_04_0": {
+    "type": 4,
+    "family": "soda",
+    "variant": 0,
+    "triangles": 76,
+    "bounds": [
+      0.6086956521739131,
+      0.6202898550724638,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_04_1": {
+    "type": 4,
+    "family": "soda",
+    "variant": 1,
+    "triangles": 76,
+    "bounds": [
+      0.6086956521739131,
+      0.6202898550724638,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "4": {
+    "family": "soda",
+    "models": [
+      "pickup_04_0",
+      "pickup_04_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-4.webp"
+  },
+  "pickup_05_0": {
+    "type": 5,
+    "family": "milk",
+    "variant": 0,
+    "triangles": 38,
+    "bounds": [
+      0.5454545454545454,
+      0.4441558441558442,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_05_1": {
+    "type": 5,
+    "family": "milk",
+    "variant": 1,
+    "triangles": 38,
+    "bounds": [
+      0.5454545454545454,
+      0.4441558441558442,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "5": {
+    "family": "milk",
+    "models": [
+      "pickup_05_0",
+      "pickup_05_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-5.webp"
+  },
+  "pickup_07_0": {
+    "type": 7,
+    "family": "flowerpot",
+    "variant": 0,
+    "triangles": 102,
+    "bounds": [
+      0.5617977528089888,
+      0.5617977528089888,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_07_1": {
+    "type": 7,
+    "family": "flowerpot",
+    "variant": 1,
+    "triangles": 102,
+    "bounds": [
+      0.5617977528089888,
+      0.5617977528089888,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "7": {
+    "family": "flowerpot",
+    "models": [
+      "pickup_07_0",
+      "pickup_07_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-7.webp"
+  },
+  "pickup_18_0": {
+    "type": 18,
+    "family": "cupcake",
+    "variant": 0,
+    "triangles": 72,
+    "bounds": [
+      0.9433962264150942,
+      0.9433962264150942,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_18_1": {
+    "type": 18,
+    "family": "cupcake",
+    "variant": 1,
+    "triangles": 72,
+    "bounds": [
+      0.9433962264150942,
+      0.9433962264150942,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "18": {
+    "family": "cupcake",
+    "models": [
+      "pickup_18_0",
+      "pickup_18_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-20.webp"
+  },
+  "pickup_19_0": {
+    "type": 19,
+    "family": "sushi",
+    "variant": 0,
+    "triangles": 108,
+    "bounds": [
+      1.0,
+      0.5714285714285714,
+      0.25
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_19_1": {
+    "type": 19,
+    "family": "sushi",
+    "variant": 1,
+    "triangles": 108,
+    "bounds": [
+      1.0,
+      0.5714285714285714,
+      0.25
+    ],
+    "pivot": "bottom center"
+  },
+  "19": {
+    "family": "sushi",
+    "models": [
+      "pickup_19_0",
+      "pickup_19_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-21.webp"
+  },
+  "pickup_20_0": {
+    "type": 20,
+    "family": "teapot",
+    "variant": 0,
+    "triangles": 118,
+    "bounds": [
+      1.0,
+      0.36148487047420647,
+      0.590999073949893
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_20_1": {
+    "type": 20,
+    "family": "teapot",
+    "variant": 1,
+    "triangles": 118,
+    "bounds": [
+      1.0,
+      0.36148487047420647,
+      0.590999073949893
+    ],
+    "pivot": "bottom center"
+  },
+  "20": {
+    "family": "teapot",
+    "models": [
+      "pickup_20_0",
+      "pickup_20_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-22.webp"
+  },
+  "pickup_21_0": {
+    "type": 21,
+    "family": "duck",
+    "variant": 0,
+    "triangles": 64,
+    "bounds": [
+      1.0,
+      0.44517258488524963,
+      0.7749300551706196
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_21_1": {
+    "type": 21,
+    "family": "duck",
+    "variant": 1,
+    "triangles": 64,
+    "bounds": [
+      1.0,
+      0.44517258488524963,
+      0.7749300551706196
+    ],
+    "pivot": "bottom center"
+  },
+  "21": {
+    "family": "duck",
+    "models": [
+      "pickup_21_0",
+      "pickup_21_1"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-23.webp"
+  },
+  "pickup_52_0": {
+    "type": 52,
+    "family": "guide",
+    "variant": 0,
+    "triangles": 430,
+    "bounds": [
+      0.5554926866455332,
+      0.3404159986699555,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "52": {
+    "family": "guide",
+    "models": [
+      "pickup_52_0"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": null
+  },
   "pickup_06_0": {
     "type": 6,
     "family": "car",
     "variant": 0,
-    "triangles": 420,
+    "triangles": 416,
     "bounds": [
       1.0,
       0.6430477117818889,
-      0.7144595910418695
+      0.5805744888023369
     ],
     "pivot": "bottom center"
   },
@@ -15,11 +398,11 @@
     "type": 6,
     "family": "car",
     "variant": 1,
-    "triangles": 420,
+    "triangles": 416,
     "bounds": [
       1.0,
       0.6430477117818889,
-      0.7144595910418695
+      0.5805744888023369
     ],
     "pivot": "bottom center"
   },
@@ -27,11 +410,11 @@
     "type": 6,
     "family": "car",
     "variant": 2,
-    "triangles": 420,
+    "triangles": 416,
     "bounds": [
       1.0,
       0.6430477117818889,
-      0.7144595910418695
+      0.5805744888023369
     ],
     "pivot": "bottom center"
   },
@@ -117,8 +500,8 @@
     "variant": 0,
     "triangles": 136,
     "bounds": [
-      0.868421052631579,
-      0.8157894736842105,
+      0.9565217391304349,
+      0.8985507246376813,
       1.0
     ],
     "pivot": "bottom center"
@@ -129,8 +512,8 @@
     "variant": 1,
     "triangles": 136,
     "bounds": [
-      0.868421052631579,
-      0.8157894736842105,
+      0.9565217391304349,
+      0.8985507246376813,
       1.0
     ],
     "pivot": "bottom center"
@@ -148,7 +531,7 @@
     "type": 11,
     "family": "bike",
     "variant": 0,
-    "triangles": 388,
+    "triangles": 532,
     "bounds": [
       1.0,
       0.10471203954432022,
@@ -160,7 +543,7 @@
     "type": 11,
     "family": "bike",
     "variant": 1,
-    "triangles": 388,
+    "triangles": 532,
     "bounds": [
       1.0,
       0.10471203954432022,
@@ -229,8 +612,8 @@
     "variant": 0,
     "triangles": 388,
     "bounds": [
-      0.6434782608695653,
-      0.41478260869565226,
+      0.8131868131868131,
+      0.5241758241758241,
       1.0
     ],
     "pivot": "bottom center"
@@ -241,8 +624,8 @@
     "variant": 1,
     "triangles": 388,
     "bounds": [
-      0.6434782608695653,
-      0.41478260869565226,
+      0.8131868131868131,
+      0.5241758241758241,
       1.0
     ],
     "pivot": "bottom center"
@@ -260,11 +643,11 @@
     "type": 14,
     "family": "van",
     "variant": 0,
-    "triangles": 448,
+    "triangles": 444,
     "bounds": [
       1.0,
       0.612059574468085,
-      0.7021276595744682
+      0.5531914893617021
     ],
     "pivot": "bottom center"
   },
@@ -272,11 +655,11 @@
     "type": 14,
     "family": "van",
     "variant": 1,
-    "triangles": 448,
+    "triangles": 444,
     "bounds": [
       1.0,
       0.612059574468085,
-      0.7021276595744682
+      0.5531914893617021
     ],
     "pivot": "bottom center"
   },
@@ -293,11 +676,11 @@
     "type": 15,
     "family": "house",
     "variant": 0,
-    "triangles": 390,
+    "triangles": 214,
     "bounds": [
-      0.8955223880597014,
-      0.9900497512437809,
-      1.0
+      0.9468085106382979,
+      1.0,
+      0.9999999999999999
     ],
     "pivot": "bottom center"
   },
@@ -305,11 +688,11 @@
     "type": 15,
     "family": "house",
     "variant": 1,
-    "triangles": 334,
+    "triangles": 156,
     "bounds": [
-      0.9045226130653268,
+      0.82,
       1.0,
-      0.9095477386934674
+      0.9299999999999999
     ],
     "pivot": "bottom center"
   },
@@ -317,11 +700,11 @@
     "type": 15,
     "family": "house",
     "variant": 2,
-    "triangles": 418,
+    "triangles": 274,
     "bounds": [
-      0.8955223880597014,
-      0.9900497512437809,
-      1.0
+      1.0,
+      0.946808510638298,
+      0.9335106382978723
     ],
     "pivot": "bottom center"
   },
@@ -341,8 +724,8 @@
     "variant": 0,
     "triangles": 190,
     "bounds": [
-      0.7972228396175565,
-      0.5287175604818206,
+      0.7822045129685601,
+      0.48049494112494867,
       1.0
     ],
     "pivot": "bottom center"
@@ -353,8 +736,8 @@
     "variant": 1,
     "triangles": 190,
     "bounds": [
-      0.7972228396175565,
-      0.5287175604818206,
+      0.8105497349711395,
+      0.5134708105478449,
       1.0
     ],
     "pivot": "bottom center"
@@ -365,8 +748,8 @@
     "variant": 2,
     "triangles": 190,
     "bounds": [
-      0.7972228396175565,
-      0.5287175604818206,
+      0.8388394434171135,
+      0.5463820973827607,
       1.0
     ],
     "pivot": "bottom center"
@@ -389,7 +772,7 @@
     "bounds": [
       1.0,
       0.7093023255813954,
-      0.6046511627906977
+      0.6511627906976745
     ],
     "pivot": "bottom center"
   },
@@ -401,7 +784,7 @@
     "bounds": [
       1.0,
       0.7093023255813954,
-      0.6046511627906977
+      0.6511627906976745
     ],
     "pivot": "bottom center"
   },
@@ -422,7 +805,7 @@
     "bounds": [
       1.0,
       0.42000000000000004,
-      0.4126181516572732
+      0.3676181516572732
     ],
     "pivot": "bottom center"
   },
@@ -434,7 +817,7 @@
     "bounds": [
       1.0,
       0.42000000000000004,
-      0.4126181516572732
+      0.3676181516572732
     ],
     "pivot": "bottom center"
   },
@@ -486,9 +869,9 @@
     "variant": 0,
     "triangles": 192,
     "bounds": [
-      0.7355371900826446,
-      0.5371900826446281,
-      1.0
+      1.0,
+      0.7303370786516853,
+      0.9943820224719101
     ],
     "pivot": "bottom center"
   },
@@ -498,9 +881,9 @@
     "variant": 1,
     "triangles": 192,
     "bounds": [
-      0.7355371900826446,
-      0.5371900826446281,
-      1.0
+      1.0,
+      0.7303370786516853,
+      0.9943820224719101
     ],
     "pivot": "bottom center"
   },
@@ -519,8 +902,8 @@
     "variant": 0,
     "triangles": 244,
     "bounds": [
-      0.6115171828206405,
-      0.2801143224533257,
+      0.8362875911335717,
+      0.3830736707773135,
       1.0
     ],
     "pivot": "bottom center"
@@ -531,8 +914,8 @@
     "variant": 1,
     "triangles": 244,
     "bounds": [
-      0.6115171828206405,
-      0.2801143224533257,
+      0.8362875911335717,
+      0.3830736707773135,
       1.0
     ],
     "pivot": "bottom center"
@@ -552,8 +935,8 @@
     "variant": 0,
     "triangles": 160,
     "bounds": [
-      0.49707602339181295,
-      0.3508771929824561,
+      0.5074626865671643,
+      0.35820895522388063,
       1.0
     ],
     "pivot": "bottom center"
@@ -564,8 +947,8 @@
     "variant": 1,
     "triangles": 160,
     "bounds": [
-      0.49707602339181295,
-      0.3508771929824561,
+      0.5074626865671643,
+      0.35820895522388063,
       1.0
     ],
     "pivot": "bottom center"
@@ -576,8 +959,8 @@
     "variant": 2,
     "triangles": 160,
     "bounds": [
-      0.49707602339181295,
-      0.3508771929824561,
+      0.5074626865671643,
+      0.35820895522388063,
       1.0
     ],
     "pivot": "bottom center"
@@ -600,7 +983,7 @@
     "bounds": [
       1.0,
       0.6595092024539878,
-      0.9969325153374232
+      0.9739263803680981
     ],
     "pivot": "bottom center"
   },
@@ -612,7 +995,7 @@
     "bounds": [
       1.0,
       0.6595092024539878,
-      0.9969325153374232
+      0.9739263803680981
     ],
     "pivot": "bottom center"
   },
@@ -624,7 +1007,7 @@
     "bounds": [
       1.0,
       0.6595092024539878,
-      0.9969325153374232
+      0.9739263803680981
     ],
     "pivot": "bottom center"
   },
@@ -644,8 +1027,8 @@
     "variant": 0,
     "triangles": 440,
     "bounds": [
-      0.6,
-      0.5375000000000001,
+      0.7598944591029023,
+      0.6807387862796834,
       1.0
     ],
     "pivot": "bottom center"
@@ -656,8 +1039,8 @@
     "variant": 1,
     "triangles": 440,
     "bounds": [
-      0.6,
-      0.5375000000000001,
+      0.7598944591029023,
+      0.6807387862796834,
       1.0
     ],
     "pivot": "bottom center"
@@ -675,11 +1058,11 @@
     "type": 29,
     "family": "convertible",
     "variant": 0,
-    "triangles": 476,
+    "triangles": 532,
     "bounds": [
       1.0,
       0.7002629016553066,
-      0.7874878286270691
+      0.5988315481986368
     ],
     "pivot": "bottom center"
   },
@@ -687,11 +1070,11 @@
     "type": 29,
     "family": "convertible",
     "variant": 1,
-    "triangles": 476,
+    "triangles": 532,
     "bounds": [
       1.0,
       0.7002629016553066,
-      0.7874878286270691
+      0.5988315481986368
     ],
     "pivot": "bottom center"
   },
@@ -699,11 +1082,11 @@
     "type": 29,
     "family": "convertible",
     "variant": 2,
-    "triangles": 476,
+    "triangles": 532,
     "bounds": [
       1.0,
       0.7002629016553066,
-      0.7874878286270691
+      0.5988315481986368
     ],
     "pivot": "bottom center"
   },
@@ -721,11 +1104,11 @@
     "type": 30,
     "family": "bus",
     "variant": 0,
-    "triangles": 588,
+    "triangles": 584,
     "bounds": [
       1.0,
       0.612059574468085,
-      0.7021276595744682
+      0.602127659574468
     ],
     "pivot": "bottom center"
   },
@@ -733,11 +1116,11 @@
     "type": 30,
     "family": "bus",
     "variant": 1,
-    "triangles": 588,
+    "triangles": 584,
     "bounds": [
       1.0,
       0.612059574468085,
-      0.7021276595744682
+      0.602127659574468
     ],
     "pivot": "bottom center"
   },
@@ -745,11 +1128,11 @@
     "type": 30,
     "family": "bus",
     "variant": 2,
-    "triangles": 588,
+    "triangles": 584,
     "bounds": [
       1.0,
       0.612059574468085,
-      0.7021276595744682
+      0.602127659574468
     ],
     "pivot": "bottom center"
   },
@@ -813,10 +1196,10 @@
     "type": 32,
     "family": "apartment",
     "variant": 0,
-    "triangles": 1300,
+    "triangles": 588,
     "bounds": [
-      0.6370967741935483,
-      0.6311358472993296,
+      0.7919799498746868,
+      0.8320802005012532,
       1.0
     ],
     "pivot": "bottom center"
@@ -825,10 +1208,10 @@
     "type": 32,
     "family": "apartment",
     "variant": 1,
-    "triangles": 1300,
+    "triangles": 588,
     "bounds": [
-      0.6370967741935483,
-      0.6311358472993296,
+      0.7919799498746868,
+      0.8320802005012532,
       1.0
     ],
     "pivot": "bottom center"
@@ -837,10 +1220,10 @@
     "type": 32,
     "family": "apartment",
     "variant": 2,
-    "triangles": 1300,
+    "triangles": 588,
     "bounds": [
-      0.6370967741935483,
-      0.6311358472993296,
+      0.7919799498746868,
+      0.8320802005012532,
       1.0
     ],
     "pivot": "bottom center"
@@ -859,10 +1242,10 @@
     "type": 33,
     "family": "windmill",
     "variant": 0,
-    "triangles": 548,
+    "triangles": 292,
     "bounds": [
-      0.5671702226459779,
-      0.4801230184539421,
+      0.7475799501316236,
+      0.5337905498918313,
       1.0
     ],
     "pivot": "bottom center"
@@ -871,10 +1254,10 @@
     "type": 33,
     "family": "windmill",
     "variant": 1,
-    "triangles": 548,
+    "triangles": 292,
     "bounds": [
-      0.5671702226459779,
-      0.4801230184539421,
+      0.7475799501316236,
+      0.5337905498918313,
       1.0
     ],
     "pivot": "bottom center"
@@ -892,10 +1275,10 @@
     "type": 34,
     "family": "ferris",
     "variant": 0,
-    "triangles": 900,
+    "triangles": 996,
     "bounds": [
-      0.8889191093117519,
-      0.333344665991907,
+      0.88724584103512,
+      0.33271719038817005,
       1.0
     ],
     "pivot": "bottom center"
@@ -904,10 +1287,10 @@
     "type": 34,
     "family": "ferris",
     "variant": 1,
-    "triangles": 900,
+    "triangles": 996,
     "bounds": [
-      0.8889191093117519,
-      0.333344665991907,
+      0.88724584103512,
+      0.33271719038817005,
       1.0
     ],
     "pivot": "bottom center"
@@ -916,10 +1299,10 @@
     "type": 34,
     "family": "ferris",
     "variant": 2,
-    "triangles": 900,
+    "triangles": 996,
     "bounds": [
-      0.8889191093117519,
-      0.333344665991907,
+      0.88724584103512,
+      0.33271719038817005,
       1.0
     ],
     "pivot": "bottom center"
@@ -938,7 +1321,7 @@
     "type": 35,
     "family": "watertower",
     "variant": 0,
-    "triangles": 396,
+    "triangles": 468,
     "bounds": [
       0.5644000114440918,
       0.48694093634311864,
@@ -950,7 +1333,7 @@
     "type": 35,
     "family": "watertower",
     "variant": 1,
-    "triangles": 396,
+    "triangles": 468,
     "bounds": [
       0.5644000114440918,
       0.48694093634311864,
@@ -962,7 +1345,7 @@
     "type": 35,
     "family": "watertower",
     "variant": 2,
-    "triangles": 396,
+    "triangles": 468,
     "bounds": [
       0.5644000114440918,
       0.48694093634311864,
@@ -984,7 +1367,7 @@
     "type": 36,
     "family": "clocktower",
     "variant": 0,
-    "triangles": 488,
+    "triangles": 352,
     "bounds": [
       0.5172413793103449,
       0.5172413793103449,
@@ -996,7 +1379,7 @@
     "type": 36,
     "family": "clocktower",
     "variant": 1,
-    "triangles": 488,
+    "triangles": 352,
     "bounds": [
       0.5172413793103449,
       0.5172413793103449,
@@ -1008,7 +1391,7 @@
     "type": 36,
     "family": "clocktower",
     "variant": 2,
-    "triangles": 488,
+    "triangles": 352,
     "bounds": [
       0.5172413793103449,
       0.5172413793103449,
@@ -1030,10 +1413,10 @@
     "type": 37,
     "family": "castle",
     "variant": 0,
-    "triangles": 768,
+    "triangles": 608,
     "bounds": [
-      0.6553265244760486,
-      0.5145563772452123,
+      0.6196866582882621,
+      0.4865722811554746,
       1.0
     ],
     "pivot": "bottom center"
@@ -1042,10 +1425,10 @@
     "type": 37,
     "family": "castle",
     "variant": 1,
-    "triangles": 768,
+    "triangles": 608,
     "bounds": [
-      0.6553265244760486,
-      0.5145563772452123,
+      0.6196866582882621,
+      0.4865722811554746,
       1.0
     ],
     "pivot": "bottom center"
@@ -1054,10 +1437,10 @@
     "type": 37,
     "family": "castle",
     "variant": 2,
-    "triangles": 768,
+    "triangles": 608,
     "bounds": [
-      0.6553265244760486,
-      0.5145563772452123,
+      0.6196866582882621,
+      0.4865722811554746,
       1.0
     ],
     "pivot": "bottom center"
@@ -1076,11 +1459,11 @@
     "type": 38,
     "family": "stadium",
     "variant": 0,
-    "triangles": 392,
+    "triangles": 380,
     "bounds": [
-      0.9885057471264368,
-      0.9770114942528736,
-      1.0
+      1.0,
+      0.7857142857142857,
+      0.826530612244898
     ],
     "pivot": "bottom center"
   },
@@ -1088,11 +1471,11 @@
     "type": 38,
     "family": "stadium",
     "variant": 1,
-    "triangles": 392,
+    "triangles": 380,
     "bounds": [
-      0.9885057471264368,
-      0.9770114942528736,
-      1.0
+      1.0,
+      0.7857142857142857,
+      0.826530612244898
     ],
     "pivot": "bottom center"
   },
@@ -1109,10 +1492,10 @@
     "type": 39,
     "family": "skyscraper",
     "variant": 0,
-    "triangles": 496,
+    "triangles": 544,
     "bounds": [
-      0.5526315789473684,
-      0.5285087719298245,
+      0.5278688524590164,
+      0.4954918032786886,
       1.0
     ],
     "pivot": "bottom center"
@@ -1121,10 +1504,10 @@
     "type": 39,
     "family": "skyscraper",
     "variant": 1,
-    "triangles": 496,
+    "triangles": 544,
     "bounds": [
-      0.5526315789473684,
-      0.5285087719298245,
+      0.5278688524590164,
+      0.4954918032786886,
       1.0
     ],
     "pivot": "bottom center"
@@ -1133,10 +1516,10 @@
     "type": 39,
     "family": "skyscraper",
     "variant": 2,
-    "triangles": 496,
+    "triangles": 544,
     "bounds": [
-      0.5526315789473684,
-      0.5285087719298245,
+      0.5278688524590164,
+      0.4954918032786886,
       1.0
     ],
     "pivot": "bottom center"
@@ -1155,11 +1538,11 @@
     "type": 40,
     "family": "mountain",
     "variant": 0,
-    "triangles": 82,
+    "triangles": 142,
     "bounds": [
       1.0,
       0.9375000000000001,
-      0.421875
+      0.5951400719183209
     ],
     "pivot": "bottom center"
   },
@@ -1167,11 +1550,11 @@
     "type": 40,
     "family": "mountain",
     "variant": 1,
-    "triangles": 82,
+    "triangles": 142,
     "bounds": [
       1.0,
       0.9375000000000001,
-      0.421875
+      0.6263192654946226
     ],
     "pivot": "bottom center"
   },
@@ -1179,11 +1562,11 @@
     "type": 40,
     "family": "mountain",
     "variant": 2,
-    "triangles": 82,
+    "triangles": 142,
     "bounds": [
       1.0,
       0.9375000000000001,
-      0.421875
+      0.5748711151290441
     ],
     "pivot": "bottom center"
   },
@@ -1201,11 +1584,11 @@
     "type": 41,
     "family": "island",
     "variant": 0,
-    "triangles": 244,
+    "triangles": 1789,
     "bounds": [
-      0.9938185546219909,
       1.0,
-      0.6065813914549498
+      0.7074468085106383,
+      0.4551111111111111
     ],
     "pivot": "bottom center"
   },
@@ -1213,11 +1596,11 @@
     "type": 41,
     "family": "island",
     "variant": 1,
-    "triangles": 312,
+    "triangles": 1240,
     "bounds": [
       1.0,
-      0.9431266965273398,
-      0.5985104844434715
+      0.9777777777777777,
+      0.48444444444444446
     ],
     "pivot": "bottom center"
   },
@@ -1225,11 +1608,11 @@
     "type": 41,
     "family": "island",
     "variant": 2,
-    "triangles": 380,
+    "triangles": 1849,
     "bounds": [
       1.0,
-      0.9654559706875819,
-      0.573856411182475
+      0.7074468085106383,
+      0.4551111111111111
     ],
     "pivot": "bottom center"
   },
@@ -1242,5 +1625,465 @@
     ],
     "minScreenPixels": 30,
     "sourceArtwork": "/assets/prop-43.webp"
+  },
+  "pickup_42_0": {
+    "type": 42,
+    "family": "mailbox",
+    "variant": 0,
+    "triangles": 208,
+    "bounds": [
+      0.7287234061036298,
+      0.3824468094806641,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_42_1": {
+    "type": 42,
+    "family": "mailbox",
+    "variant": 1,
+    "triangles": 208,
+    "bounds": [
+      0.7287234061036298,
+      0.3824468094806641,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_42_2": {
+    "type": 42,
+    "family": "mailbox",
+    "variant": 2,
+    "triangles": 208,
+    "bounds": [
+      0.7287234061036298,
+      0.3824468094806641,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "42": {
+    "family": "mailbox",
+    "models": [
+      "pickup_42_0",
+      "pickup_42_1",
+      "pickup_42_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-44.webp"
+  },
+  "pickup_43_0": {
+    "type": 43,
+    "family": "sign",
+    "variant": 0,
+    "triangles": 109,
+    "bounds": [
+      0.7362637362637363,
+      0.21426987080919202,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_43_1": {
+    "type": 43,
+    "family": "sign",
+    "variant": 1,
+    "triangles": 109,
+    "bounds": [
+      0.7362637362637363,
+      0.21426987080919202,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_43_2": {
+    "type": 43,
+    "family": "sign",
+    "variant": 2,
+    "triangles": 109,
+    "bounds": [
+      0.7362637362637363,
+      0.21426987080919202,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "43": {
+    "family": "sign",
+    "models": [
+      "pickup_43_0",
+      "pickup_43_1",
+      "pickup_43_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-45.webp"
+  },
+  "pickup_44_0": {
+    "type": 44,
+    "family": "bin",
+    "variant": 0,
+    "triangles": 224,
+    "bounds": [
+      0.7315634218289087,
+      0.7067846452943696,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_44_1": {
+    "type": 44,
+    "family": "bin",
+    "variant": 1,
+    "triangles": 224,
+    "bounds": [
+      0.7315634218289087,
+      0.7067846452943696,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_44_2": {
+    "type": 44,
+    "family": "bin",
+    "variant": 2,
+    "triangles": 224,
+    "bounds": [
+      0.7315634218289087,
+      0.7067846452943696,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "44": {
+    "family": "bin",
+    "models": [
+      "pickup_44_0",
+      "pickup_44_1",
+      "pickup_44_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-46.webp"
+  },
+  "pickup_45_0": {
+    "type": 45,
+    "family": "hydrant",
+    "variant": 0,
+    "triangles": 264,
+    "bounds": [
+      0.7999999999999999,
+      0.5514923416868366,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_45_1": {
+    "type": 45,
+    "family": "hydrant",
+    "variant": 1,
+    "triangles": 264,
+    "bounds": [
+      0.7999999999999999,
+      0.5514923416868366,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_45_2": {
+    "type": 45,
+    "family": "hydrant",
+    "variant": 2,
+    "triangles": 264,
+    "bounds": [
+      0.7999999999999999,
+      0.5514923416868366,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "45": {
+    "family": "hydrant",
+    "models": [
+      "pickup_45_0",
+      "pickup_45_1",
+      "pickup_45_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-47.webp"
+  },
+  "pickup_46_0": {
+    "type": 46,
+    "family": "truck",
+    "variant": 0,
+    "triangles": 456,
+    "bounds": [
+      1.0,
+      0.5625688073394495,
+      0.68348623853211
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_46_1": {
+    "type": 46,
+    "family": "truck",
+    "variant": 1,
+    "triangles": 484,
+    "bounds": [
+      1.0,
+      0.5812322274881515,
+      0.5829383886255923
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_46_2": {
+    "type": 46,
+    "family": "truck",
+    "variant": 2,
+    "triangles": 456,
+    "bounds": [
+      1.0,
+      0.5625688073394495,
+      0.68348623853211
+    ],
+    "pivot": "bottom center"
+  },
+  "46": {
+    "family": "truck",
+    "models": [
+      "pickup_46_0",
+      "pickup_46_1",
+      "pickup_46_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-48.webp"
+  },
+  "pickup_47_0": {
+    "type": 47,
+    "family": "rockspire",
+    "variant": 0,
+    "triangles": 152,
+    "bounds": [
+      0.762808775852806,
+      0.5454545454545455,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_47_1": {
+    "type": 47,
+    "family": "rockspire",
+    "variant": 1,
+    "triangles": 152,
+    "bounds": [
+      0.762808775852806,
+      0.5454545454545455,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_47_2": {
+    "type": 47,
+    "family": "rockspire",
+    "variant": 2,
+    "triangles": 152,
+    "bounds": [
+      0.762808775852806,
+      0.5454545454545455,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "47": {
+    "family": "rockspire",
+    "models": [
+      "pickup_47_0",
+      "pickup_47_1",
+      "pickup_47_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-49.webp"
+  },
+  "pickup_48_0": {
+    "type": 48,
+    "family": "resort",
+    "variant": 0,
+    "triangles": 1280,
+    "bounds": [
+      1.0,
+      0.7983680799659726,
+      0.38171973823373073
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_48_1": {
+    "type": 48,
+    "family": "resort",
+    "variant": 1,
+    "triangles": 1280,
+    "bounds": [
+      1.0,
+      0.8050026422406198,
+      0.37731196054254007
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_48_2": {
+    "type": 48,
+    "family": "resort",
+    "variant": 2,
+    "triangles": 1280,
+    "bounds": [
+      1.0,
+      0.7790893760539628,
+      0.3612141652613828
+    ],
+    "pivot": "bottom center"
+  },
+  "48": {
+    "family": "resort",
+    "models": [
+      "pickup_48_0",
+      "pickup_48_1",
+      "pickup_48_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-50.webp"
+  },
+  "pickup_49_0": {
+    "type": 49,
+    "family": "cliff",
+    "variant": 0,
+    "triangles": 154,
+    "bounds": [
+      1.0,
+      0.9375000000000001,
+      0.7691100482608418
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_49_1": {
+    "type": 49,
+    "family": "cliff",
+    "variant": 1,
+    "triangles": 154,
+    "bounds": [
+      1.0,
+      0.9375000000000001,
+      0.7545078691483873
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_49_2": {
+    "type": 49,
+    "family": "cliff",
+    "variant": 2,
+    "triangles": 154,
+    "bounds": [
+      1.0,
+      0.9375000000000001,
+      0.7949177946282014
+    ],
+    "pivot": "bottom center"
+  },
+  "49": {
+    "family": "cliff",
+    "models": [
+      "pickup_49_0",
+      "pickup_49_1",
+      "pickup_49_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-51.webp"
+  },
+  "pickup_50_0": {
+    "type": 50,
+    "family": "pine",
+    "variant": 0,
+    "triangles": 328,
+    "bounds": [
+      0.5523809523809523,
+      0.5523809523809523,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_50_1": {
+    "type": 50,
+    "family": "pine",
+    "variant": 1,
+    "triangles": 328,
+    "bounds": [
+      0.5523809523809523,
+      0.5523809523809523,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_50_2": {
+    "type": 50,
+    "family": "pine",
+    "variant": 2,
+    "triangles": 328,
+    "bounds": [
+      0.5523809523809523,
+      0.5523809523809523,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "50": {
+    "family": "pine",
+    "models": [
+      "pickup_50_0",
+      "pickup_50_1",
+      "pickup_50_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-52.webp"
+  },
+  "pickup_51_0": {
+    "type": 51,
+    "family": "palm",
+    "variant": 0,
+    "triangles": 284,
+    "bounds": [
+      0.9567219090430953,
+      0.9813257955678132,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_51_1": {
+    "type": 51,
+    "family": "palm",
+    "variant": 1,
+    "triangles": 284,
+    "bounds": [
+      0.9582661378391599,
+      0.9829097370846878,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "pickup_51_2": {
+    "type": 51,
+    "family": "palm",
+    "variant": 2,
+    "triangles": 284,
+    "bounds": [
+      0.9556482433721036,
+      0.9802245185835602,
+      1.0
+    ],
+    "pivot": "bottom center"
+  },
+  "51": {
+    "family": "palm",
+    "models": [
+      "pickup_51_0",
+      "pickup_51_1",
+      "pickup_51_2"
+    ],
+    "minScreenPixels": 30,
+    "sourceArtwork": "/assets/prop-53.webp"
   }
 }

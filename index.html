@@ -44,10 +44,14 @@
     <div class="desktop-help">WASD / arrows to roll <b>·</b> Shift to dash <b>·</b> Q / E rotate <b>·</b> Esc pause</div>
     <section id="menu" class="menu-layer" aria-label="Start game">
       <div class="menu-card">
-        <span class="map-kicker">ONE ISLAND · SEVEN GLORIOUS STAGES</span>
+        <span class="map-kicker">HAWAII · TWO ISLANDS · SEVEN STAGES EACH</span>
         <h1>Build a<br><em>monstrosity.</em></h1>
         <p class="menu-description">Everything sticks. Every lump changes the roll.<br>Beat the goals. Earn time. Roll up the whole island.</p>
-        <div class="map-pill"><span class="map-dot"></span> Sunny Side Island <span>01</span></div>
+        <div class="island-selector" role="group" aria-label="Choose an island">
+          <button id="island-oahu" class="island-choice selected" aria-pressed="true"><img src="/assets/oahu-overview.png" alt=""><span><strong>Oʻahu</strong><small>City, coast & ridges</small></span></button>
+          <button id="island-lanai" class="island-choice" aria-pressed="false"><img src="/assets/lanai-overview.png" alt=""><span><strong>Lānaʻi</strong><small>Town & wild highlands</small></span></button>
+        </div>
+        <div class="map-pill"><span class="map-dot"></span><span id="selected-island-name">Oʻahu</span><span>01 / 02</span></div>
         <button id="start" class="primary-button" disabled>Preparing your neighborhood…</button>
         <button id="free" class="text-button" disabled>Try the 4 minute challenge</button>
         <p class="start-hint">Start with 2:30. Finish each stage for +60 seconds.<br>Build combos. Pickups recharge your dash.<br>Drag the thumbstick to roll. Hold GO! to dash.</p>
@@ -55,10 +59,10 @@
       </div>
     </section>
     <section id="pause-menu" class="menu-layer hidden" aria-label="Game paused">
-      <div class="menu-card compact"><span class="map-kicker">TAKE YOUR TIME</span><h2>Just a<br><em>little pause.</em></h2><p>Your neighborhood is right where you left it.</p><button id="resume" class="primary-button">Keep rolling</button><button id="restart" class="text-button">Start a fresh roll</button></div>
+      <div class="menu-card compact"><span class="map-kicker">TAKE YOUR TIME</span><h2>Just a<br><em>little pause.</em></h2><p>Your neighborhood is right where you left it.</p><button id="resume" class="primary-button">Keep rolling</button><button id="restart" class="text-button">Start a fresh roll</button><button id="choose-island" class="text-button">Choose an island</button></div>
     </section>
     <section id="result-menu" class="menu-layer hidden" aria-label="Round results">
-      <div class="menu-card compact"><span id="result-kicker" class="map-kicker">A GLORIOUS HEAP OF STUFF</span><h2 id="result-title">What a<br><em>monstrosity.</em></h2><div class="result-stats"><div><strong id="result-size">0</strong><span>FINAL SIZE</span></div><div><strong id="result-count">0</strong><span>STUCK OBJECTS</span></div><div><strong id="result-score">0</strong><span>FINAL SCORE</span></div><div><strong id="result-combo">0</strong><span>BEST STREAK</span></div></div><p id="result-text"></p><p id="result-record" class="result-record"></p><div id="stage-recap" class="stage-recap"></div><button id="again" class="primary-button">Roll the island again</button><button id="continue" class="text-button">Admire your finished monstrosity</button></div>
+      <div class="menu-card compact"><span id="result-kicker" class="map-kicker">A GLORIOUS HEAP OF STUFF</span><h2 id="result-title">What a<br><em>monstrosity.</em></h2><div class="result-stats"><div><strong id="result-size">0</strong><span>FINAL SIZE</span></div><div><strong id="result-count">0</strong><span>STUCK OBJECTS</span></div><div><strong id="result-score">0</strong><span>FINAL SCORE</span></div><div><strong id="result-combo">0</strong><span>BEST STREAK</span></div></div><p id="result-text"></p><p id="result-record" class="result-record"></p><div id="stage-recap" class="stage-recap"></div><button id="next-island" class="primary-button hidden">Next island · Lānaʻi</button><button id="again" class="primary-button">Roll the island again</button><button id="continue" class="text-button">Admire your finished monstrosity</button></div>
     </section>
     <section id="error" class="menu-layer hidden" role="alert"><div class="menu-card compact"><h2>A little<br><em>hiccup.</em></h2><p id="error-text">Your browser couldn't start the game.</p><button onclick="location.reload()" class="primary-button">Try again</button></div></section>
     <aside id="performance-hud" class="performance-hud" aria-label="Developer rendering performance" hidden>

@@ -1,0 +1,10 @@
+.island-selector{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0 10px}
+.island-choice{display:flex;align-items:center;gap:7px;padding:8px 7px;min-height:65px;border:2px solid #d0dabb;border-radius:13px;background:#f4f4df;box-shadow:0 3px 0 #c0cbaa;text-align:left;color:#254b38;cursor:pointer}
+.island-choice.selected{border-color:#497b57;background:#e7efca;box-shadow:0 3px 0 #497b57}
+.island-choice img{width:43px;height:43px;border-radius:9px;object-fit:cover}
+.island-choice strong{display:block;font-size:14px;line-height:1.25}
+.island-choice small{display:block;font-size:8px;line-height:1.3;margin-top:3px;color:#5a7151}
+.island-choice:focus-visible{outline:3px solid #d85d7d;outline-offset:3px}
+.menu-layer{overflow-y:auto}
+@media(max-height:740px){.menu-card{padding:22px}.menu-card h1{font-size:45px}.menu-description{font-size:12px}.start-hint{font-size:10px}.island-selector{margin:11px 0 8px}.island-choice{min-height:55px}.island-choice img{width:36px;height:36px}}
+@media(max-height:600px){.menu-layer{align-items:flex-start;padding-top:16px;padding-bottom:16px}.menu-card{margin:auto}.menu-card h1{font-size:38px}.menu-description{margin:8px 0}.island-selector{margin:8px 0}.map-pill{margin-bottom:10px}.start-hint{margin-top:9px}}

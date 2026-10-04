@@ -21,7 +21,7 @@ export class CompoundBall{
   }
   supportLocal(n){let extent=this.coreRadius;for(const p of this.points)extent=Math.max(extent,p[0]*n[0]+p[1]*n[1]+p[2]*n[2]);return extent;}
   supportWorld(x,y,z){const q=this.orientation;return this.supportLocal(rotate([x,y,z],[-q[0],-q[1],-q[2],q[3]]));}
-  attach(item,info,ratio,ballX,ballZ,targetDiameter=this.boundRadius*2){
+  attach(item,info,ratio,ballX,ballZ,targetDiameter=this.boundRadius*2,modelBounds=null){
     const inverse=[-this.orientation[0],-this.orientation[1],-this.orientation[2],this.orientation[3]];
     // Item and ball positions share the ground plane. `height` is the ball's
     // world-space lift and must not be subtracted from this local attachment
@@ -31,7 +31,9 @@ export class CompoundBall{
     const seed=item.visualSeed>>>0,angle=(seed%65536)/65536*Math.PI*2;
     const noise=normalize([Math.cos(angle),((seed>>>16)/65535-.5)*2,Math.sin(angle)]);
     const direction=normalize(incoming.map((v,i)=>v*.88+noise[i]*.12));
-    const height=item.size*1.05/(info.fitSize?Math.max(1,ratio):1),width=height*ratio,depth=Math.max(item.size*.13,Math.min(width,height)*.38);
+    const height=modelBounds?item.size*1.05*modelBounds[1]:item.size*1.05/(info.fitSize?Math.max(1,ratio):1);
+    const width=modelBounds?item.size*1.05*modelBounds[0]:height*ratio;
+    const depth=modelBounds?item.size*1.05*modelBounds[2]:Math.max(item.size*.13,Math.min(width,height)*.38);
     const align=direction[1]<-.9999?[1,0,0,0]:normalize([direction[2],0,-direction[0],1+direction[1]]);
     const rotation=multiply(align,[0,Math.sin(angle*.5),0,Math.cos(angle*.5)]);
     // Keep the contact surface tied to the logical growth size. The collision

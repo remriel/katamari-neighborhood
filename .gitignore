@@ -6,3 +6,5 @@ dist/
 .playwright-cli/
 __pycache__/
 *.blend1
+outputs/asset-tmp/
+outputs/vite-preview*.log

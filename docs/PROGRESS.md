@@ -1,7 +1,21 @@
-# Toy-town graphics upgrade and density release
+# Katamari Neighborhood — V10 release checkpoint
 
-Objective: complete the full Blender toy-town graphics brief in the referenced pasted text, preserving the finite campaign and physical accumulation. Latest user steering: reduce regular objects by 20%, then use build-once-publish for the current graphics pass.
-Progress: [#######---] 75% toward the full verified art-system objective. The user-requested current-state build/publication workflow is complete; the complete original brief is not yet proven.
+Objective: publish the completed Oʻahu/Lānaʻi all-3D game state to Sites, package the production output, push a release branch, and merge its PR before starting the newly requested traffic/people/animal work.
+Progress: [#########-] 95% toward the verified release. The public Site is still version 9; the local release source and prior acceptance evidence are ready. No open PR existed at the initial GitHub inspection.
+
+- [x] Reconcile the intended checkout, public Sites project, and GitHub main branch.
+- [x] Confirm current Site version 9 is public and repository remriel/katamari-neighborhood is public.
+- [x] Complete both 3D island worlds, 20% population reduction, visibility/loading fixes, movement recovery, persistent bumpy pile, and finite progression locally.
+- [x] Reconcile local source and prior acceptance evidence; no additional browser or automated testing is included in this release workflow.
+- [x] Show existing mobile screenshots of the island picker and Lānaʻi play.
+- [ ] Create a release branch and run the one permitted production build.
+- [ ] Push the exact source to the configured Sites branch and package the built output.
+- [ ] Save and successfully deploy public Sites version 10.
+- [ ] Push the GitHub release branch, create a PR to main, and merge it if GitHub permits.
+- [ ] Record final version, deployment, package hash, GitHub PR, and merge evidence in this file and PROJECT_STATE.md.
+
+Current state: no new game code will be added until the user-requested current release is complete. Queued for the next development pass: replace some static props without undoing the 20% thinning, add moving cars on the roads, neighborhood pedestrians, and animals.
+The sections below describe the completed version 9 release.
 
 - [x] Inspect the complete active repository and reconcile V8 baseline, source, and archived directions.
 - [x] Create a Blender MCP library with 79 variants across 31 existing gameplay types, shared vertex colors, GLB and editable Blender source.
