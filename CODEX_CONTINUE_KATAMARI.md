@@ -1,6 +1,6 @@
 # Continue Katamari Neighborhood
 
-Continue developing the private repository https://github.com/remriel/katamari-neighborhood and its existing public Site, https://katamari-neighborhood.remriel.chatgpt.site/.
+Continue developing the public repository https://github.com/remriel/katamari-neighborhood and its existing public Site, https://katamari-neighborhood.remriel.chatgpt.site/.
 
 Start with the applicable AGENTS.md, docs/PROJECT_STATE.md, docs/PROGRESS.md, docs/ACCEPTANCE.md, git status and git diff. Reconcile those notes with the actual source and newest release. Give an ETA, show progress screenshots, and update the two state documents after meaningful steps. Do not spawn subagents.
 
@@ -14,10 +14,11 @@ Visibility is geometric: all readable on-screen objects render. Do not restore a
 
 Next development priorities:
 
-1. Play both campaigns naturally from start to finish. Tune snack trails, stage distances, time bonuses and objective guidance from observed runs. Favor interesting routes, anticipation and satisfying collections while preserving size gates and an intentional ending.
-2. Measure representative Android/iPhone hardware, including sustained runs, thermal load and battery behavior. The recorded desktop-browser mobile-viewport measurements are useful evidence, not handset benchmarks. Use F3 / ?performance and preserve raw CPU/GPU, frame, draw-call, triangle and chunk-timing evidence.
-3. Use measured handset bottlenecks to guide further rendering work. The pile already changes geometry by fixed-size family with shared pivots, persistent slots and cached render pages. Preserve this behavior and verify the rendered count equals the retained piece count through every quality change.
-4. Improve scenery and routes on the existing two islands based on playtesting. Add another island only when the user requests it. Keep landmarks and neighborhoods authored in the shared physical-meter layout rather than independently moving with zoom.
+1. Implement the user's living-world request. Replace some existing static props rather than increasing object count, and preserve the 20% reduction in ordinary objects. Add moving 3D cars that stay on the winding roads, people moving through neighborhoods, and animals in yards/parks. Keep actor IDs and motion state stable across chunk loading, camera motion, rescaling, normalization and island changes so nothing pops, teleports or flies around. Reuse existing model families where suitable and add proper Blender-authored 3D models or gait variants where needed; do not ship placeholder geometry.
+2. Validate the actors' road/sidewalk/park placement, scale and collision/collection interactions using deterministic simulation checks and a real mobile browser playthrough. Ensure the new motion cannot make the existing oversized-object gates, navigation recovery, visibility coverage or persistent bumpy ball regress.
+3. Play both campaigns naturally from start to finish. Tune snack trails, stage distances, time bonuses and objective guidance from observed runs. Favor interesting routes, anticipation and satisfying collections while preserving size gates and an intentional ending.
+4. Measure representative Android/iPhone hardware, including sustained runs, thermal load and battery behavior. Desktop mobile-viewport measurements are useful evidence, not handset benchmarks. Use F3 / ?performance and preserve raw CPU/GPU, frame, draw-call, triangle and chunk-timing evidence.
+5. Use measured handset bottlenecks to guide rendering work. The pile already changes geometry by fixed-size family with shared pivots, persistent slots and cached render pages. Preserve this behavior and verify retained/rendered piece counts through each quality change. Improve scenery on the existing two islands; add another island only when the user asks.
 
 Before a release, exercise the meaningful invariants in scripts/verify-navigation.mjs and scripts/verify-island-invariants.mjs, real control/normalization fixtures in accept-movement-browser.js, both island endings in accept-endings-browser.js, and boost/growth visibility tracing in trace-hawaii-visibility.js. Read the browser-script comments and keep the benchmark browser isolated; close only your own test contexts. Large-scale QA fixtures inject scale for coverage and do not prove natural campaign pacing. The QA API exists only in Vite DEV builds.
 

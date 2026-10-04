@@ -1,21 +1,22 @@
-# Katamari Neighborhood — V10 release checkpoint
+# Katamari Neighborhood — V10 release complete
 
-Objective: publish the completed Oʻahu/Lānaʻi all-3D game state to Sites, package the production output, push a release branch, and merge its PR before starting the newly requested traffic/people/animal work.
-Progress: [#########-] 97% toward the verified release. Public Sites version 10 is deployed successfully; the one production build and package are complete. GitHub push, PR, and merge remain.
+Objective: publish the completed Oʻahu/Lānaʻi all-3D game state to Sites, package the production output, push it to GitHub, and merge before further development.
+Progress: [##########] 100% for this release checkpoint. Sites version 10 is public, its exact production archive is recorded below, and GitHub PR #1 has been merged into main.
 
 - [x] Reconcile the intended checkout, public Sites project, and GitHub main branch.
-- [x] Confirm current Site version 9 was public and repository remriel/katamari-neighborhood is public.
-- [x] Complete both 3D island worlds, 20% population reduction, visibility/loading fixes, movement recovery, persistent bumpy pile, and finite progression locally.
-- [x] Reconcile local source and prior acceptance evidence, then show mobile screenshots of the island picker and Lānaʻi play.
-- [x] Create a release branch and run the single production build: 20 modules, 1.65 s.
-- [x] Push the exact game source to the configured Sites branch and package it: 74 files, 7,383,040 bytes, SHA256 47dd2fb400da7d86ef02e3cbcaecfbf3d44f9ee27276548514df96cbcb7b748b.
+- [x] Complete both 3D island worlds, the 20% ordinary-object reduction, visibility/loading fixes, movement recovery, persistent bumpy pile, and finite progression.
+- [x] Show existing mobile screenshots of the island picker and Lānaʻi play.
+- [x] Run the single production build: 20 modules, 1.65 s.
+- [x] Push exact source commit dc1358ddd39cbac71ad988610afad8b3a29f9be0 to the configured Sites branch and package it: 74 files, 7,383,040 bytes, SHA256 47dd2fb400da7d86ef02e3cbcaecfbf3d44f9ee27276548514df96cbcb7b748b.
 - [x] Save and successfully deploy public Sites version 10 at https://katamari-neighborhood.remriel.chatgpt.site.
-- [ ] Push the GitHub release branch, create a PR to main, and merge it if GitHub permits.
-- [ ] Record final PR/merge evidence in this file and PROJECT_STATE.md.
+- [x] Push the GitHub release branch, merge PR #1 into main, and sync the merge to the checkout.
+- [x] Record exact Site, package, deployment, PR, and merge evidence in PROJECT_STATE.md.
 
-Release source: dc1358ddd39cbac71ad988610afad8b3a29f9be0. Saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_46cd20045cbc819194aa288b223952ea. Deployment appgdep_6ac1b5122fc08191a3316e76db957b92 succeeded at 2026-10-04 02:08:26 UTC (2026-10-03 19:08 PDT). Vite warned that the main JavaScript chunk is 642.58 kB; build completed. No tests or browser checks were run after publishing.
+Site saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_46cd20045cbc819194aa288b223952ea (10). Deployment appgdep_6ac1b5122fc08191a3316e76db957b92 succeeded at 2026-10-04 02:08:26 UTC (2026-10-03 19:08 PDT). GitHub PR: https://github.com/remriel/katamari-neighborhood/pull/1. Merge commit: f7b29a412e3d53ca426f3f8c24b5cdc4bbd13806. The build warned that the main JavaScript chunk is 642.58 kB; it did not fail. No test suite or browser checks were run after publication.
 
-Current state: no new game code will be added until the GitHub merge finishes. Queued for the next development pass: replace some static props without undoing the 20% thinning, add moving cars on the roads, neighborhood pedestrians, and animals.
+Next requested development: add moving 3D cars on roads, people in neighborhoods, and animals. Replace some existing props so the world retains its 20% population reduction. Keep these as new development work after this release; preserve both finite Hawaiian islands and the established all-3D rendering and stable-world rules.
+
+
 The sections below describe the completed version 9 release.
 
 - [x] Inspect the complete active repository and reconcile V8 baseline, source, and archived directions.
@@ -27,7 +28,7 @@ The sections below describe the completed version 9 release.
 - [x] Implement the latest 20% regular-population reduction and reduce the visible ceiling from 650 to 520; preserve surviving IDs/positions and authored objectives.
 - [x] Run the required production build once, push exact source, and package its output: 19 modules, 2.19 seconds.
 - [x] Save Sites version 9, publish publicly and confirm terminal succeeded status.
-- [x] Synchronize finished source to private GitHub; release notes are included in the handoff documentation commit.
+- [x] Synchronize finished source to public GitHub; release notes are included in the handoff documentation commit.
 
 Current implementation: production model assets exist. The initial diorama was rendered, then the source preview placements/lighting were corrected. The interrupted rebuild's Blender job handle is missing and the corrected preview render is unverified. No physical-phone benchmark, complete campaign playthrough, fast-movement pop-in proof, or final late-scale art review exists. Street categories absent from the current gameplay catalog (truck, mailbox, sign, trash can, hydrant) and more authored clustering remain unfinished in the broad brief.
 
@@ -45,7 +46,7 @@ Exact ordered next steps: 1. User manually accepts or reports defects in version
 - [x] Add Rapier compound contact, protrusion-driven bumps/traction and pickup attachment motion.
 - [x] Connect seven finite chapters, target guidance, combo/dash rewards, final heap inspection and personal bests.
 - [x] Production build passed once (14 modules, 2.03 s).
-- [x] Exact source pushed to Sites and private GitHub, packaged and saved as version 6.
+- [x] Exact source pushed to Sites and public GitHub, packaged and saved as version 6.
 - [x] Public deployment succeeded; release evidence recorded and manual acceptance handed to user.
 - [x] Diagnose and fix runaway early growth, map zoom jump and same-frame progression/freeze; publish version 7.
 - [x] Batch visible ground objects by artwork and share shadow geometry/material.
