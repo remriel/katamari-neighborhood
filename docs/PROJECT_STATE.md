@@ -1,3 +1,15 @@
+# Living neighborhoods — cloud continuation (2026-10-03)
+
+The authorized V10 follow-up adds moving road traffic, neighborhood people, and animals on Oʻahu and Lānaʻi. At most four surviving ordinary slots per chunk are replaced after the existing deterministic .8 density pass. Opening snacks, objectives, authored landmarks, surviving IDs, and all unselected placements are preserved. Vehicles follow a finite, continuous loop on one identified winding street; neighbors, cats, dogs, and chickens follow short oval routes. Larger actors yield to a small ball and become collectible when it grows. Actors use physical-meter routes through chunk reload, normalization and rebasing, and collected actors remain in the compound pile.
+
+Cloud Blender 4.3.2 authored four neighbor variants and three chicken variants in a supplemental vertex-colored GLB and editable .blend. The original 132 models and both original GLBs are unchanged. The full loader now reads 139 meshes, with existing near/far LODs and full-geometry fallback for the small supplemental models. Actor instance transforms update each frame; existing static batches keep their visibility cadence. `guide` now has a dedicated manifest key so the appended numeric collectible IDs 52/53 cannot replace the rolling guide.
+
+Validation: `verify-living-world.mjs`, `verify-navigation.mjs`, and `verify-island-invariants.mjs` pass. Focused checks cover complete road/land routes, ball yielding, actor collection and pile retention, rebase/rescale/reload continuity, GLB loading, bottom pivots, instanced actor/shadow transforms, and both finite seven-stage endings. A V10 comparison across 392 chunks and 13,693 surviving slots found identical IDs/counts and unchanged non-actor placements. The Blender asset preview was rendered and inspected. Browser preview tooling and the control-browser skill are absent in this cloud runtime, so no browser/mobile playthrough or handset performance claim is made.
+
+Release status: source validated; production build and public Sites publication pending. GitHub work is on `feature/living-neighborhoods`; a review PR will accompany publication. The Sites workflow helper is also absent from this cloud installation; source opening was reconciled by authenticated fetch against Sites main, which exactly matches V10 game source (GitHub adds release documentation). Publication uses native Sites save/deploy tools with a locally validated production archive and exact pushed source SHA.
+
+Previous release checkpoints follow below.
+
 # Katamari Neighborhood project state
 ## Release checkpoint — 2026-10-03
 The current public Site is version 9 at https://katamari-neighborhood.remriel.chatgpt.site. The active working tree contains the completed Oʻahu/Lānaʻi all-3D update, the 20% ordinary-object reduction, collision/movement fixes, pile persistence, streaming/visibility work, finite island progression, mobile UI changes, and the completed local acceptance evidence described above. The user has asked to publish this state to Sites, package it, push it to GitHub, and merge it before further development.

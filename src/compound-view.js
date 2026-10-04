@@ -13,7 +13,7 @@ export class CompoundView{
     this.slots=[];this.body=null;this.scaleRevision=-1;
   }
   prewarm(){
-    for(const model of this.models.models.values())if(model.type!==52){
+    for(const model of this.models.models.values())if(model.type!=='guide'){
       const slot=this.allocateModel(model);slot.mesh.setMatrixAt(slot.index,new THREE.Matrix4());slot.mesh.instanceMatrix.needsUpdate=true;
     }
   }

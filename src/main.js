@@ -79,7 +79,7 @@ async function init(){
     // The original seed stays small; retained objects form the entire growing heap.
     ball=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),new THREE.MeshStandardMaterial({map:textures[2],roughness:.82,metalness:0}));compoundView.root.add(ball);
     ballShadow=shadow(.48);scene.add(ballShadow);
-    const guide=modelLibrary.pick(52,0);if(!guide)throw new Error('The rolling guide model could not load.');
+    const guide=modelLibrary.pick('guide',0);if(!guide)throw new Error('The rolling guide model could not load.');
     prince=new THREE.Mesh(guide.geometry,modelLibrary.material);scene.add(prince);
     targetMarker=new THREE.Mesh(new THREE.RingGeometry(.46,.5,64),new THREE.MeshBasicMaterial({color:'#ffe278',side:THREE.DoubleSide,transparent:true,opacity:.8,depthWrite:false}));targetMarker.rotation.x=-Math.PI/2;targetMarker.visible=false;scene.add(targetMarker);
     resize();
@@ -209,6 +209,7 @@ function tick(now){
   const simulationFinishedAt=performance.now();
   const transform=result.transform;
   if(transform.scale!==1||transform.x!==0||transform.z!==0){
+    lastVisibleItems=null;
     follow.multiplyScalar(transform.scale);follow.x+=transform.x;follow.z+=transform.z;
     visualRadius*=transform.scale;viewSpan*=transform.scale;
     for(const s of sparks){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();}sparks=[];
@@ -275,6 +276,7 @@ function tick(now){
     lastVisibleItems=sim.items;lastCullAt=now;lastCullX=sim.x;lastCullZ=sim.z;lastCullSpan=viewSpan;lastCullYaw=yaw;
   }
   for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.life-=dt;s.mesh.position.y+=dt*.7;s.mesh.material.opacity=Math.max(0,s.life/.65);if(s.life<=0){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();sparks.splice(i,1);}}
+  itemBatches.updateMotion();
   const milestoneActive=now<milestoneUntil&&sim.mode==='playing';
   const pickupActive=!milestoneActive&&now<pickupUntil&&sim.mode==='playing';
   $('milestone').classList.toggle('show',milestoneActive);$('pickup').classList.toggle('show',pickupActive);

@@ -1,3 +1,7 @@
+# Latest cloud continuation
+
+The living-neighborhood feature is implemented on `feature/living-neighborhoods`. Read the top of docs/PROJECT_STATE.md and docs/PROGRESS.md for current publication evidence and limitations; the older next-priority list below is historical. Run `node scripts/verify-living-world.mjs` alongside the existing navigation/island invariant checks when changing actors. Run cloud Blender with `blender -b --python scripts/build_living_asset_kit.py` to regenerate only the supplemental models. Preserve the original GLBs, the dedicated `guide` manifest key, the .8 ordinary density pass, deterministic physical-meter routes and actor delay/collection identity. Browser and handset acceptance remain outstanding.
+
 # Continue Katamari Neighborhood
 
 Continue developing the public repository https://github.com/remriel/katamari-neighborhood and its existing public Site, https://katamari-neighborhood.remriel.chatgpt.site/.

@@ -8,6 +8,7 @@ export class WorldItemBatches{
     this.matrix=new THREE.Matrix4();this.position=new THREE.Vector3();this.rotation=new THREE.Quaternion();this.scale=new THREE.Vector3();
     this.up=new THREE.Vector3(0,1,0);this.shadowRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
     this.visibleCount=0;this.modelCount=0;
+    this.movers=[];
   }
   page(group,index){
     if(group.pages[index])return group.pages[index];
@@ -16,6 +17,7 @@ export class WorldItemBatches{
     this.scene.add(mesh);group.pages[index]=mesh;return mesh;
   }
   begin(){
+    this.movers=[];
     for(const group of [...this.groups.values(),this.shadow]){group.used=0;for(const mesh of group.pages)mesh.count=0;}
     this.visibleCount=0;this.modelCount=0;
   }
@@ -32,15 +34,30 @@ export class WorldItemBatches{
     const variation=[12,16,31,50,51].includes(item.type)?.96+((item.visualSeed>>>24)/255)*.08:1;
     this.scale.setScalar(item.size*1.05*variation);this.matrix.compose(this.position,this.rotation,this.scale);
     mesh.setMatrixAt(index,this.matrix);mesh.instanceMatrix.needsUpdate=true;this.visibleCount++;this.modelCount++;
+    const moving=item.motion?{item,mesh,index,scale:item.size*1.05*variation}:null;
+    if(moving)this.movers.push(moving);
     if(item.size>.3){
       const slot=this.shadow.used++,index=slot%256,shadow=this.page(this.shadow,Math.floor(slot/256));shadow.count=index+1;
       this.position.set(item.x,.012,item.z);this.scale.setScalar(item.size*.85);this.matrix.compose(this.position,this.shadowRotation,this.scale);
       shadow.setMatrixAt(index,this.matrix);shadow.instanceMatrix.needsUpdate=true;
+      if(moving){moving.shadow=shadow;moving.shadowIndex=index;}
     }
   }
   end(){
     for(const group of [...this.groups.values(),this.shadow])for(let page=0;page<group.pages.length;page++){
       const mesh=group.pages[page];mesh.count=Math.min(256,Math.max(0,group.used-page*256));mesh.visible=mesh.count>0;
+    }
+  }
+  updateMotion(){
+    for(const entry of this.movers){
+      const {item,mesh,index}=entry;
+      this.position.set(item.x,.006+(item.visualBob||0),item.z);this.rotation.setFromAxisAngle(this.up,item.visualYaw);
+      this.scale.setScalar(item.collected?0:entry.scale);this.matrix.compose(this.position,this.rotation,this.scale);
+      mesh.setMatrixAt(index,this.matrix);mesh.instanceMatrix.needsUpdate=true;
+      if(entry.shadow){
+        this.position.set(item.x,.012,item.z);this.scale.setScalar(item.collected?0:item.size*.85);
+        this.matrix.compose(this.position,this.shadowRotation,this.scale);entry.shadow.setMatrixAt(entry.shadowIndex,this.matrix);entry.shadow.instanceMatrix.needsUpdate=true;
+      }
     }
   }
   dispose(){

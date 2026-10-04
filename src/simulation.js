@@ -2,6 +2,7 @@ import {CompoundBall} from './compound-ball.js';
 import {navigationRadius,slidePastObstacles} from './navigation.js';
 import {CHAPTERS,chaptersForIsland,CAMPAIGN_START_SECONDS,CHAPTER_BONUS_SECONDS,CAMPAIGN_MAX_SECONDS} from './campaign.js';
 import {islandConfig,islandFields,islandDistance,islandDistrict,nearestStreet,constrainToIsland} from './island-layout.js';
+import {populateActors,updateActors} from './living-world.js';
 export const CHUNK_SIZE = 18;
 export const GOAL = 6;
 export const ROUND_SECONDS = 240;
@@ -50,6 +51,8 @@ export const TYPES = [
   {name:'Sea cliff',size:500,art:51,footprint:.48,fitSize:true},
   {name:'Cook pine',size:4.5,art:52,footprint:.26,fitSize:true},
   {name:'Coconut palm',size:5.5,art:53,footprint:.24,fitSize:true},
+  {name:'Island neighbor',size:1.7,art:54,footprint:.22,fitSize:true},
+  {name:'Island chicken',size:.65,art:55,footprint:.3,fitSize:true},
 ];
 export const PROP_ART_COUNT=54;
 function seededRandom(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -79,7 +82,7 @@ const floorHalf=n=>n>=0n?n/2n:(n-1n)/2n;
 function newSeed(){const values=new Uint32Array(1);if(globalThis.crypto?.getRandomValues){globalThis.crypto.getRandomValues(values);return values[0];}return(Math.random()*4294967296)>>>0;}
 
 class ProceduralWorld{
-  constructor(seed,islandId='oahu'){this.seed=seed;this.islandId=islandConfig(islandId).id;this.layout=islandConfig(this.islandId);this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.preloaded=new Map();this.prefetchQueue=[];this.prefetchStamp='';this.prefetchToken=0;this.history=new Map();this.collectedIds=new Set();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.generated=0;this.syncHits=0;this.syncMisses=0;this.lastSyncMs=0;this.opening();}
+  constructor(seed,islandId='oahu'){this.seed=seed;this.islandId=islandConfig(islandId).id;this.layout=islandConfig(this.islandId);this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.preloaded=new Map();this.prefetchQueue=[];this.prefetchStamp='';this.prefetchToken=0;this.history=new Map();this.collectedIds=new Set();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.movers=[];this.actorDelays=new Map();this.motionClock=0;this.generated=0;this.syncHits=0;this.syncMisses=0;this.lastSyncMs=0;this.opening();}
   opening(){
     const random=seededRandom(this.seed);
     for(let i=0;i<92;i++){const angle=random()*Math.PI*2,r=.65+Math.sqrt(random())*5.8,type=i%6;
@@ -130,7 +133,7 @@ class ProceduralWorld{
     // every new slot with thousands of retained old-scale objects.
     const legacyNearby=this.legacy.filter(old=>!old.collected&&Math.abs(old.x-(cx*CHUNK_SIZE+9))<9+(old.size+12)*.3&&Math.abs(old.z-(cz*CHUNK_SIZE+9))<9+(old.size+12)*.3);
     const ruralExcluded=this.islandId==='lanai'?[34,36,37,38,39]:[];
-    const catalogue=TYPES.map((_,type)=>type).filter(type=>{const size=localSize(type,this.level);return type!==41&&size>=.1&&size<=12&&!ruralExcluded.includes(type);});
+    const catalogue=TYPES.map((_,type)=>type).filter(type=>{const size=localSize(type,this.level);return type<52&&type!==41&&size>=.1&&size<=12&&!ruralExcluded.includes(type);});
     if(!catalogue.length)return chunk;
     const urban=this.islandId==='lanai'?[7,12,14,15,17,23,26,27,32,42,43,44,45,46,48,50,51]:
       [7,9,11,13,14,15,17,22,24,26,27,28,29,30,32,36,38,39,42,43,44,45,46,51];
@@ -194,12 +197,13 @@ class ProceduralWorld{
     }
     for(let slot=80;slot<96;slot++){const x=cx*CHUNK_SIZE+1.8+random()*14.4,z=cz*CHUNK_SIZE+1.8+random()*14.4;add(select(medium),x,z,slot);}
     chunk.items=reducePopulation(chunk.items);
+    populateActors(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level},TYPES,hash);
     return chunk;
   }
   sync(player,radius){
     const cx=Math.floor(player.x/CHUNK_SIZE),cz=Math.floor(player.z/CHUNK_SIZE),stamp=`${this.level}:${cx}:${cz}:${radius}`;
     if(stamp===this.stamp)return;this.stamp=stamp;const started=performance.now();
-    for(const[key,chunk]of this.chunks){if(Math.abs(chunk.cx-cx)>radius||Math.abs(chunk.cz-cz)>radius){this.remember(chunk);this.chunks.delete(key);}}
+    for(const[key,chunk]of this.chunks){if((Math.abs(chunk.cx-cx)>radius||Math.abs(chunk.cz-cz)>radius)&&!chunk.items.some(item=>item.motion&&!item.collected&&Math.hypot(item.x-player.x,item.z-player.z)<(player.visibleRadius||18)+item.size+8)){this.remember(chunk);this.chunks.delete(key);}}
     for(const[id,chunk]of this.preloaded){if(Math.abs(chunk.cx-cx)>radius+2||Math.abs(chunk.cz-cz)>radius+2)this.preloaded.delete(id);}
     for(let z=cz-radius;z<=cz+radius;z++)for(let x=cx-radius;x<=cx+radius;x++){
       const key=`${x}:${z}`;if(!this.chunks.has(key)){
@@ -215,6 +219,7 @@ class ProceduralWorld{
     this.legacy=this.legacy.filter(item=>!item.collected&&(item.objectiveIndex!==undefined||item.islandLandmark||Math.hypot(item.x-player.x,item.z-player.z)<Math.max(CHUNK_SIZE*(radius+1),player.visibleRadius||0)));
     this.items=[...this.legacy,...Array.from(this.chunks.values()).flatMap(chunk=>chunk.items)];
     this.prefetch(player,radius,cx,cz);
+    this.refreshActors(player);
     this.lastSyncMs=performance.now()-started;
     (this.syncTimes??=[]).push(this.lastSyncMs);if(this.syncTimes.length>300)this.syncTimes.shift();
   }
@@ -240,6 +245,7 @@ class ProceduralWorld{
           if(!this.chunks.get(key)?.pending)continue;
           this.chunks.set(key,this.generate(next.x,next.z,snapshot));
           this.items=[...this.legacy,...Array.from(this.chunks.values()).flatMap(chunk=>chunk.items)];
+          this.refreshActors(player);
         }else{
           if(this.chunks.has(key)||this.preloaded.has(next.id))continue;
           this.preloaded.set(next.id,this.generate(next.x,next.z,snapshot));
@@ -252,13 +258,17 @@ class ProceduralWorld{
     if(this.prefetchQueue.length){if(window.requestIdleCallback)window.requestIdleCallback(work,{timeout:700});else window.setTimeout(()=>work(null),40);}
   }
   invalidatePrefetch(){this.prefetchToken++;this.prefetchQueue=[];this.prefetchStamp='';this.preloaded.clear();}
+  refreshActors(player){this.movers=this.items.filter(item=>item.motion&&!item.collected);updateActors(this,this.motionClock,0,player);}
   nearby(x,z,radius){
     const reach=radius+8,result=[];
     for(const chunk of this.chunks.values()){
       if(x+reach<chunk.cx*CHUNK_SIZE||x-reach>(chunk.cx+1)*CHUNK_SIZE||z+reach<chunk.cz*CHUNK_SIZE||z-reach>(chunk.cz+1)*CHUNK_SIZE)continue;
-      result.push(...chunk.items);
+      result.push(...chunk.items.filter(item=>!item.motion));
     }
-    for(const item of this.legacy){const itemReach=radius+item.size;if(Math.abs(item.x-x)<itemReach&&Math.abs(item.z-z)<itemReach)result.push(item);}
+    for(const item of this.legacy){const itemReach=radius+item.size;if(!item.motion&&Math.abs(item.x-x)<itemReach&&Math.abs(item.z-z)<itemReach)result.push(item);}
+    // A moving actor can cross its source chunk boundary. Query its current
+    // position separately so rendering and pickups agree across that boundary.
+    for(const item of this.movers){const itemReach=radius+item.size;if(Math.abs(item.x-x)<itemReach&&Math.abs(item.z-z)<itemReach)result.push(item);}
     return result;
   }
   collect(item){item.collected=true;this.collectedIds.add(item.id);if(item.owner)item.owner.mask|=1n<<BigInt(item.slot);}
@@ -318,6 +328,7 @@ export class Simulation{
   step(dt,input){
     if(this.mode!=='playing')return {pickups:[],distance:0,transform:{scale:1,x:0,z:0}};
     this.elapsed+=dt;
+    this.world.motionClock=this.elapsed;
     if(this.boostEnergy<2)this.boostExhausted=true;if(this.boostEnergy>=30)this.boostExhausted=false;
     const boosting=Boolean(input.boost)&&!this.boostExhausted;
     this.boostEnergy=Math.max(0,Math.min(100,this.boostEnergy+dt*(boosting?-24:17)));
@@ -326,6 +337,7 @@ export class Simulation{
     this.vx+=(input.x*speed-this.vx)*smoothing;this.vz+=(input.z*speed-this.vz)*smoothing;
     const oldX=this.x,oldZ=this.z;
     this.world.sync(this,this.viewRadius);
+    updateActors(this.world,this.elapsed,dt,this);
     const pickups=[],pickupRadius=Math.max(this.body.coreRadius,this.diameter*.62);
     const nearby=this.world.nearby(this.x,this.z,pickupRadius+Math.hypot(this.vx,this.vz)*dt).filter(item=>!item.collected&&Math.hypot(item.x-this.x,item.z-this.z)<pickupRadius+item.size*footprint(item.type)+Math.hypot(this.vx,this.vz)*dt);
     const substeps=Math.min(10,Math.max(1,Math.ceil(Math.hypot(this.vx,this.vz)*dt/Math.max(.06,this.diameter*.16))));

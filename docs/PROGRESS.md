@@ -1,3 +1,18 @@
+# Living neighborhoods — cloud update
+
+- [x] Reconcile cloud checkout, GitHub main, and public Sites version 10.
+- [x] Replace surviving props with moving cars, neighbors, cats, dogs, and chickens while preserving .8 population thinning.
+- [x] Create seven supplemental Blender meshes and editable source; inspect asset preview.
+- [x] Verify actor routes, yielding, collection, pile retention, streaming and normalization.
+- [x] Verify navigation recovery, both finite campaigns, and all 139 model meshes.
+- [x] Compare 392 chunks / 13,693 slots to V10: counts and non-actor placements preserved.
+- [ ] Build, package, push exact source, and publish the existing public Site.
+- [ ] Push GitHub branch and open a review PR; record release evidence.
+
+Browser/mobile QA is unavailable in this cloud runtime. Physical-device performance and natural campaign pacing remain unverified. The prior build-once restriction belongs to the completed V10 release; this follow-up performed meaningful checks before its production build.
+
+Previous checkpoints follow below.
+
 # Katamari Neighborhood — V10 release complete
 
 Objective: publish the completed Oʻahu/Lānaʻi all-3D game state to Sites, package the production output, push it to GitHub, and merge before further development.
