@@ -1,0 +1,33 @@
+### Result
+{"endings":[{"island":"oahu","state":{"mode":"result","runMode":"campaign","islandId":"oahu","map":"Oʻahu","chapter":7,"chapters":7,"objective":"Collect 150 things, reach 2.5 km, and roll up the marked island.","size":"2.68 km","normalizedDiameter":5.242895620173299,"scaleExponent":9,"collected":167,"attachedPieces":167,"score":173017,"bestCombo":18,"nearbyRemaining":59,"loadedBlocks":121,"seed":2509443958,"secondsRemaining":150,"freeRoll":false,"goalMeters":2500,"x":7.421875,"z":-3.125,"coreDiameterMeters":0.32,"capturedIsland":true,"physicalX":3800,"physicalZ":-1600},"inspect":{"mode":"result","runMode":"campaign","islandId":"oahu","map":"Oʻahu","chapter":7,"chapters":7,"objective":"Collect 150 things, reach 2.5 km, and roll up the marked island.","size":"2.68 km","normalizedDiameter":5.242895620173299,"scaleExponent":9,"collected":167,"attachedPieces":167,"score":173017,"bestCombo":18,"nearbyRemaining":59,"loadedBlocks":169,"seed":2509443958,"secondsRemaining":150,"freeRoll":false,"goalMeters":2500,"x":7.421875,"z":-3.125,"coreDiameterMeters":0.32,"capturedIsland":true,"physicalX":3800,"physicalZ":-1600}},{"island":"lanai","state":{"mode":"result","runMode":"campaign","islandId":"lanai","map":"Lānaʻi","chapter":7,"chapters":7,"objective":"Collect 150 things, reach 2.5 km, and roll up the marked island.","size":"2.68 km","normalizedDiameter":5.2428857330162195,"scaleExponent":9,"collected":152,"attachedPieces":152,"score":40390,"bestCombo":3,"nearbyRemaining":37,"loadedBlocks":121,"seed":4050011118,"secondsRemaining":150,"freeRoll":false,"goalMeters":2500,"x":3.515625,"z":3.3203125,"coreDiameterMeters":0.32,"capturedIsland":true,"physicalX":1800,"physicalZ":1700},"inspect":{"mode":"result","runMode":"campaign","islandId":"lanai","map":"Lānaʻi","chapter":7,"chapters":7,"objective":"Collect 150 things, reach 2.5 km, and roll up the marked island.","size":"2.68 km","normalizedDiameter":5.2428857330162195,"scaleExponent":9,"collected":152,"attachedPieces":152,"score":40390,"bestCombo":3,"nearbyRemaining":37,"loadedBlocks":169,"seed":4050011118,"secondsRemaining":150,"freeRoll":false,"goalMeters":2500,"x":3.515625,"z":3.3203125,"coreDiameterMeters":0.32,"capturedIsland":true,"physicalX":1800,"physicalZ":1700}}],"errors":[]}
+### Ran Playwright code
+```js
+await (async page => {
+  const context=await page.context().browser().newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  const game=await context.newPage(),errors=[];game.on('pageerror',e=>errors.push(e.message));
+  await game.goto('http://127.0.0.1:5177/?qa=1');
+  await game.waitForFunction(()=>window.__katamariQa&&!document.getElementById('start').disabled);
+  const endings=[];
+  for(const island of ['oahu','lanai']){
+    await game.evaluate(id=>window.__katamariQa.endingFixture(id),island);
+    await game.getByRole('button',{name:'Admire your finished monstrosity'}).waitFor({state:'visible'});
+    const state=await game.evaluate(()=>window.__katamariQa.state());
+    if(state.mode!=='result'||!state.capturedIsland||state.collected!==state.attachedPieces)throw new Error('The island did not end with its pieces retained');
+    await game.screenshot({path:'outputs/playwright/'+island+'-ending-mobile.png'});
+    await game.getByRole('button',{name:'Admire your finished monstrosity'}).click();
+    await game.getByRole('button',{name:'Rotate camera 45 degrees'}).click();
+    await game.waitForTimeout(300);
+    const inspect=await game.evaluate(()=>window.__katamariQa.state());
+    if(inspect.attachedPieces!==state.attachedPieces||inspect.mode!=='result')throw new Error('Finished pile changed during inspection');
+    endings.push({island,state,inspect});
+    if(island==='oahu'){
+      await game.getByRole('button',{name:'Pause game'}).click();
+      await game.locator('#next-island').click();
+      const next=await game.evaluate(()=>window.__katamariQa.state());
+      if(next.islandId!=='lanai'||next.mode!=='playing')throw new Error('Next-island navigation failed');
+    }
+  }
+  await context.close();return{endings,errors};
+}
+)(page);
+```

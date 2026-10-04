@@ -1,7 +1,22 @@
-# Toy-town graphics upgrade and density release
+# Katamari Neighborhood — V10 release checkpoint
 
-Objective: complete the full Blender toy-town graphics brief in the referenced pasted text, preserving the finite campaign and physical accumulation. Latest user steering: reduce regular objects by 20%, then use build-once-publish for the current graphics pass.
-Progress: [#######---] 75% toward the full verified art-system objective. The user-requested current-state build/publication workflow is complete; the complete original brief is not yet proven.
+Objective: publish the completed Oʻahu/Lānaʻi all-3D game state to Sites, package the production output, push a release branch, and merge its PR before starting the newly requested traffic/people/animal work.
+Progress: [#########-] 97% toward the verified release. Public Sites version 10 is deployed successfully; the one production build and package are complete. GitHub push, PR, and merge remain.
+
+- [x] Reconcile the intended checkout, public Sites project, and GitHub main branch.
+- [x] Confirm current Site version 9 was public and repository remriel/katamari-neighborhood is public.
+- [x] Complete both 3D island worlds, 20% population reduction, visibility/loading fixes, movement recovery, persistent bumpy pile, and finite progression locally.
+- [x] Reconcile local source and prior acceptance evidence, then show mobile screenshots of the island picker and Lānaʻi play.
+- [x] Create a release branch and run the single production build: 20 modules, 1.65 s.
+- [x] Push the exact game source to the configured Sites branch and package it: 74 files, 7,383,040 bytes, SHA256 47dd2fb400da7d86ef02e3cbcaecfbf3d44f9ee27276548514df96cbcb7b748b.
+- [x] Save and successfully deploy public Sites version 10 at https://katamari-neighborhood.remriel.chatgpt.site.
+- [ ] Push the GitHub release branch, create a PR to main, and merge it if GitHub permits.
+- [ ] Record final PR/merge evidence in this file and PROJECT_STATE.md.
+
+Release source: dc1358ddd39cbac71ad988610afad8b3a29f9be0. Saved version: appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_46cd20045cbc819194aa288b223952ea. Deployment appgdep_6ac1b5122fc08191a3316e76db957b92 succeeded at 2026-10-04 02:08:26 UTC (2026-10-03 19:08 PDT). Vite warned that the main JavaScript chunk is 642.58 kB; build completed. No tests or browser checks were run after publishing.
+
+Current state: no new game code will be added until the GitHub merge finishes. Queued for the next development pass: replace some static props without undoing the 20% thinning, add moving cars on the roads, neighborhood pedestrians, and animals.
+The sections below describe the completed version 9 release.
 
 - [x] Inspect the complete active repository and reconcile V8 baseline, source, and archived directions.
 - [x] Create a Blender MCP library with 79 variants across 31 existing gameplay types, shared vertex colors, GLB and editable Blender source.

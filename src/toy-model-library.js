@@ -11,18 +11,27 @@ export class ToyModelLibrary{
     const response=await fetch('/models/manifest.json');
     if(!response.ok)throw new Error('The toy-town model manifest could not load.');
     this.manifest=await response.json();
-    const gltf=await new GLTFLoader().loadAsync(this.manifest.library);
+    const loader=new GLTFLoader();
+    const [gltf,lod]=await Promise.all([loader.loadAsync(this.manifest.library),this.manifest.lod?loader.loadAsync(this.manifest.lod):Promise.resolve(null)]);
     gltf.scene.updateMatrixWorld(true);
     gltf.scene.traverse(node=>{
       const meta=this.manifest.models?.[node.name];
       if(!node.isMesh||!meta)return;
       const geometry=node.geometry.clone();
+      // Quantized accessors must be expanded before changing their coordinate frame.
+      for(const key of ['position','normal']){
+        const attribute=geometry.getAttribute(key);if(!attribute)continue;
+        const values=new Float32Array(attribute.count*3);
+        for(let i=0;i<attribute.count;i++){values[i*3]=attribute.getX(i);values[i*3+1]=attribute.getY(i);values[i*3+2]=attribute.getZ(i);}
+        geometry.setAttribute(key,new THREE.BufferAttribute(values,3));
+      }
       geometry.applyMatrix4(node.matrixWorld);
       geometry.computeBoundingBox();
       const bounds=geometry.boundingBox,size=new THREE.Vector3();
       bounds.getSize(size);
       const extent=Math.max(size.x,size.y,size.z);
       if(!extent||!geometry.getAttribute('color')){geometry.dispose();return;}
+      const pivot=new THREE.Vector3((bounds.min.x+bounds.max.x)/2,bounds.min.y,(bounds.min.z+bounds.max.z)/2);
       geometry.scale(1/extent,1/extent,1/extent);
       geometry.computeBoundingBox();
       const normalized=geometry.boundingBox;
@@ -33,10 +42,30 @@ export class ToyModelLibrary{
       geometry.computeBoundingSphere();
       this.models.set(node.name,{name:node.name,type:meta.type,family:meta.family,variant:meta.variant,triangles:meta.triangles,
         minScreenPixels:this.manifest.types[String(meta.type)]?.minScreenPixels??30,
-        geometry,bounds:new THREE.Vector3(width,height,depth)});
+        geometry,extent,pivot,bounds:new THREE.Vector3(width,height,depth)});
     });
     const expected=Object.keys(this.manifest.models||{}).length;
     if(this.models.size!==expected)throw new Error('The toy-town model library is incomplete ('+this.models.size+'/'+expected+').');
+    if(lod){
+      lod.scene.updateMatrixWorld(true);let count=0;
+      lod.scene.traverse(node=>{
+        const model=this.models.get(node.name);if(!node.isMesh||!model)return;
+        const geometry=node.geometry.clone();
+        for(const key of ['position','normal']){
+          const attribute=geometry.getAttribute(key);if(!attribute)continue;
+          const values=new Float32Array(attribute.count*3);
+          for(let i=0;i<attribute.count;i++){values[i*3]=attribute.getX(i);values[i*3+1]=attribute.getY(i);values[i*3+2]=attribute.getZ(i);}
+          geometry.setAttribute(key,new THREE.BufferAttribute(values,3));
+        }
+        geometry.applyMatrix4(node.matrixWorld);
+        // Both detail levels use the original bounds, never independently re-center.
+        geometry.translate(-model.pivot.x,-model.pivot.y,-model.pivot.z);
+        geometry.scale(1/model.extent,1/model.extent,1/model.extent);geometry.computeBoundingSphere();
+        model.lod={name:model.name+':far',geometry,bounds:model.bounds};count++;
+      });
+      if(count!==expected)throw new Error('The distant model library is incomplete ('+count+'/'+expected+').');
+    }
+    for(const library of [gltf,lod])library?.scene.traverse(node=>{if(node.isMesh){node.geometry.dispose();for(const material of Array.isArray(node.material)?node.material:[node.material])material.dispose();}});
     return this;
   }
   pick(type,seed=0){
@@ -46,7 +75,7 @@ export class ToyModelLibrary{
     return this.models.get(entry.models[index])||null;
   }
   dispose(){
-    for(const model of this.models.values())model.geometry.dispose();
+    for(const model of this.models.values()){model.geometry.dispose();model.lod?.geometry.dispose();}
     this.models.clear();this.material.dispose();
   }
 }

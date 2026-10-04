@@ -1,0 +1,47 @@
+### Result
+{"cases":[{"fixture":{"island":"oahu","meters":30,"wide":true},"before":{"state":{"mode":"playing","runMode":"campaign","islandId":"oahu","map":"Oʻahu","chapter":1,"chapters":7,"objective":"Collect 20 little things and reach 1 m.","size":"30.0 m","normalizedDiameter":7.5,"scaleExponent":2,"collected":0,"attachedPieces":0,"score":0,"bestCombo":0,"nearbyRemaining":5001,"loadedBlocks":121,"seed":2474143729,"secondsRemaining":150,"freeRoll":false,"goalMeters":1,"x":0,"z":0,"coreDiameterMeters":0.32,"physicalX":0,"physicalZ":0},"metrics":{"frames":0,"frame":{"median":null,"p95":null,"max":null},"cpu":{"median":null,"p95":null,"max":null},"gpu":{"median":null,"p95":null,"max":null},"drawCalls":{"median":null,"p95":null,"max":null},"triangles":{"median":null,"p95":null,"max":null},"dpr":2,"models":132,"visible":544,"attachments":0,"preloadHits":0,"synchronousChunks":47,"lastChunkSyncMs":1.1000000000931323}},"after":{"state":{"mode":"playing","runMode":"campaign","islandId":"oahu","map":"Oʻahu","chapter":2,"chapters":7,"objective":"Roll up a convertible. Reach 6 m and 45 things.","size":"46.0 m","normalizedDiameter":5.747523907365195,"scaleExponent":3,"collected":221,"attachedPieces":221,"score":43812,"bestCombo":219,"nearbyRemaining":10332,"loadedBlocks":169,"seed":2474143729,"secondsRemaining":200,"freeRoll":false,"goalMeters":6,"x":66.44899975670447,"z":9.967349963505669,"coreDiameterMeters":0.32,"physicalX":531.5919980536357,"physicalZ":79.73879970804535},"metrics":{"frames":300,"frame":{"median":18,"p95":36.099999999998545,"max":342},"cpu":{"median":11.700000000186265,"p95":28.300000000279397,"max":57.6999999997206},"gpu":{"median":11.263204,"p95":14.612441,"max":16.956181},"drawCalls":{"median":147,"p95":161,"max":162},"triangles":{"median":357730,"p95":436288,"max":445151},"dpr":1,"models":132,"visible":1479,"attachments":221,"preloadHits":68,"synchronousChunks":74,"lastChunkSyncMs":3.6000000000931323}},"checks":14,"levels":[2,3],"interiorPops":[]}],"errors":[]}
+### Ran Playwright code
+```js
+await (async page => {
+  const browser=page.context().browser(),context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  const game=await context.newPage(),errors=[];
+  game.on('pageerror',error=>errors.push(error.message));
+  await game.goto('http://127.0.0.1:5177/?performance=1&qa=1');
+  await game.waitForFunction(()=>window.__katamariQa&&!document.getElementById('start').disabled);
+  const cases=[],selected=Number(await page.evaluate(()=>new URLSearchParams(location.search).get('trace')||0));
+  const fixtures=[{island:'oahu',meters:.32,wide:false},{island:'lanai',meters:.32,wide:false},{island:'oahu',meters:30,wide:true},{island:'lanai',meters:30,wide:false}];
+  for(const fixture of [fixtures[selected]]){
+    await game.setViewportSize(fixture.wide?{width:1440,height:900}:{width:390,height:844});
+    await game.evaluate(({island,meters})=>window.__katamariQa.setScaleMeters(meters,island),fixture);
+    await game.waitForTimeout(2000);
+    await game.evaluate(()=>{window.__katamariQa.clearMetrics();window.__katamariQa.resume();});
+    const before=await game.evaluate(()=>({state:window.__katamariQa.state(),metrics:window.__katamariQa.metrics()}));
+    let previous=[],interiorPops=[],checks=0,levels=new Set([before.state.scaleExponent]);
+    const started=Date.now();
+    while(Date.now()-started<12000){
+      const sample=await game.evaluate(({previous,fixture})=>{
+        const qa=window.__katamariQa,state=qa.state(),visible=qa.visible(),ids=new Set(visible.map(i=>i.id));
+        const missing=previous.filter(i=>i.pixels>=5&&Math.abs(i.ndc[0])<.8&&Math.abs(i.ndc[1])<.8&&!ids.has(i.id));
+        const pops=qa.inspectItems(missing).filter(i=>!i.collected&&i.pixels>=5&&Math.abs(i.ndc[0])<.8&&Math.abs(i.ndc[1])<.8&&i.ndc[2]>-1&&i.ndc[2]<1);
+        if(fixture.meters===.32){const target=qa.nearby()[0];if(target)qa.driveWorld(target.x-state.x,target.z-state.z,true);}
+        else qa.driveWorld(1,.15,true);
+        return{visible,pops,state};
+      },{previous,fixture});
+      previous=sample.visible;interiorPops.push(...sample.pops);levels.add(sample.state.scaleExponent);checks++;
+      if(sample.state.collected!==sample.state.attachedPieces)throw new Error('Collected objects disappeared from pile');
+      if(sample.state.mode!=='playing')throw new Error('Run ended unexpectedly during trace');
+      if(fixture.meters===.32&&sample.state.normalizedDiameter*2**sample.state.scaleExponent>3)throw new Error('Runaway early growth');
+      await game.waitForTimeout(100);
+    }
+    await game.evaluate(()=>window.__katamariQa.driveWorld(0,0,false));
+    const after=await game.evaluate(()=>({state:window.__katamariQa.state(),metrics:window.__katamariQa.metrics()}));
+    await game.keyboard.press('F3');
+    await game.screenshot({path:'outputs/playwright/'+fixture.island+'-'+fixture.meters+'m-trace.png'});
+    await game.keyboard.press('F3');
+    cases.push({fixture,before,after,checks,levels:[...levels],interiorPops});
+  }
+  await context.close();
+  return{cases,errors};
+}
+)(page);
+```

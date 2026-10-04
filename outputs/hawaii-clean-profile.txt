@@ -1,0 +1,32 @@
+### Result
+{"profiles":[{"island":"oahu","state":{"mode":"playing","runMode":"campaign","islandId":"oahu","map":"Oʻahu","chapter":2,"chapters":7,"objective":"Roll up a convertible. Reach 6 m and 45 things.","size":"47.2 m","normalizedDiameter":5.902054688254237,"scaleExponent":3,"collected":212,"attachedPieces":212,"score":42628,"bestCombo":208,"nearbyRemaining":10303,"loadedBlocks":169,"seed":1516945198,"secondsRemaining":200,"freeRoll":false,"goalMeters":6,"x":64.81936555465128,"z":9.72290483319768,"renderedPieces":212,"coreDiameterMeters":0.32,"capturedIsland":false,"physicalX":518.5549244372103,"physicalZ":77.78323866558144},"metrics":{"frames":300,"frame":{"median":16.69999999999891,"p95":16.80000000000109,"max":17.100000000000364},"cpu":{"median":2.599999999627471,"p95":5,"max":5.8999999994412065},"simulation":{"median":0.40000000037252903,"p95":0.7999999998137355,"max":1.900000000372529},"prepare":{"median":0.30000000074505806,"p95":2.7000000001862645,"max":3.2999999998137355},"draw":{"median":1.2999999998137355,"p95":2.1000000005587935,"max":3},"gpu":{"median":9.554628,"p95":11.55812,"max":14.293859},"drawCalls":{"median":140,"p95":147,"max":148},"triangles":{"median":230914,"p95":266724,"max":268920},"generationMs":{"count":300,"median":0.7999999998137355,"p95":1.2000000001862645,"max":1.7999999998137355},"syncMs":{"count":8,"median":1,"p95":2,"max":2},"dpr":2,"models":132,"visible":455,"attachments":212,"preloadHits":98,"synchronousChunks":56,"lastChunkSyncMs":0.900000000372529}},{"island":"lanai","state":{"mode":"playing","runMode":"campaign","islandId":"lanai","map":"Lānaʻi","chapter":4,"chapters":7,"objective":"Roll up the coastal resort. Reach 120 m and 95 things.","size":"47.0 m","normalizedDiameter":5.872484114310661,"scaleExponent":3,"collected":238,"attachedPieces":238,"score":49368,"bestCombo":181,"nearbyRemaining":8783,"loadedBlocks":169,"seed":129490995,"secondsRemaining":320,"freeRoll":false,"goalMeters":120,"x":73.98965203786389,"z":11.098447805679568,"renderedPieces":238,"coreDiameterMeters":0.32,"capturedIsland":false,"physicalX":591.9172163029111,"physicalZ":88.78758244543654},"metrics":{"frames":300,"frame":{"median":16.69999999999709,"p95":16.80000000000291,"max":16.900000000001455},"cpu":{"median":1.8999999994412065,"p95":4.7999999998137355,"max":6.599999999627471},"simulation":{"median":0.40000000037252903,"p95":0.7999999998137355,"max":2},"prepare":{"median":0.10000000055879354,"p95":2.6000000005587935,"max":3.7999999998137355},"draw":{"median":1.2000000001862645,"p95":1.900000000372529,"max":4.8999999994412065},"gpu":{"median":9.186046,"p95":10.275958,"max":11.48112},"drawCalls":{"median":135,"p95":148,"max":150},"triangles":{"median":146684,"p95":246170,"max":249954},"generationMs":{"count":300,"median":0.7000000001862645,"p95":1.2999999998137355,"max":2.5},"syncMs":{"count":9,"median":1.099999999627471,"p95":1.7000000001862645,"max":1.7000000001862645},"dpr":2,"models":132,"visible":217,"attachments":238,"preloadHits":100,"synchronousChunks":53,"lastChunkSyncMs":1}}],"spriteRequests":[],"physicsRequests":[],"errors":[]}
+### Ran Playwright code
+```js
+await (async page => {
+  const context=await page.context().browser().newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  const game=await context.newPage(),requests=[],errors=[];
+  game.on('request',r=>requests.push(r.url()));game.on('pageerror',e=>errors.push(e.message));
+  await game.goto('http://127.0.0.1:5177/?performance=1&qa=1');
+  await game.waitForFunction(()=>window.__katamariQa&&!document.getElementById('start').disabled);
+  const profiles=[];
+  for(const island of ['oahu','lanai']){
+    await game.evaluate(island=>window.__katamariQa.setScaleMeters(30,island),island);
+    await game.waitForTimeout(2500);
+    await game.evaluate(()=>{const qa=window.__katamariQa;qa.clearMetrics();qa.resume();qa.driveWorld(1,.15,true);});
+    // No per-frame browser-observer traffic during the measured interval.
+    await game.waitForTimeout(10000);
+    const result=await game.evaluate(()=>({state:window.__katamariQa.state(),metrics:window.__katamariQa.metrics()}));
+    if(result.state.collected!==result.state.renderedPieces||result.state.coreDiameterMeters!==.32)throw new Error('A rendered piece or the seed changed during the profile');
+    profiles.push({island,...result});
+  }
+  const spriteRequests=requests.filter(u=>/\/prop-\d+\.webp/.test(u)),physicsRequests=requests.filter(u=>/rapier|compound-contact/.test(u));
+  if(spriteRequests.length||physicsRequests.length)throw new Error('Legacy sprite or physics startup downloads returned');
+  await game.evaluate(()=>{const qa=window.__katamariQa;qa.setScaleMeters(8,'oahu');qa.addTestAttachments([6,12,17,42,46]);qa.resume();qa.notice('pickup');});
+  await game.waitForTimeout(1000);await game.keyboard.press('F3');
+  await game.screenshot({path:'outputs/playwright/top-notice-mobile.png'});
+  await game.evaluate(()=>window.__katamariQa.pause());
+  await game.screenshot({path:'outputs/playwright/all-3d-pile-mobile.png'});
+  await context.close();return{profiles,spriteRequests,physicsRequests,errors};
+}
+)(page);
+```

@@ -1,0 +1,47 @@
+### Result
+{"cases":[{"fixture":{"island":"lanai","meters":30,"wide":false},"before":{"state":{"mode":"playing","runMode":"campaign","islandId":"lanai","map":"Lānaʻi","chapter":1,"chapters":7,"objective":"Collect 20 little things in Lānaʻi City and reach 1 m.","size":"30.0 m","normalizedDiameter":7.5,"scaleExponent":2,"collected":0,"attachedPieces":0,"score":0,"bestCombo":0,"nearbyRemaining":6978,"loadedBlocks":121,"seed":2246688601,"secondsRemaining":150,"freeRoll":false,"goalMeters":1,"x":0,"z":0,"coreDiameterMeters":0.32,"physicalX":0,"physicalZ":0},"metrics":{"frames":1,"frame":{"median":17.90000000000009,"p95":17.90000000000009,"max":17.90000000000009},"cpu":{"median":7.099999999627471,"p95":7.099999999627471,"max":7.099999999627471},"simulation":{"median":3.5,"p95":3.5,"max":3.5},"prepare":{"median":0.7999999998137355,"p95":0.7999999998137355,"max":0.7999999998137355},"draw":{"median":2.8999999999068677,"p95":2.8999999999068677,"max":2.8999999999068677},"gpu":{"median":9.095296,"p95":9.095296,"max":9.095296},"drawCalls":{"median":64,"p95":64,"max":64},"triangles":{"median":57908,"p95":57908,"max":57908},"dpr":2,"models":132,"visible":441,"attachments":0,"preloadHits":0,"synchronousChunks":28,"lastChunkSyncMs":10.700000000186265}},"after":{"state":{"mode":"playing","runMode":"campaign","islandId":"lanai","map":"Lānaʻi","chapter":4,"chapters":7,"objective":"Roll up the coastal resort. Reach 120 m and 95 things.","size":"46.3 m","normalizedDiameter":5.789403246176826,"scaleExponent":3,"collected":280,"attachedPieces":280,"score":56696,"bestCombo":217,"nearbyRemaining":8674,"loadedBlocks":169,"seed":2246688601,"secondsRemaining":319,"freeRoll":false,"goalMeters":120,"x":81.15146334287628,"z":12.172719501431448,"coreDiameterMeters":0.32,"physicalX":649.2117067430103,"physicalZ":97.38175601145159},"metrics":{"frames":300,"frame":{"median":18,"p95":18.100000000000364,"max":198},"cpu":{"median":3.2000000001862645,"p95":15.899999999906868,"max":25.200000000186265},"simulation":{"median":1,"p95":1.6000000000931323,"max":12.399999999906868},"prepare":{"median":0.5,"p95":12,"max":15.5},"draw":{"median":1.5,"p95":2.3999999999068677,"max":6.199999999720603},"gpu":{"median":5.124312,"p95":6.642805,"max":8.062301},"drawCalls":{"median":141,"p95":143,"max":144},"triangles":{"median":145097,"p95":227980,"max":231368},"dpr":1.375,"models":132,"visible":224,"attachments":280,"preloadHits":87,"synchronousChunks":57,"lastChunkSyncMs":1.6000000000931323}},"checks":32,"levels":[2,3],"interiorPops":[]}],"errors":[]}
+### Ran Playwright code
+```js
+await (async page => {
+  const browser=page.context().browser(),context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  const game=await context.newPage(),errors=[];
+  game.on('pageerror',error=>errors.push(error.message));
+  await game.goto('http://127.0.0.1:5177/?performance=1&qa=1');
+  await game.waitForFunction(()=>window.__katamariQa&&!document.getElementById('start').disabled);
+  const cases=[],selected=Number(await page.evaluate(()=>new URLSearchParams(location.search).get('trace')||0));
+  const fixtures=[{island:'oahu',meters:.32,wide:false},{island:'lanai',meters:.32,wide:false},{island:'oahu',meters:30,wide:true},{island:'lanai',meters:30,wide:false}];
+  for(const fixture of [fixtures[selected]]){
+    await game.setViewportSize(fixture.wide?{width:1440,height:900}:{width:390,height:844});
+    await game.evaluate(({island,meters})=>window.__katamariQa.setScaleMeters(meters,island),fixture);
+    await game.waitForTimeout(2000);
+    await game.evaluate(()=>{window.__katamariQa.clearMetrics();window.__katamariQa.resume();});
+    const before=await game.evaluate(()=>({state:window.__katamariQa.state(),metrics:window.__katamariQa.metrics()}));
+    let previous=[],interiorPops=[],checks=0,levels=new Set([before.state.scaleExponent]);
+    const started=Date.now();
+    while(Date.now()-started<12000){
+      const sample=await game.evaluate(({previous,fixture})=>{
+        const qa=window.__katamariQa,state=qa.state(),visible=qa.visible(),ids=new Set(visible.map(i=>i.id));
+        const missing=previous.filter(i=>i.pixels>=5&&Math.abs(i.ndc[0])<.8&&Math.abs(i.ndc[1])<.8&&!ids.has(i.id));
+        const pops=qa.inspectItems(missing).filter(i=>!i.collected&&i.pixels>=5&&Math.abs(i.ndc[0])<.8&&Math.abs(i.ndc[1])<.8&&i.ndc[2]>-1&&i.ndc[2]<1);
+        if(fixture.meters===.32){const target=qa.nearby()[0];if(target)qa.driveWorld(target.x-state.x,target.z-state.z,true);}
+        else qa.driveWorld(1,.15,true);
+        return{visible,pops,state};
+      },{previous,fixture});
+      previous=sample.visible;interiorPops.push(...sample.pops);levels.add(sample.state.scaleExponent);checks++;
+      if(sample.state.collected!==sample.state.attachedPieces)throw new Error('Collected objects disappeared from pile');
+      if(sample.state.mode!=='playing')throw new Error('Run ended unexpectedly during trace');
+      if(fixture.meters===.32&&sample.state.normalizedDiameter*2**sample.state.scaleExponent>3)throw new Error('Runaway early growth');
+      await game.waitForTimeout(100);
+    }
+    await game.evaluate(()=>window.__katamariQa.driveWorld(0,0,false));
+    const after=await game.evaluate(()=>({state:window.__katamariQa.state(),metrics:window.__katamariQa.metrics()}));
+    await game.keyboard.press('F3');
+    await game.screenshot({path:'outputs/playwright/'+fixture.island+'-'+fixture.meters+'m-trace.png'});
+    await game.keyboard.press('F3');
+    cases.push({fixture,before,after,checks,levels:[...levels],interiorPops});
+  }
+  await context.close();
+  return{cases,errors};
+}
+)(page);
+```
