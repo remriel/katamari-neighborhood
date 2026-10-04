@@ -59,7 +59,7 @@ button:active{transform:translateY(4px)!important;box-shadow:0 1px 0 var(--shado
 .goal-row{position:relative;display:flex;justify-content:center;margin-top:4px;transform:rotate(-8deg);font-size:11px;font-weight:900;letter-spacing:.2px}
 .progress-track{position:absolute;left:33px;right:33px;bottom:24px;height:7px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);overflow:hidden;transform:rotate(-5deg)}
 #growth{width:0;height:100%;border-radius:4px;background:var(--lime);transition:width .2s}
-.hud-bottom{position:absolute;left:18px;right:18px;bottom:7px;display:flex;justify-content:center;font-size:8px;font-weight:900;line-height:1.2}
+.hud-bottom{position:absolute;left:18px;right:18px;bottom:7px;display:none;justify-content:center;font-size:8px;font-weight:900;line-height:1.2}
 .hud-bottom #district{max-width:122px;padding:3px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);text-shadow:none;transform:rotate(2deg)}
 .timer-dial{position:absolute;z-index:3;top:max(13px,env(safe-area-inset-top));right:13px;width:79px;height:79px;border:5px solid var(--paper);border-radius:50%;background:conic-gradient(var(--sun) var(--clock-turn,0deg),var(--purple) 0);box-shadow:0 0 0 3px var(--ink),0 5px 0 var(--shadow);pointer-events:none;color:var(--paper)}
 .timer-dial:after{content:"";position:absolute;inset:7px;border:2px dashed #fff8c8a6;border-radius:50%}

@@ -32,6 +32,7 @@ const world=$('world'),loader=new THREE.TextureLoader();
 const performanceHud=$('performance-hud');
 let performanceHudEnabled=new URLSearchParams(location.search).has('performance'),gpuTimerExtension=null,gpuQueries=[],gpuFrameMs=null,lastPerformanceHudAt=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mobileDepthRange=matchMedia('(pointer:coarse)').matches;
 document.body.classList.add('menu-open');
 performanceHud.hidden=!performanceHudEnabled;
 
@@ -275,7 +276,7 @@ function tick(now){
   const desiredSpan=qaOverview?sim.world.layout.half*2.1*Math.max(1,1/aspect)*2**(-sim.level):inMenu?16:Math.max(6*2**(-Math.min(sim.level,32))+renderDiameter*4.1,renderDiameter*2.6/Math.max(.3,aspect));
   viewSpan+=(desiredSpan*(1-feedback.pulse*.018)-viewSpan)*(1-Math.exp(-dt*4));
   const dist=Math.max(20,viewSpan*1.7);camera.position.set(follow.x+Math.sin(yaw)*dist,follow.y+dist*1.12,follow.z+Math.cos(yaw)*dist);camera.lookAt(follow);
-  const cameraDistance=Math.hypot(dist,dist*1.12);camera.near=.05;camera.far=cameraDistance+viewSpan*4+40;
+  const cameraDistance=Math.hypot(dist,dist*1.12);camera.near=mobileDepthRange?Math.max(.5,cameraDistance*.12):.05;camera.far=cameraDistance+viewSpan*4+40;
   camera.left=-viewSpan*aspect/2;camera.right=viewSpan*aspect/2;camera.top=viewSpan/2;camera.bottom=-viewSpan/2;camera.updateProjectionMatrix();camera.updateMatrixWorld();
   scene.fog.near=cameraDistance+viewSpan*.65;scene.fog.far=cameraDistance+viewSpan*2;
   terrain.update(sim.x,sim.z,viewSpan,aspect,cameraDistance,sim.world);
