@@ -1,3 +1,13 @@
+# Power-up visibility release (2026-10-04)
+
+The latest user reported that power-ups were too small to see and requested larger, glowing pickups. Magnet, turbo and lucky star now use 3x model scale with a 38 CSS-pixel minimum as the camera zooms and the world rescales. Their actual Blender meshes face the camera with gentle rocking, emissive materials, soft light halos, tall fading beacons, and pink/cyan/gold ground rings. Shared geometry/materials and instanced pages keep these effects batched; no bloom pipeline or extra texture download is added. Physical size, collection rules, durations, population, and the three-power limit stay as before.
+
+Visibility bounds include the full effects. Model size follows camera zoom between culls; collection/reset removes every effect, and reduced motion retains steady visibility cues. `verify-living-world.mjs` exercises the real power meshes through scale exponents 0/8/20/32, camera facing, emissive state, the screen-size floor, collection/reset and reduced motion. Terrain/power behavior, navigation, actor streaming and both finite island/model invariants pass. The new glow shaders compile and render offline on EGL/Mesa llvmpipe. `art/toytown/powerup-visibility-preview.png` uses real meshes/instance transforms and glow shaders with approximate lighting; it is not a browser gameplay screenshot. Browser/mobile acceptance remains unverified.
+
+User preference: always push releases to GitHub and Sites from the same commit. This release uses GitHub branch `feature/living-neighborhoods` / PR #2 and the existing public Sites project `appgprj_6abd4eabb1fc8191b880958dde997a86`. Publish the single successful build in `outputs/katamari-neighborhood-v13.tar.gz`. The native publication receipt is saved locally as `outputs/katamari-neighborhood-v13-release.json` after deployment, including exact source SHA, version, deployment status and archive hashes. Keep tracked continuation notes in the release commit; avoid documentation-only commits that leave GitHub ahead of the published Sites source.
+
+The V12 checkpoint below is previous release history.
+
 # Terrain, beaches, map variety and three powers — cloud continuation (2026-10-03)
 
 Current authorized scope combines richer grass, beach development, more regional variety on both islands, actual up/down hill rolling, the first Katamari Damacy HUD direction, and exactly three power-ups. The user's latest UI reference is https://www.gameuidatabase.com/gameData.php?id=124 (first game). The cloud proxy blocks that page; the implementation uses first-game examples in the supplied image as its visual reference, not a verified pixel copy.

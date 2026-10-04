@@ -1,3 +1,16 @@
+# Power-up visibility
+
+- [x] Enlarge all three power models to 3x their previous art scale.
+- [x] Keep a 38 CSS-pixel minimum through zoom/growth and camera-facing symbols.
+- [x] Add emissive models, soft halos, fading beacons and colored ground rings.
+- [x] Include effects in culling, collection/reset cleanup and reduced-motion behavior.
+- [x] Verify real meshes, actor streaming, power behavior, navigation and both island endings.
+- [x] Compile/render the glow shaders offline and inspect the power-up preview.
+
+Release source must be identical on GitHub and Sites, per the user's latest instruction. Publication uses the single production build and `outputs/katamari-neighborhood-v13.tar.gz`; native terminal status, exact commit and version/deployment IDs are recorded in the local `outputs/katamari-neighborhood-v13-release.json` receipt. This lets tracked release notes travel with the same commit as the deployed code. Browser/mobile acceptance remains unverified; the offline preview uses approximate model lighting.
+
+Previous checkpoints follow below.
+
 # Terrain, beaches, variety, HUD and three powers
 
 - [x] Replace grass and add sand artwork with smaller mobile texture payloads.

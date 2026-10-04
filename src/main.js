@@ -12,6 +12,7 @@ import {ToyModelLibrary} from './toy-model-library.js';
 import {ISLANDS,islandConfig} from './island-layout.js';
 import {activePowers} from './powerups.js';
 import {surfaceHeight} from './terrain-height.js';
+import {itemDisplaySize,itemVisibilitySphere} from './powerup-visuals.js';
 
 const $=id=>document.getElementById(id);
 for(let i=0;i<12;i++){const petal=document.createElement('i');petal.style.setProperty('--angle',(i*30)+'deg');document.querySelector('.size-flower').append(petal);}
@@ -94,7 +95,7 @@ async function init(){
       const info=TYPES[type],variants=modelLibrary.manifest.types[String(type)]?.models.length||1;
       for(let seed=0;seed<variants;seed++)for(const detail of [1,1000])itemBatches.put({id:'warm:'+type+':'+seed,type,size:1,x:0,z:0,visualSeed:seed},detail);
     }
-    itemBatches.end();camera.position.set(0,20,20);camera.lookAt(0,0,0);
+    itemBatches.end();camera.position.set(0,20,20);camera.lookAt(0,0,0);itemBatches.updateMotion(0,false,camera.quaternion);
     compoundView.prewarm();
     await renderer.compileAsync(scene,camera);
     renderer.render(scene,camera);
@@ -265,17 +266,16 @@ function tick(now){
   targetMarker.visible=Boolean(missionTarget);if(missionTarget){targetMarker.position.set(missionTarget.x,surfaceHeight(sim.world,missionTarget.x,missionTarget.z)+Math.max(.03,sim.diameter*.002),missionTarget.z);targetMarker.scale.setScalar(missionTarget.size*1.25);}
   const moved=Math.hypot(sim.x-lastCullX,sim.z-lastCullZ)>Math.max(.35,viewSpan*.035);
   const turned=Math.abs(yaw-lastCullYaw)>.045,zoomed=Math.abs(viewSpan-lastCullSpan)>Math.max(.25,viewSpan*.035);
+  const pixelsPerUnit=viewportHeight/viewSpan;
   if(now-lastCullAt>95||moved||turned||zoomed||lastVisibleItems===null){
-    const pixelsPerUnit=viewportHeight/viewSpan;
     const radius=viewSpan*Math.hypot(aspect,1.5)*.65+sim.body.boundRadius+4;
     const nearby=sim.world.nearby(sim.x,sim.z,radius),candidates=[];
     const frustum=new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
     const sphere=new THREE.Sphere();
     for(const item of nearby){
-      if(item.collected||item.size*pixelsPerUnit<1.2)continue;
+      if(item.collected||itemDisplaySize(item,pixelsPerUnit)*pixelsPerUnit<1.2)continue;
       const bounds=modelLibrary.pick(item.type,item.visualSeed).bounds;
-      sphere.center.set(item.x,surfaceHeight(sim.world,item.x,item.z)+item.size*1.05*bounds.y*.5,item.z);
-      sphere.radius=item.size*1.12*bounds.length()*.5+viewSpan*.08;
+      itemVisibilitySphere(item,bounds,pixelsPerUnit,surfaceHeight(sim.world,item.x,item.z),viewSpan*.08,sphere);
       if(frustum.intersectsSphere(sphere))candidates.push(item);
     }
     // Culling is geometric. A nearest-N budget made visible props blink when
@@ -285,7 +285,7 @@ function tick(now){
     lastVisibleItems=sim.items;lastCullAt=now;lastCullX=sim.x;lastCullZ=sim.z;lastCullSpan=viewSpan;lastCullYaw=yaw;
   }
   for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.life-=dt;s.mesh.position.y+=dt*.7;s.mesh.material.opacity=Math.max(0,s.life/.65);if(s.life<=0){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();sparks.splice(i,1);}}
-  itemBatches.updateMotion(sim.elapsed,!reducedMotion);
+  itemBatches.updateMotion(sim.elapsed,!reducedMotion,camera.quaternion,pixelsPerUnit);
   const milestoneActive=now<milestoneUntil&&sim.mode==='playing';
   const pickupActive=!milestoneActive&&now<pickupUntil&&sim.mode==='playing';
   $('milestone').classList.toggle('show',milestoneActive);$('pickup').classList.toggle('show',pickupActive);

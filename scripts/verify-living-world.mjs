@@ -8,6 +8,8 @@ import {nearestStreet,islandDistance} from '../src/island-layout.js';
 import {ToyModelLibrary} from '../src/toy-model-library.js';
 import {WorldItemBatches} from '../src/model-batches.js';
 import {CompoundView} from '../src/compound-view.js';
+import {POWERUPS} from '../src/powerups.js';
+import {itemDisplaySize,itemVisibilitySphere} from '../src/powerup-visuals.js';
 const near=(a,b,message)=>assert.ok(Math.abs(a-b)<1e-6,message||`${a} != ${b}`);
 const physicalPose=(w,i)=>[(i.x+Number(w.originX)*18)*2**w.level,(i.z+Number(w.originZ)*18)*2**w.level];
 const evidence=[];
@@ -95,6 +97,47 @@ near(matrix.elements[12],5);near(matrix.elements[14],6);near(matrix.elements[13]
 item.collected=true;batches.updateMotion();entry.mesh.getMatrixAt(entry.index,matrix);
 near(new THREE.Vector3().setFromMatrixScale(matrix).length(),0,'Collected actor stayed visible');
 batches.dispose();
+// Real power meshes must stay readable through growth, face the camera, and
+// take every glow instance with them when consumed or reset.
+const powerScene=new THREE.Scene(),powers=new WorldItemBatches(powerScene,models,new THREE.Texture());
+const camera=new THREE.OrthographicCamera(-4,4,4,-4,.1,100);camera.position.set(6,8,7);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+powers.heightAt=()=>2;
+for(const level of [0,8,20,32]){
+  const pixelsPerUnit=level===0?30:.01;
+  const fixtures=Object.entries(POWERUPS).map(([id,power],i)=>({type:power.type,powerup:id,size:.4/2**level,x:i*2,z:0,visualSeed:0}));
+  powers.begin();for(const fixture of fixtures)powers.put(fixture,pixelsPerUnit);powers.end();powers.updateMotion(1,true,camera.quaternion,pixelsPerUnit);
+  for(const entry of powers.movers){
+    entry.mesh.getMatrixAt(entry.index,matrix);
+    const scale=new THREE.Vector3().setFromMatrixScale(matrix).x;
+    assert.ok(scale*pixelsPerUnit>=38-1e-4,'Power-up shrank below readable screen size');
+    assert.ok(scale>=entry.item.size*1.05*3-1e-5,'Power-up is not larger than ordinary art');
+    assert.ok(entry.mesh.material.emissiveIntensity>0&&!entry.mesh.material.fog,'Power model can become dark or fogged out');
+    assert.equal(entry.effects.length,3);
+    const normal=new THREE.Vector3(0,1,0).transformDirection(matrix),towardCamera=new THREE.Vector3(0,0,1).applyQuaternion(camera.quaternion);
+    assert.ok(normal.dot(towardCamera)>.999,'Power symbol turns edge-on to the player');
+    const sphere=itemVisibilitySphere(entry.item,models.pick(entry.item.type).bounds,pixelsPerUnit,2,0,new THREE.Sphere());
+    for(const effect of entry.effects){
+      assert.equal(effect.mesh.material.depthWrite,false);
+      effect.mesh.getMatrixAt(effect.index,matrix);
+      const center=new THREE.Vector3().setFromMatrixPosition(matrix);
+      assert.ok(sphere.containsPoint(center),'Culling ignores a power-up effect');
+    }
+  }
+  // Camera zoom between culls must keep the size floor, and reduced motion
+  // freezes the bob/rock/pulse without removing the visibility cues.
+  powers.updateMotion(2,false,camera.quaternion,pixelsPerUnit/2);
+  const before=powers.movers[0].effects.map(effect=>{effect.mesh.getMatrixAt(effect.index,matrix);return matrix.toArray();});
+  powers.updateMotion(10,false,camera.quaternion,pixelsPerUnit/2);
+  powers.movers[0].effects.forEach((effect,i)=>{effect.mesh.getMatrixAt(effect.index,matrix);assert.deepEqual(matrix.toArray(),before[i]);});
+  for(const entry of powers.movers)entry.item.collected=true;
+  powers.updateMotion(10,false,camera.quaternion,pixelsPerUnit/2);
+  for(const entry of powers.movers)for(const part of [{mesh:entry.mesh,index:entry.index},...entry.effects]){
+    part.mesh.getMatrixAt(part.index,matrix);near(new THREE.Vector3().setFromMatrixScale(matrix).length(),0,'Consumed power glow stayed visible');
+  }
+}
+powers.begin();powers.end();assert.ok(powerScene.children.every(mesh=>mesh.count===0&&!mesh.visible),'Reset retained power-up effects');
+powers.dispose();assert.equal(powerScene.children.length,0);
+near(itemDisplaySize({type:0,size:.12},.01),.12*1.05,'Ordinary pickups gained power-up scaling');
 const pile=new CompoundView(scene,models);pile.prewarm();
 assert.ok([...pile.modelBatches.values()].some(batch=>batch.model.type===52),'Neighbors were not prewarmed for the pile');
 assert.ok([...pile.modelBatches.values()].every(batch=>batch.model.type!=='guide'),'Guide was treated as a collectible');
@@ -107,4 +150,4 @@ for(const type of [52,53]){
 pile.sync(fixture.body,100,false);assert.equal(pile.slots.length,2);
 fixture.body.rescale(.5);pile.sync(fixture.body,200,false);assert.equal(pile.slots.length,2);
 pile.dispose();models.dispose();
-console.log(JSON.stringify({islands:evidence,models:170,actorInstances:'pass',browserQA:'unavailable'},null,2));
+console.log(JSON.stringify({islands:evidence,models:170,actorInstances:'pass',powerVisibility:'38px minimum, 3x art, emissive/glow, camera facing, collection/reset, reduced motion pass',browserQA:'unavailable'},null,2));
