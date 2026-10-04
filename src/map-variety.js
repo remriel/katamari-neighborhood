@@ -2,7 +2,7 @@ import {islandFields,nearestStreet,islandDistance} from './island-layout.js';
 
 export function dressRegion(items,world,types,hash){
   const {physical,originX,originZ,islandId}=world;
-  const allowPowerup=hash(world.chunkId,islandId,'powerup-frequency')%100<30;
+  const allowPowerup=hash(world.chunkId,islandId,'powerup-frequency')%100<21;
   const candidates=items.filter(i=>!i.motion&&types[i.type].size<=12&&i.type<52)
     .sort((a,b)=>hash(a.id,'region')-hash(b.id,'region'));
   let dressed=0,powered=false;

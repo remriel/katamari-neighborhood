@@ -37,9 +37,9 @@ memory.observe(fake);assert.ok(memory.prize.blocked);fake.diameter=.62*1.08-.000
 fake.diameter=.62*1.08;fake.elapsed=6;memory.observe(fake);assert.equal(memory.prize.blocked,false);assert.ok(memory.notice(6).text.includes('now'));
 fake.level=1;fake.diameter/=2;fake.x=-18;fake.world.originX=1n;fake.world.nearby=()=>[];memory.observe(fake);assert.equal(memory.prize.id,'prize','Target memory did not survive rescaling/rebase');
 const data=new Map(),storage={getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)};
-data.set('katamari:oahu:four-stage-tour-30s-best',JSON.stringify({score:1000,combo:25,seconds:90}));const previous=readRecord(storage,'oahu','campaign');assert.equal(previous.score,1000);
-const fixture={islandId:'oahu',runMode:'campaign',won:true,score:1100,bestCombo:30,count:200,elapsed:87,chapterStats:[{name:'Snack attack',seconds:18,medal:'Gold'}]};
-const result=finishRecord(fixture,previous,[{time:15,score:100},{time:30,score:200}]);assert.ok(!result.labels.includes('FASTEST FINISH'));assert.ok(saveRecord(storage,fixture,result.record));assert.equal(readRecord(storage,'oahu','campaign').seconds,87);
+data.set('katamari:oahu:island-race-best',JSON.stringify({score:1000,combo:25,seconds:90}));const previous=readRecord(storage,'oahu','campaign');assert.equal(previous.score,1000);
+const fixture={islandId:'oahu',runMode:'campaign',won:true,score:1100,bestCombo:30,count:200,elapsed:87.125,chapterStats:[{name:'Snack attack',seconds:18,medal:'Gold'}]};
+const result=finishRecord(fixture,previous,[{time:15,score:100},{time:30,score:200}]);assert.ok(result.labels.includes('FASTEST FINISH'));assert.ok(saveRecord(storage,fixture,result.record));assert.equal(readRecord(storage,'oahu','campaign').seconds,87.125);
 assert.equal(scorePace(result.record,{elapsed:22.5,score:175}),25);assert.equal(readRecord({getItem:()=>'{broken'},'oahu','campaign'),null);
-const failed=finishRecord({...fixture,won:false,elapsed:10},result.record);assert.equal(failed.record.seconds,87,'A failed run replaced the fastest completion');
+const failed=finishRecord({...fixture,won:false,elapsed:10},result.record);assert.equal(failed.record.seconds,87.125,'A failed run replaced the fastest completion');
 console.log(JSON.stringify({openings,chainGraceDecay:true,finiteDash:true,physicalPrizeEligibility:true,memoryAcrossScale:true,localRecordMigrationAndDeltas:true},null,2));
