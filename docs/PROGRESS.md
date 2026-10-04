@@ -1,3 +1,9 @@
+# Mobile ground anchoring fix (2026-10-04)
+
+Removed the flat mobile fallback plane that followed the ball beneath the real surface. Terrain vertices now use simulation surfaceHeight on a world-anchored power-of-two grid; shared heights are cached as the patch streams. The lightweight mobile texture shader and latest HUD/depth fixes are retained. Both islands pass anchoring and terrain/power regression checks. Production build passes; physical-phone visual acceptance remains unverified.
+
+Publish the same release commit to GitHub feature/living-neighborhoods and the existing public Sites project. Record the native receipt locally in outputs/katamari-ground-anchoring-release.json; keep these tracked notes in the release commit.
+
 # Power-up visibility
 
 - [x] Enlarge all three power models to 3x their previous art scale.

@@ -1,3 +1,9 @@
+# Mobile ground anchoring fix (2026-10-04)
+
+Removed the flat mobile fallback plane that followed the ball beneath the real surface. Terrain vertices now use simulation surfaceHeight on a world-anchored power-of-two grid; shared heights are cached as the patch streams. The lightweight mobile texture shader and latest HUD/depth fixes are retained. Both islands pass anchoring and terrain/power regression checks. Production build passes; physical-phone visual acceptance remains unverified.
+
+Publish the same release commit to GitHub feature/living-neighborhoods and the existing public Sites project. Record the native receipt locally in outputs/katamari-ground-anchoring-release.json; keep these tracked notes in the release commit.
+
 # Power-up visibility release (2026-10-04)
 
 The latest user reported that power-ups were too small to see and requested larger, glowing pickups. Magnet, turbo and lucky star now use 3x model scale with a 38 CSS-pixel minimum as the camera zooms and the world rescales. Their actual Blender meshes face the camera with gentle rocking, emissive materials, soft light halos, tall fading beacons, and pink/cyan/gold ground rings. Shared geometry/materials and instanced pages keep these effects batched; no bloom pipeline or extra texture download is added. Physical size, collection rules, durations, population, and the three-power limit stay as before.

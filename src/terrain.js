@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {CHUNK_SIZE} from './simulation.js';
 import {islandConfig} from './island-layout.js';
-import {HEIGHT_GLSL,ridgeSegments} from './terrain-height.js';
+import {surfaceHeight} from './terrain-height.js';
 function pow2mod(exponent,modulus){
   let value=1n,base=2n%modulus,n=BigInt(exponent);
   while(n>0n){if(n&1n)value=value*base%modulus;base=base*base%modulus;n>>=1n;}
@@ -13,7 +13,7 @@ function originPhase(origin,delta,numerator,denominator=1){
   return Number((n%d+d)%d)/Number(d);
 }
 export function createTerrain(grass,paving,renderer,ocean,fields,sand){
-  const mobile=matchMedia('(pointer:coarse)').matches;
+  const mobile=typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches;
   const anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
   for(const texture of[grass,paving,ocean,sand]){
     texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.anisotropy=anisotropy;
@@ -23,15 +23,14 @@ export function createTerrain(grass,paving,renderer,ocean,fields,sand){
   const material=new THREE.ShaderMaterial({
     uniforms:{grass:{value:grass},paving:{value:paving},ocean:{value:ocean},sand:{value:sand},time:{value:0},islandField:{value:fields.oahu},
       mapCenter:{value:new THREE.Vector2()},mapHalf:{value:6000},isLanai:{value:0},
-      physicalScale:{value:1},ridgeCount:{value:0},ridgeSegments:{value:Array.from({length:8},()=>new THREE.Vector4())},
+      physicalScale:{value:1},
       roads:{value:Array.from({length:4},()=>new THREE.Vector4())},roadWidths:{value:[1,1,1,1]},roadCurbs:{value:[.1,.1,.1,.1]},
       pavingPhases:{value:Array.from({length:4},()=>new THREE.Vector2())},
       grassUnits:{value:new THREE.Vector2(3,6)},grassPhases:{value:[new THREE.Vector2(),new THREE.Vector2()]},
       grassBlend:{value:0},mobileDetail:{value:mobile?1:0},viewSpan:{value:8},fogColor:{value:new THREE.Color('#bce7a0')},fogNear:{value:60},fogFar:{value:100}},
     vertexShader:[
-      'uniform sampler2D islandField;uniform vec2 mapCenter;uniform float mapHalf,isLanai; varying vec2 groundPosition; varying float viewDepth,terrainHeight;',
-      HEIGHT_GLSL,
-      'void main(){vec4 p=modelMatrix*vec4(position,1.0);groundPosition=p.xz;vec2 uv=vec2(.5+(p.x-mapCenter.x)/(mapHalf*2.0),.5-(p.z-mapCenter.y)/(mapHalf*2.0));terrainHeight=surfaceElevation((p.xz-mapCenter)*physicalScale,texture2D(islandField,uv).rgb)/physicalScale;p.y+=terrainHeight;vec4 view=viewMatrix*p;viewDepth=-view.z;gl_Position=projectionMatrix*view;}',
+      'varying vec2 groundPosition; varying float viewDepth,terrainHeight;',
+      'void main(){vec4 p=modelMatrix*vec4(position,1.0);groundPosition=p.xz;terrainHeight=p.y;vec4 view=viewMatrix*p;viewDepth=-view.z;gl_Position=projectionMatrix*view;}',
     ].join('\n'),
     fragmentShader:[
       'precision highp float;',
@@ -115,23 +114,38 @@ export function createTerrain(grass,paving,renderer,ocean,fields,sand){
     ].join('\n');
     material.side=THREE.DoubleSide;
   }
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1,96,96),material);mesh.rotation.x=-Math.PI/2;mesh.frustumCulled=false;
-  const fallbackMap=mobile?grass.clone():null;
-  if(fallbackMap){fallbackMap.wrapS=fallbackMap.wrapT=THREE.RepeatWrapping;fallbackMap.needsUpdate=true;}
-  const fallback=mobile?new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:fallbackMap,side:THREE.DoubleSide})):null;
-  if(fallback){fallback.rotation.x=-Math.PI/2;fallback.position.y=-.12;fallback.frustumCulled=false;}
-  let anchorKey='';
-  return{mesh,fallback,material,update(x,z,span,aspect,cameraDistance,world){
+  const segments=96,geometry=new THREE.PlaneGeometry(1,1,segments,segments);
+  geometry.rotateX(-Math.PI/2);
+  const mesh=new THREE.Mesh(geometry,material);mesh.frustumCulled=false;
+  let anchorKey='',surfaceKey='',gridKey='';
+  let heightCache=new Map();
+
+  return{mesh,material,update(x,z,span,aspect,cameraDistance,world){
     material.uniforms.time.value=world.motionClock;
-    const extent=Math.max(40,span*Math.max(1,aspect)*4);mesh.scale.set(extent,extent,1);mesh.position.set(x,0,z);
-    if(fallback){fallback.scale.set(extent,extent,1);fallback.position.x=x;fallback.position.z=z;fallbackMap.repeat.set(extent/8,extent/8);}
+    // Keep shared vertices fixed as the patch follows the player. Quantizing the
+    // spacing also prevents camera smoothing from reshaping the ground each frame.
+    const spacing=2**Math.ceil(Math.log2(Math.max(40,span*Math.max(1,aspect)*4)/segments));
+    const cx=Math.round(x/spacing),cz=Math.round(z/spacing);
+    const surface=[world.islandId,world.level,world.originX,world.originZ,spacing].join(':');
+    if(surface!==surfaceKey){surfaceKey=surface;heightCache=new Map();gridKey='';}
+    const grid=[cx,cz].join(':');
+    if(grid!==gridKey){
+      gridKey=grid;
+      const positions=geometry.attributes.position,nextCache=new Map();
+      for(let row=0;row<=segments;row++)for(let col=0;col<=segments;col++){
+        const gx=cx+col-segments/2,gz=cz+row-segments/2,key=gx+':'+gz;
+        const height=heightCache.has(key)?heightCache.get(key):surfaceHeight(world,gx*spacing,gz*spacing);
+        nextCache.set(key,height);
+        positions.setXYZ(row*(segments+1)+col,(col-segments/2)*spacing,height,(row-segments/2)*spacing);
+      }
+      heightCache=nextCache;positions.needsUpdate=true;
+      mesh.position.set(cx*spacing,0,cz*spacing);
+    }
     const layout=islandConfig(world.islandId);
     material.uniforms.islandField.value=fields[layout.id];material.uniforms.isLanai.value=layout.id==='lanai'?1:0;
     material.uniforms.mapCenter.value.set(-Number(world.originX)*CHUNK_SIZE,-Number(world.originZ)*CHUNK_SIZE);
     material.uniforms.mapHalf.value=layout.half*2**(-world.level);
     material.uniforms.physicalScale.value=2**world.level;
-    const ridges=ridgeSegments(layout.id);material.uniforms.ridgeCount.value=ridges.length;
-    ridges.forEach((segment,i)=>material.uniforms.ridgeSegments.value[i].fromArray(segment));
     material.uniforms.fogNear.value=cameraDistance+span*.65;material.uniforms.fogFar.value=cameraDistance+span*2;
     const zoom=Math.log2(Math.max(.001,span)/8),baseLayer=world.level+Math.floor(zoom);
     material.uniforms.grassBlend.value=zoom-Math.floor(zoom);material.uniforms.viewSpan.value=span;

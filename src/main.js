@@ -82,7 +82,7 @@ async function init(){
     const [textures]=await Promise.all([Promise.all([loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp'),loadTexture('/assets/oahu-field.png',THREE.NoColorSpace),loadTexture('/assets/lanai-field.png',THREE.NoColorSpace),loadTexture('/assets/sand.webp')]),modelLibrary.load()]);
     shadowMap=shadowTexture();sim.setArtRatios(modelLibrary.manifest.artRatios);
     sim.setModelBounds((type,seed)=>modelLibrary.pick(type,seed)?.bounds.toArray());
-    terrain=createTerrain(textures[0],textures[1],renderer,textures[3],{oahu:textures[4],lanai:textures[5]},textures[6]);scene.add(terrain.mesh);if(terrain.fallback)scene.add(terrain.fallback);
+    terrain=createTerrain(textures[0],textures[1],renderer,textures[3],{oahu:textures[4],lanai:textures[5]},textures[6]);scene.add(terrain.mesh);
     compoundView=new CompoundView(scene,modelLibrary);itemBatches=new WorldItemBatches(scene,modelLibrary,shadowMap);
     itemBatches.heightAt=(x,z)=>surfaceHeight(sim.world,x,z);
     // The original seed stays small; retained objects form the entire growing heap.
