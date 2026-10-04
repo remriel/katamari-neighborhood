@@ -8,8 +8,12 @@
 - [x] Implement exactly three powers: magnet, turbo, lucky star.
 - [x] Verify terrain/powers, actors, navigation, finite campaigns, 170 models and density.
 - [x] Compile/render terrain offline and inspect Blender scenery preview.
-- [ ] Build, package, push exact source and publish the public Site.
-- [ ] Update GitHub review PR #2 and release evidence.
+- [x] Build, package, push exact source and publish public Sites version 12.
+- [x] Update GitHub review PR #2 and release evidence.
+
+Public Sites version 12 deployed successfully at 2026-10-03 21:59 PDT / 2026-10-04T04:59:02.951104+00:00. Live: https://katamari-neighborhood.remriel.chatgpt.site. Exact built/pushed source: `b6ee4f3122c5403660c82bac0a0f218cf2b93fff`. Saved version: `appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_a768d1ca8e38819183d5ef982748be2e`. Deployment: `appgdep_6ac1dd069f60819190db38036470280a`, terminal status `succeeded`. Vite transformed 25 modules in one 1.39s production build; the 655.12 kB JS chunk warning is nonfatal.
+
+Local package `outputs/katamari-neighborhood-v12.tar.gz`: 77 files, 5,221,833 compressed bytes, SHA256 `908abe5ca1bb2ae87185509c8128a368f107a24f90f199fc22cdc5271863d956`. Sites normalized tar: 7,823,360 bytes, SHA256 `4b5d9f01759451531f9a53205ed2d5d1a2a95e433430125056173dcbd9f70e67`, artifact `file_000000004dcc81f4850b9f267a8c9f8c`. Review PR #2: https://github.com/remriel/katamari-neighborhood/pull/2, updated to the full living-islands/terrain/power scope, open and unmerged. This release documentation follow-up leaves built game source unchanged.
 
 Browser/mobile gameplay acceptance remains unverified; the linked original UI page is blocked by the cloud proxy. See PROJECT_STATE.md for precise evidence boundaries.
 
