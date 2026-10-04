@@ -1,5 +1,7 @@
 # Katamari Neighborhood
 
+https://katamari-neighborhood.remriel.chatgpt.site/
+
 A mobile-first, independent Katamari-inspired browser fan game with original generated artwork. One continuous map: Endless Sunny Side. Start at 32 cm and roll forever through procedurally generated districts, or try the optional four-minute 6 m challenge.
 
 V4 adds 24 original illustrated objects, bringing the catalog to 42 collectibles. Twelve new everyday props join buses, giant oaks, apartments, windmills, Ferris wheels, water towers, clock towers, castles, stadiums, skyscrapers, mountains, and islands. Sizes range from 16 cm sushi to a 2.2 km island. Regular objects have fixed physical sizes, so houses remain about 5 m as the ball grows beyond them. New catalog tiers appear in fresh areas; existing visible objects keep their positions and sizes. At later scales, mountain ranges and island chains continue to grow for endless play. Scale milestones and pickup size labels show the progression.
