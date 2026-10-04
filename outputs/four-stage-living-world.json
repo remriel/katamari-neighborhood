@@ -1,0 +1,26 @@
+{
+  "islands": [
+    {
+      "island": "oahu",
+      "car": 28,
+      "person": 29,
+      "animal": 40,
+      "routeSamples": 12800,
+      "collectible": true,
+      "streamingStable": true
+    },
+    {
+      "island": "lanai",
+      "car": 17,
+      "person": 40,
+      "animal": 56,
+      "routeSamples": 16000,
+      "collectible": true,
+      "streamingStable": true
+    }
+  ],
+  "models": 170,
+  "actorInstances": "pass",
+  "powerVisibility": "22.8px minimum, 1.8x art, emissive/glow, camera facing, collection/reset, reduced motion pass",
+  "browserQA": "unavailable"
+}

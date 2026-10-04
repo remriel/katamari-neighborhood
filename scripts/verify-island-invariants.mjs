@@ -8,7 +8,7 @@ for(const island of ['oahu','lanai']){
   const sim=new Simulation();sim.reset('campaign',island);
   assert.equal(sim.snapshot().map,islandConfig(island).name);
   assert.equal(sim.world.legacy.filter(i=>i.id.startsWith('opening:')).length,74);
-  assert.equal(sim.world.legacy.filter(i=>i.objectiveIndex!==undefined).length,6);
+  assert.equal(sim.world.legacy.filter(i=>i.objectiveIndex!==undefined).length,3);
   sim.setViewRadius(9);assert.equal(sim.viewRadius,9,'Camera coverage was clamped to a small chunk radius');
   assert.ok(islandContains(0,0,island));
   assert.ok(islandDistrict(0,0,island).includes(island==='oahu'?'Honolulu':'Lānaʻi City'));
@@ -20,7 +20,7 @@ for(const island of ['oahu','lanai']){
   const ca=a.generate(1,0,player),cb=b.generate(1,0,player);
   assert.deepEqual(ca.items.map(i=>[i.id,i.type,i.x,i.z,i.visualYaw]),cb.items.map(i=>[i.id,i.type,i.x,i.z,i.visualYaw]));
   for(const i of ca.items)assert.ok(islandDistance(i.x,i.z,island)>0,'Ordinary pickup spawned in ocean');
-  const objective=sim.world.legacy.find(i=>i.objectiveIndex===6),before={x:objective.x,z:objective.z,size:objective.size,id:objective.id};
+  const objective=sim.world.legacy.find(i=>i.objectiveIndex===3),before={x:objective.x,z:objective.z,size:objective.size,id:objective.id};
   sim.world.rescale(sim);
   const after=sim.world.legacy.find(i=>i.id===before.id);
   near((after.x+Number(sim.world.originX)*18)*2,before.x);near((after.z+Number(sim.world.originZ)*18)*2,before.z);near(after.size*2,before.size);
@@ -34,11 +34,13 @@ for(const island of ['oahu','lanai']){
   const pieces=sim.body.pieces.map(p=>({id:p.id,center:[...p.center],rotation:[...p.rotation]}));
   sim.body.rescale(.5);
   for(let i=0;i<pieces.length;i++){assert.equal(sim.body.pieces[i].id,pieces[i].id);assert.deepEqual(sim.body.pieces[i].rotation,pieces[i].rotation);pieces[i].center.forEach((v,j)=>near(sim.body.pieces[i].center[j],v*.5));}
-  sim.reset('campaign',island);sim.diameter=2500;sim.volume=2500**3;sim.count=150;sim.capturedObjectives=new Set([1,2,3,4,5,6]);
-  for(let i=0;i<7;i++)sim.step(1/60,{x:0,z:0,boost:false});
-  assert.equal(sim.mode,'result');assert.equal(sim.won,true);assert.equal(sim.chapter,7);
+  sim.reset('campaign',island);
+  for(let i=0;i<4;i++){
+    sim.elapsed=sim.timeLimit-.01;sim.step(.02,{x:0,z:0,boost:false});
+  }
+  assert.equal(sim.mode,'result');assert.equal(sim.won,true);assert.equal(sim.chapter,4);assert.equal(sim.elapsed,240);
   const terminal=sim.snapshot();sim.step(1,{x:1,z:1,boost:true});assert.deepEqual(sim.snapshot(),terminal,'Finished level continued running');
-  evidence.push({island,opening:74,goals:6,ordinarySample:ca.items.length,finiteEnding:true});
+  evidence.push({island,opening:74,goals:3,ordinarySample:ca.items.length,finiteEnding:true});
 }
 const data=readFileSync(new URL('../public/models/toy-town.glb',import.meta.url));
 assert.equal(data.readUInt32LE(0),0x46546c67);assert.equal(data.readUInt32LE(4),2);

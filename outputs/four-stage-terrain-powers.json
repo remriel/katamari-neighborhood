@@ -1,0 +1,25 @@
+{
+  "terrain": [
+    {
+      "island": "oahu",
+      "beachProps": 1635,
+      "variedProps": 1996,
+      "powerups": 87,
+      "townHeightRange": 1.0910712406116483,
+      "ridgeHeight": 222.51257928617127
+    },
+    {
+      "island": "lanai",
+      "beachProps": 782,
+      "variedProps": 1153,
+      "powerups": 39,
+      "townHeightRange": 1.950526176274002,
+      "ridgeHeight": 169.3350869481933
+    }
+  ],
+  "threePowers": true,
+  "magnetGateAndPile": true,
+  "expiryPauseReset": true,
+  "turboSpeed": true,
+  "doubleScore": true
+}

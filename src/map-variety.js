@@ -19,6 +19,7 @@ export function dressRegion(items,world,types,hash){
     if(allowPowerup&&!powered&&seed%11===0){type=68+(seed>>>8)%3;powered=true;}
     else if(dressed>=6)continue;
     const size=types[type].size;
+    if(size>(world.maxObjectSize??Infinity))continue;
     if(islandDistance(x,z,islandId)<size*.55+.3)continue;
     const street=nearestStreet(x,z,islandId);
     if(type<68&&size>1&&street.distance<street.width*.5+size*.25)continue;

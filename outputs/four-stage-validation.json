@@ -1,0 +1,78 @@
+{
+  "fourTimedStages": true,
+  "earlyGoalsDoNotSkipTime": true,
+  "retainedWorldAndHeap": true,
+  "pausedClock": true,
+  "increasingObjectSizes": true,
+  "recordsSeparated": true,
+  "evidence": [
+    {
+      "island": "oahu",
+      "transitions": [
+        {
+          "at": 60,
+          "stage": 2,
+          "position": [
+            900,
+            1450.5067427102695
+          ],
+          "largestObjectMeters": 6
+        },
+        {
+          "at": 120,
+          "stage": 3,
+          "position": [
+            675.9439719314638,
+            200
+          ],
+          "largestObjectMeters": 28
+        },
+        {
+          "at": 180,
+          "stage": 4,
+          "position": [
+            -2096.679507224476,
+            -1100
+          ],
+          "largestObjectMeters": 95
+        }
+      ],
+      "seconds": 240,
+      "retainedPieces": 29
+    },
+    {
+      "island": "lanai",
+      "transitions": [
+        {
+          "at": 60,
+          "stage": 2,
+          "position": [
+            865.9141129157523,
+            2890
+          ],
+          "largestObjectMeters": 6
+        },
+        {
+          "at": 120,
+          "stage": 3,
+          "position": [
+            1244.2841138997742,
+            1630
+          ],
+          "largestObjectMeters": 28
+        },
+        {
+          "at": 180,
+          "stage": 4,
+          "position": [
+            -1727.252532129739,
+            -1100
+          ],
+          "largestObjectMeters": 95
+        }
+      ],
+      "seconds": 240,
+      "retainedPieces": 28
+    }
+  ]
+}

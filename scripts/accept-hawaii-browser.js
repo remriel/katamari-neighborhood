@@ -6,7 +6,7 @@ async page => {
   await phone.goto('http://127.0.0.1:5177/?performance=1&qa=1');
   await phone.waitForFunction(()=>window.__katamariQa&&!document.getElementById('start').disabled);
   await phone.getByRole('button',{name:'Lānaʻi Town & wild highlands'}).click();
-  await phone.getByRole('button',{name:'Roll Lānaʻi · 7 stages'}).click();
+  await phone.getByRole('button',{name:'Roll Lānaʻi · 4 stages'}).click();
   const selection=await phone.evaluate(()=>window.__katamariQa.state());
   if(selection.islandId!=='lanai'||selection.mode!=='playing')throw new Error('Island selection did not start Lānaʻi');
   const fixtures=[];

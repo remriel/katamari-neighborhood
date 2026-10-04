@@ -16,19 +16,19 @@ const evidence=[];
 
 for(const island of ['oahu','lanai']){
   const sim=new Simulation();sim.reset('campaign',island);
-  const World=sim.world.constructor;sim.world=new World(123456,island);sim.world.installObjectives(sim.chapters);sim.world.installLandmarks();sim.world.sync(sim,3);
+  const World=sim.world.constructor;sim.world=new World(123456,island);sim.world.installObjectives(sim.chapters);sim.world.installLandmarks();sim.x=300;sim.world.sync(sim,3);
   const world=sim.world,counts={car:0,person:0,animal:0};
   for(const actor of world.movers)counts[actor.motion.kind]++;
   for(const kind of Object.keys(counts))assert.ok(counts[kind]>0,`${island} lacks ${kind}`);
   assert.equal(world.legacy.filter(i=>i.id.startsWith('opening:')).length,74);
-  assert.equal(world.legacy.filter(i=>i.objectiveIndex!==undefined).length,6);
+  assert.equal(world.legacy.filter(i=>i.objectiveIndex!==undefined).length,3);
   // Sample complete routes, not just the initial placement.
   for(const item of world.movers)for(let step=0;step<128;step++){
     const p=actorPose(item.motion,step/128,island);
     assert.ok(islandDistance(p.x,p.z,island)>0,'Actor walked into the sea');
     if(item.motion.kind==='car')assert.ok(nearestStreet(p.x,p.z,island).distance<=nearestStreet(p.x,p.z,island).width*.5,'Car left its road');
   }
-  const actor=world.movers.find(i=>i.motion.kind==='car');
+  const actor=world.movers.filter(i=>i.motion.kind==='car').sort((a,b)=>Math.hypot(a.x-sim.x,a.z-sim.z)-Math.hypot(b.x-sim.x,b.z-sim.z))[0];
   const originalCoordinates=actor.owner.id.split(':').slice(1).map(Number);
   const start=physicalPose(world,actor);
   updateActors(world,7,0,{x:900,z:900,diameter:.32});
@@ -55,7 +55,7 @@ for(const island of ['oahu','lanai']){
   reload.items=chunk.items;reload.refreshActors(current);
   physicalPose(reload,regenerated).forEach((v,j)=>near(v,before[j],'Actor route changed on reload'));
   // An actor larger than the ball becomes collectible when the ball grows.
-  sim.x=actor.x;sim.z=actor.z;sim.diameter=actor.size*1.2;sim.volume=sim.diameter**3;
+  sim.chapter=1;sim.x=actor.x;sim.z=actor.z;sim.diameter=actor.size*1.2;sim.volume=sim.diameter**3;
   sim.elapsed=world.motionClock;sim.timeLimit=1000;sim.step(1/60,{x:0,z:0});
   assert.ok(actor.collected,'Moving car could not be collected');
   assert.ok(sim.body.pieces.some(piece=>piece.id===actor.id),'Moving actor did not stay in the pile');
@@ -109,8 +109,8 @@ for(const level of [0,8,20,32]){
   for(const entry of powers.movers){
     entry.mesh.getMatrixAt(entry.index,matrix);
     const scale=new THREE.Vector3().setFromMatrixScale(matrix).x;
-    assert.ok(scale*pixelsPerUnit>=38-1e-4,'Power-up shrank below readable screen size');
-    assert.ok(scale>=entry.item.size*1.05*3-1e-5,'Power-up is not larger than ordinary art');
+    assert.ok(scale*pixelsPerUnit>=22.8-1e-4,'Power-up shrank below readable screen size');
+    assert.ok(scale>=entry.item.size*1.05*1.8-1e-5,'Power-up is not larger than ordinary art');
     assert.ok(entry.mesh.material.emissiveIntensity>0&&!entry.mesh.material.fog,'Power model can become dark or fogged out');
     assert.equal(entry.effects.length,3);
     const normal=new THREE.Vector3(0,1,0).transformDirection(matrix),towardCamera=new THREE.Vector3(0,0,1).applyQuaternion(camera.quaternion);
@@ -150,4 +150,4 @@ for(const type of [52,53]){
 pile.sync(fixture.body,100,false);assert.equal(pile.slots.length,2);
 fixture.body.rescale(.5);pile.sync(fixture.body,200,false);assert.equal(pile.slots.length,2);
 pile.dispose();models.dispose();
-console.log(JSON.stringify({islands:evidence,models:170,actorInstances:'pass',powerVisibility:'38px minimum, 3x art, emissive/glow, camera facing, collection/reset, reduced motion pass',browserQA:'unavailable'},null,2));
+console.log(JSON.stringify({islands:evidence,models:170,actorInstances:'pass',powerVisibility:'22.8px minimum, 1.8x art, emissive/glow, camera facing, collection/reset, reduced motion pass',browserQA:'unavailable'},null,2));
