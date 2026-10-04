@@ -1,10 +1,5 @@
 import * as THREE from 'three';
 import './style.css';
-import './performance-hud.css';
-import './island-menu.css';
-import './notifications.css';
-import './original-hud.css';
-import './engagement.css';
 import {Simulation,TYPES,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
 import {createTerrain} from './terrain.js';
 import {CompoundView} from './compound-view.js';
@@ -37,6 +32,7 @@ const world=$('world'),loader=new THREE.TextureLoader();
 const performanceHud=$('performance-hud');
 let performanceHudEnabled=new URLSearchParams(location.search).has('performance'),gpuTimerExtension=null,gpuQueries=[],gpuFrameMs=null,lastPerformanceHudAt=0;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mobileDepthRange=matchMedia('(pointer:coarse)').matches;
 document.body.classList.add('menu-open');
 performanceHud.hidden=!performanceHudEnabled;
 
@@ -128,8 +124,9 @@ function resetVisuals(){
 }
 function selectIsland(id){
   selectedIsland=islandConfig(id).id;
+  document.body.dataset.island=selectedIsland;
+  document.querySelector('meta[name="theme-color"]').content=selectedIsland==='lanai'?'#cf6b43':'#60d9df';
   for(const key of Object.keys(ISLANDS)){const button=$('island-'+key);button.setAttribute('aria-pressed',String(key===selectedIsland));button.classList.toggle('selected',key===selectedIsland);}
-  $('selected-island-name').textContent=islandConfig(selectedIsland).name;
   const record=readRecord(recordStorage,selectedIsland,'campaign');$('menu-record').textContent=record?.score?'Your best · '+record.score.toLocaleString()+' pts · '+record.combo+' chain':'';
   if(loaded)$('start').textContent='Roll '+islandConfig(selectedIsland).name+' · 7 stages';
 }
@@ -175,6 +172,7 @@ function updateHud(){
   const powers=activePowers(sim);$('power-status').innerHTML=powers.map(p=>'<div class="power-pill '+p.id+'"><b>'+(p.id==='magnet'?'∩':p.id==='turbo'?'ϟ':'★')+'</b><span>'+p.name+'<small>'+p.seconds+'s</small></span></div>').join('');
   document.querySelector('.timer-dial').style.setProperty('--clock-turn',(sim.elapsed/Math.max(1,sim.timeLimit)*360)+'deg');
   const parts=sizeParts(sim.diameter,sim.level);ui.size.textContent=parts.value;ui.unit.textContent=parts.unit;ui.size.style.fontSize=parts.value.length>5?'30px':'';
+  document.querySelector('.hud').style.setProperty('--hud-scale',Math.min(1.15,.58+Math.max(0,Math.log2(Math.max(.32,sim.diameter)/.32))*.085));
   ui.count.textContent=`${sim.count} stuck object${sim.count===1?'':'s'}`;
   $('boost').style.setProperty('--boost-energy',sim.boostEnergy+'%');$('boost').classList.toggle('depleted',sim.boostExhausted);$('boost').querySelector('small').textContent=sim.boostExhausted?'RECHARGE':'HOLD';
   ui.growth.style.width=`${Math.min(100,sim.progress()*100)}%`;
@@ -183,9 +181,11 @@ function updateHud(){
   ui.district.textContent=sim.world.layout.name+' · '+sim.world.district(sim.x,sim.z);
   document.querySelector('.size-sticker').innerHTML=sim.scaleLabel().replace(' ','<br>');
   const goal=sim.chapterGoal();$('chapter-title').textContent=sim.runMode==='quick'?'QUICK CHALLENGE':`${Math.min(sim.chapter+1,sim.chapters.length)} / ${sim.chapters.length} · ${goal.name}`;
-  $('stage-track').textContent=sim.runMode==='campaign'?sim.chapters.map((chapter,i)=>(i<sim.chapter?'●':i===sim.chapter?'◉':'○')).join('  '):'4 MINUTE CHALLENGE';
-  $('chapter-hint').textContent=sim.runMode==='quick'?'Build a 6 m heap before the four-minute clock runs out.':goal.hint;
+  const stageTrack=$('stage-track'),quick=sim.runMode==='quick';stageTrack.classList.toggle('quick',quick);stageTrack.setAttribute('aria-label',quick?'Four minute heap challenge':'Seven-stage island progression');
+  for(const [i,stamp] of [...stageTrack.children].entries()){stamp.classList.toggle('done',!quick&&i<sim.chapter);stamp.classList.toggle('current',!quick&&i===sim.chapter);}
+  $('chapter-hint').textContent=quick?'4 min · 6 m heap':goal.count+' pickups';
   const chain=sim.engagement.chain;$('score').textContent=sim.score.toLocaleString()+' PTS';$('score').style.setProperty('--score-pulse',reducedMotion?1:1+feedback.pulse*.08);
+  $('combo').style.setProperty('--chain-scale',1+Math.min(chain.count,30)/75);
   $('combo').classList.toggle('hidden',chain.count<2);$('combo').classList.toggle('fading',chain.remaining<0);$('combo-text').textContent=chain.count+' CHAIN · ×'+chain.multiplier;$('chain-fill').style.width=chain.charge*100+'%';
   const prize=sim.prize();$('next-prize').classList.toggle('hidden',!prize);$('next-prize').classList.toggle('ready',Boolean(prize?.ready));
   if(prize)$('next-prize').textContent=prize.ready?'NOW · '+prize.name:prize.name+' · '+formatSize(prize.neededMeters)+' to go';
@@ -220,6 +220,8 @@ function handleRollResult(result,now){
       emitSparks({...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale});
     }
     const last=result.pickups.reduce((best,p)=>p.importance>best.importance||p.importance===best.importance&&p.size>best.size?p:best);$('pickup').textContent=`+ ${last.name||TYPES[last.type].name} · ${formatSize(last.size,last.sizeLevel??sim.level)}${importance>=2&&last.points?' · +'+last.points+' pts':''}`;pickupUntil=now+(importance>=2?1100:650);
+    const pickup=$('pickup');pickup.classList.remove('impact');void pickup.offsetWidth;pickup.classList.add('impact');
+    const score=$('score');score.classList.remove('score-rattle');void score.offsetWidth;score.classList.add('score-rattle');
     rollAudio.pickup(sim.combo,importance,now/1000);
     if(navigator.vibrate&&now-lastVibration>100){navigator.vibrate(importance>=3?[18,20,25]:importance>=2?16:7);lastVibration=now;}
   }
@@ -274,7 +276,7 @@ function tick(now){
   const desiredSpan=qaOverview?sim.world.layout.half*2.1*Math.max(1,1/aspect)*2**(-sim.level):inMenu?16:Math.max(6*2**(-Math.min(sim.level,32))+renderDiameter*4.1,renderDiameter*2.6/Math.max(.3,aspect));
   viewSpan+=(desiredSpan*(1-feedback.pulse*.018)-viewSpan)*(1-Math.exp(-dt*4));
   const dist=Math.max(20,viewSpan*1.7);camera.position.set(follow.x+Math.sin(yaw)*dist,follow.y+dist*1.12,follow.z+Math.cos(yaw)*dist);camera.lookAt(follow);
-  const cameraDistance=Math.hypot(dist,dist*1.12);camera.near=.05;camera.far=cameraDistance+viewSpan*4+40;
+  const cameraDistance=Math.hypot(dist,dist*1.12);camera.near=mobileDepthRange?Math.max(.5,cameraDistance*.12):.05;camera.far=cameraDistance+viewSpan*4+40;
   camera.left=-viewSpan*aspect/2;camera.right=viewSpan*aspect/2;camera.top=viewSpan/2;camera.bottom=-viewSpan/2;camera.updateProjectionMatrix();camera.updateMatrixWorld();
   scene.fog.near=cameraDistance+viewSpan*.65;scene.fog.far=cameraDistance+viewSpan*2;
   terrain.update(sim.x,sim.z,viewSpan,aspect,cameraDistance,sim.world);
