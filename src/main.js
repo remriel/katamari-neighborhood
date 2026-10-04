@@ -1,10 +1,5 @@
 import * as THREE from 'three';
 import './style.css';
-import './performance-hud.css';
-import './island-menu.css';
-import './notifications.css';
-import './original-hud.css';
-import './engagement.css';
 import {Simulation,TYPES,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
 import {createTerrain} from './terrain.js';
 import {CompoundView} from './compound-view.js';
@@ -128,8 +123,9 @@ function resetVisuals(){
 }
 function selectIsland(id){
   selectedIsland=islandConfig(id).id;
+  document.body.dataset.island=selectedIsland;
+  document.querySelector('meta[name="theme-color"]').content=selectedIsland==='lanai'?'#cf6b43':'#60d9df';
   for(const key of Object.keys(ISLANDS)){const button=$('island-'+key);button.setAttribute('aria-pressed',String(key===selectedIsland));button.classList.toggle('selected',key===selectedIsland);}
-  $('selected-island-name').textContent=islandConfig(selectedIsland).name;
   const record=readRecord(recordStorage,selectedIsland,'campaign');$('menu-record').textContent=record?.score?'Your best · '+record.score.toLocaleString()+' pts · '+record.combo+' chain':'';
   if(loaded)$('start').textContent='Roll '+islandConfig(selectedIsland).name+' · 7 stages';
 }
@@ -183,9 +179,11 @@ function updateHud(){
   ui.district.textContent=sim.world.layout.name+' · '+sim.world.district(sim.x,sim.z);
   document.querySelector('.size-sticker').innerHTML=sim.scaleLabel().replace(' ','<br>');
   const goal=sim.chapterGoal();$('chapter-title').textContent=sim.runMode==='quick'?'QUICK CHALLENGE':`${Math.min(sim.chapter+1,sim.chapters.length)} / ${sim.chapters.length} · ${goal.name}`;
-  $('stage-track').textContent=sim.runMode==='campaign'?sim.chapters.map((chapter,i)=>(i<sim.chapter?'●':i===sim.chapter?'◉':'○')).join('  '):'4 MINUTE CHALLENGE';
-  $('chapter-hint').textContent=sim.runMode==='quick'?'Build a 6 m heap before the four-minute clock runs out.':goal.hint;
+  const stageTrack=$('stage-track'),quick=sim.runMode==='quick';stageTrack.classList.toggle('quick',quick);stageTrack.setAttribute('aria-label',quick?'Four minute heap challenge':'Seven-stage island progression');
+  for(const [i,stamp] of [...stageTrack.children].entries()){stamp.classList.toggle('done',!quick&&i<sim.chapter);stamp.classList.toggle('current',!quick&&i===sim.chapter);}
+  $('chapter-hint').textContent=quick?'4 min · 6 m heap':goal.count+' pickups';
   const chain=sim.engagement.chain;$('score').textContent=sim.score.toLocaleString()+' PTS';$('score').style.setProperty('--score-pulse',reducedMotion?1:1+feedback.pulse*.08);
+  $('combo').style.setProperty('--chain-scale',1+Math.min(chain.count,30)/75);
   $('combo').classList.toggle('hidden',chain.count<2);$('combo').classList.toggle('fading',chain.remaining<0);$('combo-text').textContent=chain.count+' CHAIN · ×'+chain.multiplier;$('chain-fill').style.width=chain.charge*100+'%';
   const prize=sim.prize();$('next-prize').classList.toggle('hidden',!prize);$('next-prize').classList.toggle('ready',Boolean(prize?.ready));
   if(prize)$('next-prize').textContent=prize.ready?'NOW · '+prize.name:prize.name+' · '+formatSize(prize.neededMeters)+' to go';
@@ -220,6 +218,8 @@ function handleRollResult(result,now){
       emitSparks({...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale});
     }
     const last=result.pickups.reduce((best,p)=>p.importance>best.importance||p.importance===best.importance&&p.size>best.size?p:best);$('pickup').textContent=`+ ${last.name||TYPES[last.type].name} · ${formatSize(last.size,last.sizeLevel??sim.level)}${importance>=2&&last.points?' · +'+last.points+' pts':''}`;pickupUntil=now+(importance>=2?1100:650);
+    const pickup=$('pickup');pickup.classList.remove('impact');void pickup.offsetWidth;pickup.classList.add('impact');
+    const score=$('score');score.classList.remove('score-rattle');void score.offsetWidth;score.classList.add('score-rattle');
     rollAudio.pickup(sim.combo,importance,now/1000);
     if(navigator.vibrate&&now-lastVibration>100){navigator.vibrate(importance>=3?[18,20,25]:importance>=2?16:7);lastVibration=now;}
   }
