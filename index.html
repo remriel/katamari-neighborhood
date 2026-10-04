@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
-  <meta name="theme-color" content="#bce7a0" />
+  <meta name="theme-color" content="#5134a2" />
   <meta name="description" content="Build a bumpy monstrosity of permanently stuck objects. Beat seven stages, collect landmarks, and roll up Sunny Side Island in this finite mobile-first Katamari-inspired game." />
   <title>Katamari Neighborhood — Roll a little, grow a lot</title>
   <link rel="icon" type="image/png" href="/assets/ball-icon.png" />
@@ -12,7 +12,7 @@
   <main id="game" aria-label="Katamari Neighborhood game">
     <canvas id="world" aria-label="Three dimensional neighborhood. Use the touch joystick or WASD to roll." tabindex="0"></canvas>
     <header class="topbar">
-      <div class="brand"><span class="brand-top">KATAMARI</span><span class="brand-bottom">NEIGHBORHOOD</span></div>
+      <div class="brand"><span class="brand-top">KATAMARI!</span><span class="brand-bottom">ROLL CLUB</span></div>
       <div class="top-buttons">
         <button id="sound" class="icon-button" aria-label="Turn sound on" title="Sound off">♪<span class="sound-slash">/</span></button>
         <button id="pause" class="icon-button" aria-label="Pause game" title="Pause">Ⅱ</button>
@@ -30,7 +30,7 @@
     <section class="mission-card" aria-label="Current objective">
       <div class="mission-header"><strong id="chapter-title">1 / 7 · Snack attack</strong><span id="score">0 PTS</span></div>
       <div class="mission-content"><p id="chapter-hint">Collect 20 little things and reach 1 m.</p><div id="target-guide" class="target-guide hidden"><span id="target-arrow">↑</span><small id="target-distance"></small><small id="target-name"></small></div></div>
-      <div id="stage-track" class="stage-track" aria-label="Seven-stage island progression"></div>
+      <div id="stage-track" class="stage-track" aria-label="Seven-stage island progression"><span title="Snack Attack">🍬</span><span title="Toy Town">🧸</span><span title="Traffic Jam">🚗</span><span title="House Party">🏠</span><span title="Big City">🏙️</span><span title="Highlands">⛰️</span><span title="Whole Island">🏝️</span></div>
       <div id="next-prize" class="next-prize hidden"></div>
       <div id="combo" class="combo-label hidden"><span id="combo-text"></span><span class="chain-track" aria-hidden="true"><i id="chain-fill"></i></span></div>
       <div id="record-pace" class="record-pace hidden"></div>
@@ -49,18 +49,17 @@
     <div class="desktop-help">WASD / arrows to roll <b>·</b> Shift to dash <b>·</b> Q / E rotate <b>·</b> Esc pause</div>
     <section id="menu" class="menu-layer" aria-label="Start game">
       <div class="menu-card">
-        <span class="map-kicker">HAWAII · TWO ISLANDS · SEVEN STAGES EACH</span>
-        <h1>Build a<br><em>monstrosity.</em></h1>
-        <p class="menu-description">Everything sticks. Every lump changes the roll.<br>Beat the goals. Earn time. Roll up the whole island.</p>
+        <span class="map-kicker">HAWAII · 2 ISLANDS · 7 STAGES</span>
+        <h1>Build a<br><em>monstrosity!</em></h1>
+        <p class="menu-description">Roll. Stick. Grow. Eat the island.</p>
         <div class="island-selector" role="group" aria-label="Choose an island">
           <button id="island-oahu" class="island-choice selected" aria-pressed="true"><img src="/assets/oahu-overview.png" alt=""><span><strong>Oʻahu</strong><small>City, coast & ridges</small></span></button>
           <button id="island-lanai" class="island-choice" aria-pressed="false"><img src="/assets/lanai-overview.png" alt=""><span><strong>Lānaʻi</strong><small>Town & wild highlands</small></span></button>
         </div>
-        <div class="map-pill"><span class="map-dot"></span><span id="selected-island-name">Oʻahu</span><span>01 / 02</span></div>
         <p id="menu-record" class="menu-record"></p>
         <button id="start" class="primary-button" disabled>Preparing your neighborhood…</button>
         <button id="free" class="text-button" disabled>Try the 4 minute challenge</button>
-        <p class="start-hint">Start with 2:30. Finish each stage for +60 seconds.<br>Find magnets, turbo bolts, and lucky stars.<br>Drag the thumbstick to roll. Hold GO! to dash.</p>
+        <p class="start-hint">Drag to roll · Hold GO! to dash · stages add 60 sec</p>
         <span class="fan-note">An independent Katamari-inspired fan game.</span>
       </div>
     </section>
