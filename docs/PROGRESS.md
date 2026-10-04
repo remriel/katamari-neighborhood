@@ -6,8 +6,12 @@
 - [x] Verify actor routes, yielding, collection, pile retention, streaming and normalization.
 - [x] Verify navigation recovery, both finite campaigns, and all 139 model meshes.
 - [x] Compare 392 chunks / 13,693 slots to V10: counts and non-actor placements preserved.
-- [ ] Build, package, push exact source, and publish the existing public Site.
-- [ ] Push GitHub branch and open a review PR; record release evidence.
+- [x] Build, package, push exact source, and publish public Sites version 11.
+- [x] Push GitHub branch and open review PR #2; record release evidence.
+
+Release: public Sites version 11 deployed successfully on 2026-10-03 at 21:31 PDT (2026-10-04T04:31:07.848047+00:00). Live: https://katamari-neighborhood.remriel.chatgpt.site. Exact built/pushed source: `3863a0d2d0574bb6986675dbb497b8fcfba533eb`. Saved version: `appgprj_6abd4eabb1fc8191b880958dde997a86~appgver_552ec1112f388191a534d7bfc2ec9e4a`. Deployment: `appgdep_6ac1d67c2c008191971e9f52abff08cc`, terminal status `succeeded`. One Vite production build transformed 21 modules in 1.36 seconds; the 647.06 kB main JS chunk warning remains.
+
+Local package `outputs/katamari-neighborhood-v11.tar.gz`: 75 files, 5,407,627 compressed bytes, SHA256 `4a9d1bf76305375e6ff496e16b6bee4916f738ef795825202a77291c95202076`. Sites stores its normalized tar as 7,598,080 bytes, SHA256 `a7398bb3049b3b36d99a3167abe6c724880431d44c3393ba4e822612b95e4dcf`, artifact `file_0000000032cc8210880204f54ccf0b2f`. GitHub review PR #2: https://github.com/remriel/katamari-neighborhood/pull/2, branch `feature/living-neighborhoods`, open and unmerged. This documentation follow-up changes no built game source and does not require a second build or deployment.
 
 Browser/mobile QA is unavailable in this cloud runtime. Physical-device performance and natural campaign pacing remain unverified. The prior build-once restriction belongs to the completed V10 release; this follow-up performed meaningful checks before its production build.
 
