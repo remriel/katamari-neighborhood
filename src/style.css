@@ -295,66 +295,6 @@ body.menu-open .topbar,body.menu-open .hud,body.menu-open .timer-dial,body.menu-
   .camera-button{width:30px;height:30px;font-size:20px}
   .desktop-help{display:none}
 }
-@media(min-width:760px) and (pointer:fine){
-  .mission-card{top:205px;bottom:auto}
-  .power-status{top:132px;bottom:auto}
-  .pickup-message{top:116px;max-width:380px;padding:10px 20px;font-size:14px}
-  .milestone{top:139px;width:min(340px,36vw);min-height:90px;padding:18px 34px;font-size:18px}
-  .hint{top:116px;font-size:10px}
-}
-@media(max-width:600px) and (orientation:portrait){
-  .brand-top{font-size:21px}.brand-bottom{font-size:9px}
-  .top-buttons{top:49px}.icon-button{width:44px;height:44px;font-size:21px}
-  .hud{left:3px;top:max(1px,env(safe-area-inset-top));width:170px;height:170px;padding:52px 19px 0}
-  .size-flower{inset:4px}.size-flower:after{inset:42px}
-  .size-flower i{left:calc(50% - 15px);top:calc(50% - 45px);width:30px;height:90px}
-  .size-row{height:48px}.size-row strong{font-size:40px}.size-row>span#unit{font-size:17px}
-  .goal-row{font-size:12px}.progress-track{left:36px;right:36px;bottom:25px}
-  .hud-bottom{bottom:8px;font-size:10px}.hud-bottom #district{max-width:140px}
-  .timer-dial{top:max(13px,env(safe-area-inset-top));right:12px;width:88px;height:88px}
-  .timer-dial #timer{font-size:23px}.timer-dial small{bottom:9px;font-size:9px}
-  .timer-hand{top:10px;height:25px;transform-origin:50% 28px}
-  .mission-card{left:8px;top:auto;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 158px);width:min(280px,calc(100% - 102px));padding:11px 12px}
-  .mission-header{font-size:13px}.mission-header #score{font-size:10px}
-  .mission-content p{font-size:12px}.target-guide{min-width:43px}
-  .target-guide #target-arrow{font-size:26px}.target-guide small{font-size:9px}
-  .stage-track{gap:3px;margin-top:8px}.stage-track>span{width:23px;height:23px;font-size:13px}
-  .next-prize{font-size:10px}.combo-label{font-size:11px}.record-pace{font-size:9px}
-  .power-status{right:5px;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 158px)}
-  .power-pill{gap:4px;padding:4px 5px 4px 4px;font-size:9px}
-  .power-pill b{width:29px;height:29px;font-size:20px}.power-pill span,.power-pill small{font-size:9px}
-  .hint{top:max(186px,calc(env(safe-area-inset-top) + 177px));font-size:12px;max-width:calc(100% - 28px);white-space:normal}
-  .touch-controls{bottom:max(14px,env(safe-area-inset-bottom));padding:0 12px}
-  .joystick{width:138px;height:138px}.joystick:before{inset:18px}.joystick-ring{inset:35px}
-  .stick{left:40px;top:40px;width:50px;height:50px}.joystick>span{bottom:8px;font-size:10px}
-  .action-controls{gap:10px}.camera-button{width:48px;height:48px;font-size:28px}
-  .boost-button{width:92px;height:92px;font-size:24px}.boost-button small{font-size:10px}
-  .map-kicker{font-size:10px}.menu-description{font-size:13px}
-  .menu-card p{font-size:12px}.menu-card .start-hint{font-size:11px}.fan-note{font-size:9px}
-  .island-choice{min-height:145px}.island-choice strong{font-size:22px}.island-choice small{font-size:10px}
-  .menu-record{font-size:11px!important}.primary-button{padding:14px 9px;font-size:16px}
-  .text-button{min-height:44px;font-size:12px}
-  .result-stats span{font-size:9px}.result-details summary{font-size:12px}
-  .stage-recap>div,.result-accomplishments{font-size:10px}
-}
-@media(max-width:600px) and (orientation:portrait) and (max-height:700px){
-  .mission-card{top:185px;bottom:auto}
-  .power-status{top:190px;bottom:auto}
-}
-@media(max-height:480px) and (orientation:landscape) and (pointer:coarse){
-  .hud{width:133px;height:133px;padding:39px 12px 0}
-  .size-flower:after{inset:31px}.size-flower i{left:calc(50% - 11px);top:calc(50% - 34px);width:22px;height:68px}
-  .size-row{height:39px}.size-row strong{font-size:31px}.goal-row{font-size:9px}
-  .timer-dial{width:75px;height:75px}.timer-dial #timer{font-size:20px}
-  .icon-button{width:40px;height:40px}
-  .mission-card{left:143px;top:8px;bottom:auto;width:min(288px,calc(100% - 235px));padding:9px 11px}
-  .mission-header{font-size:12px}.mission-header #score{font-size:9px}.mission-content p{font-size:11px}
-  .stage-track>span{width:21px;height:21px;font-size:12px}
-  .touch-controls{bottom:8px}.joystick{width:92px;height:92px}.joystick:before{inset:11px}.joystick-ring{inset:24px}
-  .stick{left:27px;top:27px;width:34px;height:34px}.joystick>span{font-size:8px}
-  .boost-button{width:73px;height:73px;font-size:19px}.boost-button small{font-size:8px}
-  .camera-button{width:43px;height:43px;font-size:24px}
-}
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
