@@ -1,0 +1,15 @@
+{
+  "threePickupsThenBlocker": "pass",
+  "lumpyBusCorridor": {
+    "z": 22.11817228714066,
+    "pieces": 3
+  },
+  "cornerEscape": {
+    "x": 2.5129876987874256,
+    "z": 13.19895106556193
+  },
+  "reverseEscape": {
+    "before": 3.6946120252899304,
+    "after": -2.9014891740859703
+  }
+}

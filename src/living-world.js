@@ -6,7 +6,7 @@ const fract=x=>x-Math.floor(x);
 
 // Replace at most four surviving ordinary slots. The thinning pass already ran;
 // opening snacks, landmarks, objectives and all other placements stay intact.
-export function populateActors(items,{islandId,physical,originX,originZ,level},types,hash){
+export function populateActors(items,{islandId,physical,originX,originZ,level,maxObjectSize=Infinity},types,hash){
   if(level>7)return;
   const candidates=items.filter(i=>eligible.has(i.type)&&i.size*physical<=10)
     .sort((a,b)=>hash(a.id,'living')-hash(b.id,'living')).slice(0,4);
@@ -27,6 +27,7 @@ export function populateActors(items,{islandId,physical,originX,originZ,level},t
         speed:type===52?.55:.7,phase:(seed>>>8)/16777216};
     }
     const physicalSize=types[type].size;
+    if(physicalSize>maxObjectSize)continue;
     // Skip replacements whose entire route is not on land or crosses a prop.
     const safe=Array.from({length:16},(_,i)=>actorPose(route,i/16,islandId)).every(p=>{
       // Keep the short opening sweep approachable from every seed. Road loops
@@ -70,7 +71,7 @@ export function updateActors(world,elapsed,dt,player){
     // Large actors yield to a small ball instead of driving through it. Stop
     // before contact, and retain this delay if their chunk streams out/in.
     const clearance=player.diameter*.65+item.size*.55+.15/physical;
-    if(dt>0&&item.size*1.08>player.diameter&&Math.hypot(x-player.x,z-player.z)<clearance){
+    if(dt>0&&(player.canCollect?!player.canCollect(item):item.size*1.08>player.diameter)&&Math.hypot(x-player.x,z-player.z)<clearance){
       delay+=dt;world.actorDelays.set(item.id,delay);
       p=actorPose(route,route.phase+(elapsed-delay)/period,world.islandId);
       x=p.x/physical-ox;z=p.z/physical-oz;

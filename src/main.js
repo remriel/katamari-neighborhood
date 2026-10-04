@@ -13,6 +13,7 @@ import {PickupFeedback} from './pickup-feedback.js';
 import {RollAudio} from './roll-audio.js';
 import {readRecord,saveRecord,finishRecord,scorePace} from './run-records.js';
 import {RoutePilot} from './diagnostics/route-pilot.js';
+import {STAGE_SECONDS,STAGE_COUNT} from './campaign.js';
 
 const $=id=>document.getElementById(id);
 for(let i=0;i<12;i++){const petal=document.createElement('i');petal.style.setProperty('--angle',(i*30)+'deg');document.querySelector('.size-flower').append(petal);}
@@ -128,7 +129,7 @@ function selectIsland(id){
   document.querySelector('meta[name="theme-color"]').content=selectedIsland==='lanai'?'#cf6b43':'#60d9df';
   for(const key of Object.keys(ISLANDS)){const button=$('island-'+key);button.setAttribute('aria-pressed',String(key===selectedIsland));button.classList.toggle('selected',key===selectedIsland);}
   const record=readRecord(recordStorage,selectedIsland,'campaign');$('menu-record').textContent=record?.score?'Your best · '+record.score.toLocaleString()+' pts · '+record.combo+' chain':'';
-  if(loaded)$('start').textContent='Roll '+islandConfig(selectedIsland).name+' · 7 stages';
+  if(loaded)$('start').textContent='Roll '+islandConfig(selectedIsland).name+' · '+STAGE_COUNT+' stages';
 }
 function showIslandMenu(){
   resetInput();sim.reset('campaign',selectedIsland);sim.mode='menu';qaOverview=false;resetVisuals();hideMenus();
@@ -137,7 +138,7 @@ function showIslandMenu(){
 function start(runMode='campaign',islandId=selectedIsland,seed){
   if(!loaded)return;resetInput();selectIsland(islandId);qaOverview=false;performanceSamples.length=0;sim.reset(runMode,selectedIsland,seed);resetVisuals();resultShown=false;startedAt=performance.now();hintUntil=startedAt+6000;
   previousRecord=readRecord(recordStorage,sim.islandId,sim.runMode);recordSplits=[];
-  $('hint').textContent='Follow the treats. The toys are next.';
+  $('hint').textContent=runMode==='campaign'?'Four stops · one minute each · keep your growing heap.':'Follow the treats. The toys are next.';
   $('goal-label').textContent='GOAL · '+sim.nextGoalSize();
   hideMenus();updateHud();initAudio();world.focus({preventScroll:true});
 }
@@ -149,7 +150,7 @@ function finish(){
   resultShown=true;
   resetInput();$('result-menu').classList.remove('hidden');document.body.classList.add('menu-open');
   const completedIsland=sim.won&&sim.runMode==='campaign';
-  $('result-kicker').textContent=completedIsland?sim.world.layout.name.toUpperCase()+' · COMPLETELY ROLLED':sim.won?'QUICK CHALLENGE COMPLETE':'THE CLOCK CAUGHT UP';
+  $('result-kicker').textContent=completedIsland?sim.world.layout.name.toUpperCase()+' · FOUR STAGES COMPLETE':sim.won?'QUICK CHALLENGE COMPLETE':'THE CLOCK CAUGHT UP';
   $('result-title').innerHTML=completedIsland?'What a<br><em>monstrosity.</em>':sim.won?'A beautiful<br><em>little monster.</em>':'One more<br><em>glorious roll?</em>';
   $('result-size').textContent=formatSize(sim.diameter,sim.level);$('result-count').textContent=String(sim.count);
   $('result-score').textContent=sim.score.toLocaleString();$('result-combo').textContent=String(sim.bestCombo);
@@ -158,11 +159,11 @@ function finish(){
   const seconds=Math.round(sim.elapsed);$('result-time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+' · '+Math.round(sim.count/Math.max(1,sim.elapsed)*60)+' things/min'+(completedIsland?' · Grade '+report.grade:'');
   $('result-hooks').replaceChildren();for(const text of report.nextTry){const row=document.createElement('p');row.textContent=text;$('result-hooks').append(row);}
   $('stage-recap').replaceChildren();for(const [i,stage] of sim.chapterStats.entries()){
-    const row=document.createElement('div'),old=previousRecord?.stages?.[i]?.seconds,delta=Number.isFinite(old)?' · '+(stage.seconds<old?old-stage.seconds+'s faster':stage.seconds-old+'s from best'):'';
-    row.textContent=stage.medal+' · '+stage.name+' · '+stage.seconds+'s · '+stage.combo+' chain'+delta;$('stage-recap').append(row);
+    const row=document.createElement('div'),goal=stage.goalSeconds===null?'': ' · goal in '+Math.ceil(stage.goalSeconds)+'s';
+    row.textContent=stage.medal+' · '+stage.name+' · 1 min · '+stage.pickups+' pickups · '+stage.combo+' chain'+goal;$('stage-recap').append(row);
   }
   $('medal-summary').textContent=sim.chapterStats.length+' stage medals · highlights';$('result-accomplishments').textContent=sim.engagement.accomplishments.slice(-4).join(' · ');
-  $('result-text').textContent=completedIsland?sim.world.layout.name+' is rolled. Every piece is still in that ridiculous heap. You finished this island.':sim.won?'Six meters of permanently stuck stuff. Your quick challenge is finished.':`You reached ${sim.runMode==='campaign'?Math.min(sim.chapter+1,sim.chapters.length)+' / '+sim.chapters.length+' stages':'the quick challenge'} and built a pile of ${sim.count} things. Try again for the finish.`;
+  $('result-text').textContent=completedIsland?'Four places on '+sim.world.layout.name+', four minutes, and one growing heap. Every collected piece is still attached.':sim.won?'Six meters of permanently stuck stuff. Your quick challenge is finished.':`You reached ${sim.runMode==='campaign'?Math.min(sim.chapter+1,sim.chapters.length)+' / '+sim.chapters.length+' stages':'the quick challenge'} and built a pile of ${sim.count} things. Try again for the finish.`;
   $('again').textContent='Beat this route · '+sim.world.layout.name;
   $('next-island').textContent='Next island · '+islandConfig(sim.islandId==='oahu'?'lanai':'oahu').name;$('next-island').classList.toggle('hidden',!completedIsland);
   melody(sim.won?[523,659,784,1047]:[440,392,330]);
@@ -170,7 +171,7 @@ function finish(){
 function inspectResult(){hideMenus();hintUntil=performance.now()+12000;$('hint').textContent='Finished. Rotate the camera to admire your heap. Tap Ⅱ for results.';}
 function updateHud(){
   const powers=activePowers(sim);$('power-status').innerHTML=powers.map(p=>'<div class="power-pill '+p.id+'"><b>'+(p.id==='magnet'?'∩':p.id==='turbo'?'ϟ':'★')+'</b><span>'+p.name+'<small>'+p.seconds+'s</small></span></div>').join('');
-  document.querySelector('.timer-dial').style.setProperty('--clock-turn',(sim.elapsed/Math.max(1,sim.timeLimit)*360)+'deg');
+  document.querySelector('.timer-dial').style.setProperty('--clock-turn',((sim.elapsed-(sim.runMode==='campaign'?sim.chapterStarted:0))/(sim.runMode==='campaign'?STAGE_SECONDS:sim.timeLimit)*360)+'deg');
   const parts=sizeParts(sim.diameter,sim.level);ui.size.textContent=parts.value;ui.unit.textContent=parts.unit;ui.size.style.fontSize=parts.value.length>5?'30px':'';
   document.querySelector('.hud').style.setProperty('--hud-scale',Math.min(1.15,.58+Math.max(0,Math.log2(Math.max(.32,sim.diameter)/.32))*.085));
   ui.count.textContent=`${sim.count} stuck object${sim.count===1?'':'s'}`;
@@ -181,9 +182,12 @@ function updateHud(){
   ui.district.textContent=sim.world.layout.name+' · '+sim.world.district(sim.x,sim.z);
   document.querySelector('.size-sticker').innerHTML=sim.scaleLabel().replace(' ','<br>');
   const goal=sim.chapterGoal();$('chapter-title').textContent=sim.runMode==='quick'?'QUICK CHALLENGE':`${Math.min(sim.chapter+1,sim.chapters.length)} / ${sim.chapters.length} · ${goal.name}`;
-  const stageTrack=$('stage-track'),quick=sim.runMode==='quick';stageTrack.classList.toggle('quick',quick);stageTrack.setAttribute('aria-label',quick?'Four minute heap challenge':'Seven-stage island progression');
-  for(const [i,stamp] of [...stageTrack.children].entries()){stamp.classList.toggle('done',!quick&&i<sim.chapter);stamp.classList.toggle('current',!quick&&i===sim.chapter);}
-  $('chapter-hint').textContent=quick?'4 min · 6 m heap':goal.count+' pickups';
+  const stageTrack=$('stage-track'),quick=sim.runMode==='quick';stageTrack.classList.toggle('quick',quick);stageTrack.setAttribute('aria-label',quick?'Four minute heap challenge':'Four stages on the same island, one minute each');
+  for(const [i,stamp] of [...stageTrack.children].entries()){
+    stamp.classList.toggle('done',!quick&&i<sim.chapter);stamp.classList.toggle('current',!quick&&i===sim.chapter);
+    stamp.title=sim.chapters[i].name+' · 1 min';stamp.textContent=sim.chapters[i].icon;
+  }
+  $('chapter-hint').textContent=quick?'4 min · 6 m heap':(sim.stageGoalReachedAt!==null?'Goal reached · keep rolling':'1 min · '+goal.count+' pickups');
   const chain=sim.engagement.chain;$('score').textContent=sim.score.toLocaleString()+' PTS';$('score').style.setProperty('--score-pulse',reducedMotion?1:1+feedback.pulse*.08);
   $('combo').style.setProperty('--chain-scale',1+Math.min(chain.count,30)/75);
   $('combo').classList.toggle('hidden',chain.count<2);$('combo').classList.toggle('fading',chain.remaining<0);$('combo-text').textContent=chain.count+' CHAIN · ×'+chain.multiplier;$('chain-fill').style.width=chain.charge*100+'%';
@@ -217,13 +221,20 @@ function handleRollResult(result,now){
     let importance=1;
     for(const picked of result.pickups){
       lastVisibleItems=null;importance=Math.max(importance,picked.importance||1);
-      emitSparks({...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale});
+      if(!result.stageChanged)emitSparks({...picked,x:picked.x*transform.scale+transform.x,z:picked.z*transform.scale+transform.z,size:picked.size*transform.scale});
     }
     const last=result.pickups.reduce((best,p)=>p.importance>best.importance||p.importance===best.importance&&p.size>best.size?p:best);$('pickup').textContent=`+ ${last.name||TYPES[last.type].name} · ${formatSize(last.size,last.sizeLevel??sim.level)}${importance>=2&&last.points?' · +'+last.points+' pts':''}`;pickupUntil=now+(importance>=2?1100:650);
     const pickup=$('pickup');pickup.classList.remove('impact');void pickup.offsetWidth;pickup.classList.add('impact');
     const score=$('score');score.classList.remove('score-rattle');void score.offsetWidth;score.classList.add('score-rattle');
     rollAudio.pickup(sim.combo,importance,now/1000);
     if(navigator.vibrate&&now-lastVibration>100){navigator.vibrate(importance>=3?[18,20,25]:importance>=2?16:7);lastVibration=now;}
+  }
+  if(result.stageChanged){
+    feedback.reset();itemBatches.begin();itemBatches.end();lastVisibleItems=null;lastRenderedItems=[];lastCullAt=0;
+    follow.set(sim.x,surfaceHeight(sim.world,sim.x,sim.z)+visualRadius*.25,sim.z);
+    const [hx,hz]=sim.chapterGoal().heading;yaw=targetYaw=Math.atan2(-hx,-hz);
+    $('hint').textContent=sim.chapterGoal().arc;hintUntil=now+4500;pickupUntil=0;
+    updateHud();
   }
   if(result.checkpoint||result.celebration||result.unlock||(result.milestone!==null&&result.milestone!==undefined)){
     // Stage/size fantasy takes priority; one notice strip protects the playfield.
@@ -377,8 +388,10 @@ if(import.meta.env.DEV&&new URLSearchParams(location.search).has('qa')){
     pacingMetrics(){return sim.engagement.report(sim);},
     warming(){return {active:sim.world.prefetchQueue.filter(q=>q.active).length,pending:[...sim.world.chunks.values()].filter(c=>c.pending).length};},
     endingFixture(island){
-      this.setScaleMeters(2500,island);this.addTestAttachments([...Array(143).fill(0),37,39,40,47,48,49]);
-      sim.chapter=6;const target=sim.objective();sim.x=target.x;sim.z=target.z;sim.world.stamp='';resetVisuals();this.resume();return this.state();
+      this.setScaleMeters(120,island);this.addTestAttachments([...Array(90).fill(0),32,37,48]);
+      sim.chapter=sim.chapters.length-1;sim.chapterStarted=sim.chapter*STAGE_SECONDS;sim.elapsed=sim.timeLimit=sim.chapters.length*STAGE_SECONDS;
+      sim.elapsed-=.05;sim.chapterStats=sim.chapters.slice(0,-1).map(goal=>({name:goal.name,seconds:60,goalSeconds:null,medal:'Played',pickups:0,combo:0,score:0}));
+      sim.moveToStage();sim.world.stamp='';resetVisuals();this.resume();return this.state();
     },
     navigationFixture(kind='corridor'){
       this.setScaleMeters(kind==='corridor'?3:kind==='cadence'?.32:.7,'oahu');
@@ -390,6 +403,7 @@ if(import.meta.env.DEV&&new URLSearchParams(location.search).has('qa')){
     },
     normalizationFixture(level){
       const meters=7.85*2**level;this.setScaleMeters(meters,'oahu');
+      sim.chapter=sim.chapters.length-1;sim.chapterStarted=sim.elapsed=sim.chapter*STAGE_SECONDS;sim.timeLimit=sim.elapsed+STAGE_SECONDS;
       const type=TYPES.map((info,type)=>({type,size:info.size})).filter(i=>i.size*1.08<meters).sort((a,b)=>b.size-a.size)[0].type;
       const item={id:'qa-normalize:'+level,type,x:sim.x+.01,z:sim.z+.01,size:TYPES[type].size*2**(-sim.level),visualSeed:123+level,collected:false,owner:null,islandLandmark:true};
       sim.world.legacy.push(item);sim.world.items.push(item);sim.world.stamp='';return this.state();
@@ -423,7 +437,7 @@ if(import.meta.env.DEV&&new URLSearchParams(location.search).has('qa')){
     resume(){qaOverview=false;sim.mode='playing';},
     overview(){qaOverview=true;resetInput();sim.mode='paused';sim.setViewRadius(4);sim.world.sync(sim,4);},
     driveWorld(x,z,boost=false){const length=Math.max(1,Math.hypot(x,z));x/=length;z/=length;joystick.x=x*Math.cos(yaw)-z*Math.sin(yaw);joystick.z=x*Math.sin(yaw)+z*Math.cos(yaw);boostHeld=boost;},
-    nearby(){return sim.items.filter(i=>!i.collected&&i.size*1.08<=sim.diameter).sort((a,b)=>Math.hypot(a.x-sim.x,a.z-sim.z)-Math.hypot(b.x-sim.x,b.z-sim.z)).slice(0,20).map(i=>({id:i.id,type:i.type,x:i.x,z:i.z,size:i.size}));},
+    nearby(){return sim.items.filter(i=>!i.collected&&sim.canCollect(i)).sort((a,b)=>Math.hypot(a.x-sim.x,a.z-sim.z)-Math.hypot(b.x-sim.x,b.z-sim.z)).slice(0,20).map(i=>({id:i.id,type:i.type,x:i.x,z:i.z,size:i.size}));},
     visible(){const scale=2**sim.level,ppu=world.clientHeight/viewSpan;return lastRenderedItems.map(i=>{const p=new THREE.Vector3(i.x,i.size*.4,i.z).project(camera);return{id:i.id,type:i.type,x:(i.x+Number(sim.world.originX)*CHUNK_SIZE)*scale,z:(i.z+Number(sim.world.originZ)*CHUNK_SIZE)*scale,size:i.size*scale,model:i.renderModel,detailed:i.renderDetailed,ndc:[p.x,p.y,p.z],pixels:i.size*ppu};});},
     inspectItems(previous){const scale=2**sim.level,ppu=world.clientHeight/viewSpan,index=new Map(sim.items.map(i=>[i.id,i]));return previous.map(old=>{const i=index.get(old.id),size=i?.size??old.size/scale;const p=new THREE.Vector3(i?.x??old.x/scale-Number(sim.world.originX)*CHUNK_SIZE,size*.4,i?.z??old.z/scale-Number(sim.world.originZ)*CHUNK_SIZE).project(camera);return{id:old.id,collected:i?.collected||sim.world.collectedIds.has(old.id),loaded:Boolean(i),ndc:[p.x,p.y,p.z],pixels:size*ppu};});},
     clearMetrics(){performanceSamples.length=0;sim.world.generationTimes=[];sim.world.syncTimes=[];},
@@ -434,7 +448,7 @@ if(import.meta.env.DEV&&new URLSearchParams(location.search).has('qa')){
       const eventStats=source=>{const values=[...(source||[])].sort((a,b)=>a-b);return{count:values.length,median:values[Math.floor(values.length*.5)]??null,p95:values[Math.floor(values.length*.95)]??null,max:values.at(-1)??null};};
       return{frames:samples.length,frame:stats('frame'),cpu:stats('cpu'),simulation:stats('simulation'),prepare:stats('prepare'),draw:stats('draw'),gpu:stats('gpu'),drawCalls:stats('calls'),triangles:stats('triangles'),generationMs:eventStats(sim.world.generationTimes),syncMs:eventStats(sim.world.syncTimes),dpr:renderDpr,models:modelLibrary.models.size,visible:itemBatches.visibleCount,attachments:sim.body.pieces.length,preloadHits:sim.world.syncHits,synchronousChunks:sim.world.syncMisses,lastChunkSyncMs:sim.world.lastSyncMs};
     },
-    state:()=>({...sim.snapshot(),elapsed:sim.elapsed,combo:sim.combo,chainCharge:sim.engagement.chain.charge,boostEnergy:sim.boostEnergy,stages:sim.chapterStats,x:sim.x,z:sim.z,renderedPieces:[...compoundView.modelBatches.values()].reduce((total,batch)=>total+batch.pages.reduce((sum,mesh)=>sum+mesh.count,0),0),coreDiameterMeters:sim.body.coreRadius*2*2**sim.level,capturedIsland:sim.body.pieces.some(p=>p.id==='objective:6'),physicalX:(sim.x+Number(sim.world.originX)*CHUNK_SIZE)*2**sim.level,physicalZ:(sim.z+Number(sim.world.originZ)*CHUNK_SIZE)*2**sim.level}),
+    state:()=>({...sim.snapshot(),elapsed:sim.elapsed,combo:sim.combo,chainCharge:sim.engagement.chain.charge,boostEnergy:sim.boostEnergy,stages:sim.chapterStats,x:sim.x,z:sim.z,renderedPieces:[...compoundView.modelBatches.values()].reduce((total,batch)=>total+batch.pages.reduce((sum,mesh)=>sum+mesh.count,0),0),coreDiameterMeters:sim.body.coreRadius*2*2**sim.level,physicalX:(sim.x+Number(sim.world.originX)*CHUNK_SIZE)*2**sim.level,physicalZ:(sim.z+Number(sim.world.originZ)*CHUNK_SIZE)*2**sim.level}),
   };
 }
 
@@ -443,7 +457,7 @@ function registerTools(){
   const lifecycle=new AbortController();
   const register=tool=>{try{Promise.resolve(context.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}};
   register({name:'read_roll_status',description:'Read the current neighborhood game status, size, timer and collection count.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:()=>sim.snapshot()});
-  register({name:'start_neighborhood_roll',description:'Start a fresh Oahu or Lanai island campaign or four-minute challenge. Resets the heap and collection.',inputSchema:{type:'object',properties:{runMode:{type:'string',enum:['campaign','quick']},island:{type:'string',enum:['oahu','lanai']}},required:['runMode'],additionalProperties:false},annotations:{readOnlyHint:false},execute:input=>{if(!['campaign','quick'].includes(input?.runMode))throw new Error('runMode must be campaign or quick');if(input.island&&!ISLANDS[input.island])throw new Error('Unknown island');start(input.runMode,input.island||selectedIsland);return sim.snapshot();}});
+  register({name:'start_neighborhood_roll',description:'Start four one-minute stages around the same Oahu or Lanai map, or the separate four-minute quick challenge. Resets the heap and collection.',inputSchema:{type:'object',properties:{runMode:{type:'string',enum:['campaign','quick']},island:{type:'string',enum:['oahu','lanai']}},required:['runMode'],additionalProperties:false},annotations:{readOnlyHint:false},execute:input=>{if(!['campaign','quick'].includes(input?.runMode))throw new Error('runMode must be campaign or quick');if(input.island&&!ISLANDS[input.island])throw new Error('Unknown island');start(input.runMode,input.island||selectedIsland);return sim.snapshot();}});
   window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
 }
 init();

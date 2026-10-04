@@ -1,3 +1,15 @@
+# Four one-minute stops on the same map (2026-10-04)
+
+The user selected four stages of 60 active seconds each, automatic travel to different places on the same map, increasingly larger objects, and a growing ball with its attachments and collected-map progress retained. This supersedes the seven goal-gated stages and accumulated time bonuses described below. Both island choices use snack market / town square, beach, neighborhood / resort, and highland stops. Travel occurs at 60, 120 and 180 seconds; the run ends at 240 seconds. Early goals earn medals/score bonuses without ending the minute; missing a bonus goal does not skip a stop.
+
+Pickup tiers unlock progressively: snacks/toys up to 0.8 m, beach finds/furniture up to 6 m, neighborhood objects up to 30 m, and all larger objects in the final stage. Authored physical sizes remain fixed. Regional catalogs belong to fixed physical areas, rather than the current stage clock. Each new stop has a 74-slot themed growth trail, accessible starter pickups and larger prizes; clearances persist across normalization/rebase. The same world, seed, collection ledger, compound, power timers and heap carry through travel. Camera/input face the new trail immediately. Ordinary population keeps the 0.8 thinning pass; original model assets and the anchored terrain are reused.
+
+Menu, four stage stamps, per-stage timer, result recap, QA ending/normalization fixtures and WebMCP descriptions match the new run. Local records use a separate four-stage-tour key, so seven-stage scores/times are not mixed with the new mode. The separate quick challenge remains available. The actor regression now samples the neighborhood rather than the new snack-only area, and its visibility assertions reflect the already-shipped 22.8px/1.8x power art.
+
+Validation: four exact timer boundaries, early-goal timing, pause, physical arrival positions, increasing prop sizes, collection/magnet tier gates, map/heap identity, normalization, source-region stability, record separation, navigation, actors, terrain and power behavior pass. Ordinary-control simulation completes all four minutes on both islands; this is not a physical-phone or browser playthrough. Phone visual/performance acceptance remains unverified. Build once from the final source, push the same release commit to GitHub and the public Sites source, and record the native save/deploy receipt locally at outputs/katamari-four-stages-release.json.
+
+Previous release history follows.
+
 # Latest power-up visibility and source synchronization
 
 Power-up art is now 3x larger with a 38 CSS-pixel floor, camera-facing 3D symbols, emissive materials, halos, fading beacons and colored ground rings. The original three powers and physical collection behavior are retained. Read the newest entries in docs/PROJECT_STATE.md and docs/PROGRESS.md; run `node scripts/verify-living-world.mjs` for rendering/cleanup/reduced-motion regression checks alongside the terrain/power checks when changing powers.

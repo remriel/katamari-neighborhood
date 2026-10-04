@@ -1,0 +1,25 @@
+{
+  "simulation": [
+    {
+      "island": "oahu",
+      "opening": 74,
+      "goals": 3,
+      "ordinarySample": 53,
+      "finiteEnding": true
+    },
+    {
+      "island": "lanai",
+      "opening": 74,
+      "goals": 3,
+      "ordinarySample": 64,
+      "finiteEnding": true
+    }
+  ],
+  "models": 170,
+  "materials": 1,
+  "triangles": 53575,
+  "farTriangles": 23575,
+  "maxTriangles": 1849,
+  "bytes": 1336976,
+  "farBytes": 317424
+}
