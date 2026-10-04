@@ -1,3 +1,31 @@
+# Size checkpoint race and island-clearing finale (2026-10-04)
+
+The latest user selected 100 → 200 → 300 → 400 m checkpoints and a race to grow as fast as possible. Stage travel happens immediately on reaching each physical size, retaining the same island, seed, attachments, collection ledger, powers and elapsed clock. There is no campaign deadline or timed stage advancement. At 400 m a fifth island-sweep stage unlocks. Reaching 400 m does not win: the player must grow enough to collect the 2,200 m island pickup (2,376 m eligibility under the ordinary 1.08 rule). Only that actual pickup completes the run. Paused time is excluded, the HUD counts upward, and fastest island-clear times use a new record key with fractional seconds and five stage splits. The separate four-minute quick challenge is retained.
+
+Pacing: the opening snack sweep remains intact, followed by a 140-object trail spanning the small-to-landmark growth bands. Middle stops have 24 growth pickups with greater spacing; the finale has 96 giant pickups, with eight large final reserves. Objects retain physical sizes. Baseline movement speed is increased by exactly 10%. Power-up chunk eligibility falls from 30% to 21% (a 30% reduction); power durations/effects and regular .8 scenery density are retained. Full early scenery and actual rolling terrain remain intact.
+
+The final island target is created only when its stage unlocks, in physical coordinates, and persists through rebase/rescale. It does not act as an oversized obstacle or suppress ordinary scenery; its model becomes visible once eligible, while its marker provides final guidance. This avoids blocking the opening or making the finale unplayable.
+
+Validation: checkpoint boundaries below/at thresholds, continuous/pause-safe time, world and heap retention, normal collection across regions, mass availability, actual island pickup and terminal victory, record separation, fractional fastest finish, navigation, actors, terrain/powers, anchored vertices and 170-model/island invariants pass. Ordinary-control simulation completes both full island-clear races for seed 123456 (about 72.27 s Oʻahu, 82.23 s Lānaʻi). Twenty island/seed combinations have enough authored finale mass; minimum potential diameter is approximately 2,412 m. These tests demonstrate possibility, not human difficulty or phone performance. Browser and physical-phone acceptance remain unverified.
+
+Release uses one production build and the same commit on GitHub feature/living-neighborhoods (PR #2) and the existing public Sites source. Bundled Sites workflow helpers remain absent from this environment; source is reconciled through authenticated fetch, followed by native archive save/deploy. Store the terminal receipt locally at outputs/katamari-island-race-release.json to preserve identical release heads.
+
+Previous history follows.
+
+# Thirty-second stages, restored scenery and mountain relief (2026-10-04)
+
+The latest user requests supersede the stage-based population and collection restrictions below. Both islands now run four 30-second stages, travel at 30/60/90 seconds and finish at 120 seconds. Stage medals use proportionally shorter thresholds; menu, HUD, result text, QA fixtures and WebMCP descriptions match. Campaign records use a new 30-second-tour key. The independent four-minute quick challenge is retained.
+
+Restored the complete ordinary scenery catalog, buildings, plants, actors and regional dressing in early areas. Authored stage trails still supply increasingly large themed pickups, but no stage or destination can block collection: physical ball size alone determines eligibility everywhere, including magnets, obstacles and actor yielding. The existing .8 ordinary population pass, physical object sizes, collected IDs and heap retention remain intact.
+
+Mountain amplitudes rise from 250/180 m to 620/420 m on Oʻahu/Lānaʻi, broad hills become taller, and an additional foothill wave creates smaller rises and valleys. Heights stay in physical meters across normalization and rebasing. Desktop and mobile terrain shade the real slopes and tint high peaks with rock colors. Test ridge samples reach approximately 569/408 m; town sampling shows 3.1/7.2 m relief.
+
+Validation: exact stage boundaries, pause/early goals, persistent world/heap, physical-size collection of formerly stage-locked vans, old-record separation, restored early-area counts (1,887/2,012 objects in 49 sampled chunks, including 945/955 larger props), terrain/powers, anchored vertices, navigation, actors, 170-model/island invariants and engagement checks pass. Ordinary-control route simulation completes both 120-second tours. These are deterministic simulation checks, not browser or physical-phone acceptance. Browser QA remains unavailable through the supported preview workflow.
+
+Release uses one production build, identical source on GitHub feature/living-neighborhoods (PR #2) and the existing public Sites project. Bundled Sites workflow helpers remain absent from this cloud image; source is reconciled by authenticated fetch and published through native archive save/deploy. Keep the native terminal receipt at outputs/katamari-30s-terrain-release.json, outside tracked source, to avoid desynchronizing release heads.
+
+Previous history follows.
+
 # Four one-minute stops on the same map (2026-10-04)
 
 The user selected four stages of 60 active seconds each, automatic travel to different places on the same map, increasingly larger objects, and a growing ball with its attachments and collected-map progress retained. This supersedes the seven goal-gated stages and accumulated time bonuses described below. Both island choices use snack market / town square, beach, neighborhood / resort, and highland stops. Travel occurs at 60, 120 and 180 seconds; the run ends at 240 seconds. Early goals earn medals/score bonuses without ending the minute; missing a bonus goal does not skip a stop.

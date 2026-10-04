@@ -1,6 +1,6 @@
 import {CompoundBall} from './compound-ball.js';
 import {navigationRadius,slidePastObstacles} from './navigation.js';
-import {CHAPTERS,chaptersForIsland,stageMedal,STAGE_SECONDS,CAMPAIGN_START_SECONDS} from './campaign.js';
+import {CHAPTERS,chaptersForIsland,stageMedal,RACE_GOAL_METERS,ISLAND_PICKUP_METERS} from './campaign.js';
 import {islandConfig,islandFields,islandDistance,islandDistrict,nearestStreet,constrainToIsland} from './island-layout.js';
 import {populateActors,updateActors} from './living-world.js';
 import {surfaceHeight} from './terrain-height.js';
@@ -112,26 +112,26 @@ class ProceduralWorld{
     this.legacy=reducePopulation(this.legacy);
     arrangeOpening(this.legacy,TYPES,this.seed,this.islandId,hash);
   }
-  installObjectives(chapters=CHAPTERS){
+  installObjectives(chapters=CHAPTERS,activeIndex=-1){
     for(let index=1;index<chapters.length;index++){
-      const type=chapters[index].type;if(type===null)continue;
-      const [x,z]=chapters[index].target;
+      const type=chapters[index].type;if(type===null||index!==activeIndex)continue;
+      const [px,pz]=chapters[index].target,scale=2**this.level,x=px/scale-Number(this.originX)*CHUNK_SIZE,z=pz/scale-Number(this.originZ)*CHUNK_SIZE;
       let visualSeed=hash(this.seed,'objective',index);if(type===41)visualSeed=visualSeed-visualSeed%3+(this.islandId==='lanai'?1:0);
-      this.legacy.push({id:`objective:${index}`,type,name:TYPES[type].name,x,z,size:TYPES[type].size,collected:false,visualSeed,owner:null,objectiveIndex:index});
+      this.legacy.push({id:`objective:${index}`,type,name:type===41?this.layout.name:TYPES[type].name,x,z,size:TYPES[type].size/scale,collected:false,visualSeed,owner:null,objectiveIndex:index,islandFinale:type===41});
     }
   }
   installStageRoute(player,chapter,index){
     const scale=2**this.level,ox=Number(this.originX)*CHUNK_SIZE,oz=Number(this.originZ)*CHUNK_SIZE;
     const startX=(player.x+ox)*scale,startZ=(player.z+oz)*scale;
-    const [hx,hz]=chapter.heading,slots=Math.round(92*REGULAR_PICKUP_DENSITY);
-    let diameter=player.diameter*scale,mass=player.volume*scale**3,along=diameter*.8+.6,previous=0;
+    const [hx,hz]=chapter.heading,slots=index===0?140:index===4?96:24;
+    let diameter=player.diameter*scale,mass=player.volume*scale**3,along=index===0?14:diameter*.8+.6,previous=0;
     for(let i=0;i<slots;i++){
       const availableDiameter=i<8?player.diameter*scale:diameter;
-      const eligible=chapter.props.filter(type=>TYPES[type].size*1.08<=availableDiameter).sort((a,b)=>TYPES[b].size-TYPES[a].size);
+      const eligible=chapter.props.filter(type=>TYPES[type].size*1.08<=Math.min(availableDiameter,chapter.size)).sort((a,b)=>TYPES[b].size-TYPES[a].size);
       const prizes=chapter.props.filter(type=>TYPES[type].size>=chapter.size*.6);
-      const pool=i>=slots-4&&prizes.length?prizes:eligible;
+      const pool=index===4&&i>=slots-8?eligible.slice(0,1):i>=slots-4&&prizes.length?prizes:eligible;
       const type=pool[hash(this.seed,index,i,'stage-prop')%Math.min(3,pool.length)]??chapter.props[0],info=TYPES[type];
-      along+=(previous+info.size)*.42+.25;
+      along+=((previous+info.size)*.42+.25)*(index>0?2.5:1);
       const bend=Math.sin(i*.22)*Math.min(12,along*.07);
       const point=constrainToIsland(startX+hx*along-hz*bend,startZ+hz*along+hx*bend,info.size*footprint(type)+.4,this.islandId);
       const id=`stage:${index}:${i}`;
@@ -178,20 +178,17 @@ class ProceduralWorld{
     // every new slot with thousands of retained old-scale objects.
     const legacyNearby=this.legacy.filter(old=>{
       const range=9+(old.size+12)*(old.stageIndex!==undefined?.6:.3)+(old.routeClearance||0);
-      return !old.collected&&Math.abs(old.x-(cx*CHUNK_SIZE+9))<range&&Math.abs(old.z-(cz*CHUNK_SIZE+9))<range;
+      return !old.collected&&!old.islandFinale&&Math.abs(old.x-(cx*CHUNK_SIZE+9))<range&&Math.abs(old.z-(cz*CHUNK_SIZE+9))<range;
     });
     const ruralExcluded=this.islandId==='lanai'?[34,36,37,38,39]:[];
-    // Region tiers belong to physical places, so revisiting a place never
-    // changes its objects just because the one-minute clock advanced.
-    const physicalX=(cx*CHUNK_SIZE+9+originX)*physical,physicalZ=(cz*CHUNK_SIZE+9+originZ)*physical;
-    const region=chaptersForIsland(this.islandId).filter(stage=>Math.hypot(physicalX-stage.start[0],physicalZ-stage.start[1])<stage.radius)
-      .sort((a,b)=>Math.hypot(physicalX-a.start[0],physicalZ-a.start[1])-Math.hypot(physicalX-b.start[0],physicalZ-b.start[1]))[0];
-    const catalogue=TYPES.map((_,type)=>type).filter(type=>{const size=localSize(type,this.level);return (region?region.props.includes(type):type<52)&&type!==41&&size>=.1&&size<=12&&(!region||TYPES[type].size<=region.maxObjectSize)&&!ruralExcluded.includes(type);});
+    // The full scenery catalog is present from the start. Stage themes belong
+    // to the authored trails; collection depends only on the growing ball.
+    const catalogue=TYPES.map((_,type)=>type).filter(type=>{const size=localSize(type,this.level);return type<52&&type!==41&&size>=.1&&size<=12&&!ruralExcluded.includes(type);});
     if(!catalogue.length)return chunk;
     const urban=this.islandId==='lanai'?[7,12,14,15,17,23,26,27,32,42,43,44,45,46,48,50,51]:
       [7,9,11,13,14,15,17,22,24,26,27,28,29,30,32,36,38,39,42,43,44,45,46,51];
     const natural=zone.ridge>.28?[2,7,12,16,23,31,33,35,40,47,49,50]:zone.coast<160?[7,12,14,23,29,31,48,49,51]:[1,2,7,12,15,16,23,31,33,35,47,50];
-    const theme=region?.props||(zone.city>.28?urban:natural);
+    const theme=zone.city>.28?urban:natural;
     const themed=theme.filter(type=>catalogue.includes(type));
     const large=catalogue.filter(type=>localSize(type,this.level)>=1.6);
     const small=catalogue.filter(type=>localSize(type,this.level)<=1.6&&(themed.includes(type)||type<6||[18,19,20,21].includes(type)));
@@ -253,8 +250,8 @@ class ProceduralWorld{
     }
     for(let slot=80;slot<96;slot++){const x=cx*CHUNK_SIZE+1.8+random()*14.4,z=cz*CHUNK_SIZE+1.8+random()*14.4;add(select(medium),x,z,slot);}
     chunk.items=reducePopulation(chunk.items);
-    populateActors(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level,maxObjectSize:region?.maxObjectSize},TYPES,hash);
-    dressRegion(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level,chunkId:chunk.id,maxObjectSize:region?.maxObjectSize},TYPES,hash);
+    populateActors(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level},TYPES,hash);
+    dressRegion(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level,chunkId:chunk.id},TYPES,hash);
     arrangeChunkRoute(chunk.items,{islandId:this.islandId,physical,originX,originZ,cx,cz},TYPES,hash,this.guards,legacyNearby);
     for(const item of chunk.items){const pulled=this.magnetPositions.get(item.id);if(pulled){item.x=pulled.x/physical-originX;item.z=pulled.z/physical-originZ;item.magnetized=true;}}
     return chunk;
@@ -378,7 +375,7 @@ export class Simulation{
     if(this.runMode==='campaign')this.world.installObjectives(this.chapters);
     this.world.installLandmarks();
     this.x=0;this.z=0;this.vx=0;this.vz=0;this.navSide=hash(this.world.seed,'steering')%2?1:-1;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.powerUntil={magnet:0,turbo:0,star:0};this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.bestCombo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;
-    this.chapter=0;this.capturedObjectives=new Set();this.score=0;this.chapterStarted=0;this.stageGoalReachedAt=null;this.chapterStats=[];this.boostEnergy=100;this.boostExhausted=false;this.timeLimit=this.runMode==='campaign'?CAMPAIGN_START_SECONDS:ROUND_SECONDS;this.world.sync(this,this.viewRadius);
+    this.chapter=0;this.capturedObjectives=new Set();this.score=0;this.chapterStarted=0;this.stageGoalReachedAt=null;this.chapterStats=[];this.boostEnergy=100;this.boostExhausted=false;this.timeLimit=this.runMode==='campaign'?Infinity:ROUND_SECONDS;if(this.runMode==='campaign')this.world.installStageRoute(this,this.chapters[0],0);this.world.sync(this,this.viewRadius);
     this.engagement=new RollEngagement(this.diagnosticsEnabled);this.stageStartCount=0;this.stageStartScore=0;this.stageBestCombo=0;this.boostPickupSecond=-1;this.boostPickupAwarded=0;this.boosting=false;
   }
   setDiagnostics(enabled){this.diagnosticsEnabled=Boolean(enabled);this.engagement.diagnostics=this.diagnosticsEnabled;}
@@ -386,8 +383,7 @@ export class Simulation{
   setModelBounds(resolver){this.modelBounds=resolver;}
   setViewRadius(radius){this.viewRadius=Math.max(2,Number.isFinite(radius)?Math.ceil(radius):2);}
   setVisibleRadius(radius){this.visibleRadius=radius;}
-  stageAllows(item){return Boolean(item.powerup)||this.runMode==='quick'||this.chapter>=this.chapters.length-1||item.size*2**this.level<=this.chapterGoal().maxObjectSize+1e-8;}
-  canCollect(item){return Boolean(item.powerup)||this.stageAllows(item)&&item.size*1.08<=this.diameter;}
+  canCollect(item){return Boolean(item.powerup)||item.size*1.08<=this.diameter;}
   moveToStage(){
     const chapter=this.chapterGoal(),street=nearestStreet(...chapter.start,this.islandId);
     const point=constrainToIsland(street.x,street.z,Math.max(.25,this.body.coreRadius*2**this.level),this.islandId);
@@ -398,13 +394,14 @@ export class Simulation{
     const shift=this.world.rebase(Math.floor(this.x/CHUNK_SIZE),Math.floor(this.z/CHUNK_SIZE));
     this.x-=shift.dx;this.z-=shift.dz;
     this.world.installStageRoute(this,chapter,this.chapter);
+    if(chapter.type!==null)this.world.installObjectives(this.chapters,this.chapter);
     this.engagement.memories.clear();this.engagement.prize=null;this.engagement.nextObserve=this.elapsed;
     return shift;
   }
   step(dt,input){
     if(this.mode!=='playing')return {pickups:[],distance:0,transform:{scale:1,x:0,z:0}};
-    // A stage consumes exactly 60 active seconds. Do not let a long frame use
-    // time from the next stop or carry overshoot into its clock.
+    // Race time counts up continuously. Only the separate quick challenge has
+    // a deadline; a race checkpoint never consumes or resets elapsed time.
     dt=Math.max(0,Math.min(dt,this.timeLimit-this.elapsed));
     this.elapsed+=dt;
     if(this.timeLimit-this.elapsed<1e-9)this.elapsed=this.timeLimit;
@@ -417,7 +414,7 @@ export class Simulation{
     const probe=Math.max(.5/2**this.level,this.diameter*.3),ground=surfaceHeight(this.world,this.x,this.z);
     const slope=(surfaceHeight(this.world,this.x+input.x*probe,this.z+input.z*probe)-ground)/probe;
     const slopeSpeed=Math.max(.65,Math.min(1.3,1-slope*.65));
-    const speed=(1.7+Math.sqrt(this.diameter)*1.5)*(boosting?1.7:1)*(1-this.body.impact*.24)*slopeSpeed*((this.powerUntil.turbo||0)>this.elapsed?1.4:1);
+    const speed=(1.7+Math.sqrt(this.diameter)*1.5)*1.1*(boosting?1.7:1)*(1-this.body.impact*.24)*slopeSpeed*((this.powerUntil.turbo||0)>this.elapsed?1.4:1);
     const smoothing=1-Math.exp(-dt*9);
     const gx=(surfaceHeight(this.world,this.x+probe,this.z)-surfaceHeight(this.world,this.x-probe,this.z))/(probe*2),gz=(surfaceHeight(this.world,this.x,this.z+probe)-surfaceHeight(this.world,this.x,this.z-probe))/(probe*2);
     this.vx+=(input.x*speed-this.vx)*smoothing;this.vz+=(input.z*speed-this.vz)*smoothing;
@@ -476,7 +473,7 @@ export class Simulation{
           if(item.objectiveIndex!==undefined)this.capturedObjectives.add(item.objectiveIndex);
         }
       }
-      const obstacles=nearby.filter(item=>!item.collected&&!item.powerup&&!this.canCollect(item)).map(item=>({...item,radius:item.size*footprint(item.type)*.78}));
+      const obstacles=nearby.filter(item=>!item.collected&&!item.powerup&&!item.islandFinale&&!this.canCollect(item)).map(item=>({...item,radius:item.size*footprint(item.type)*.78}));
       for(const item of obstacles)if(Math.hypot(this.x-item.x,this.z-item.z)<navigationRadius(this.diameter,this.body.coreRadius)+item.radius+.04&&(item.x-this.x)*input.x+(item.z-this.z)*input.z>0)this.engagement.failedContact(item,this.elapsed);
       const pose=slidePastObstacles(this.x,this.z,this.vx,this.vz,navigationRadius(this.diameter,this.body.coreRadius),obstacles,dt/substeps,{fromX:beforeX,fromZ:beforeZ,intentX:input.x,intentZ:input.z,side:this.navSide});
       this.x=pose.x;this.z=pose.z;this.vx=pose.vx;this.vz=pose.vz;
@@ -492,24 +489,15 @@ export class Simulation{
     if(this.scaleStage<SCALE_STAGES.length-1&&Math.log2(this.diameter)+this.level>=Math.log2(SCALE_STAGES[this.scaleStage+1].size)){this.scaleStage++;unlock=SCALE_STAGES[this.scaleStage].message;}
     let checkpoint=null,stageChanged=false;
     if(this.runMode==='campaign'){
-      if(this.chapter<this.chapters.length){
-        const goal=this.chapters[this.chapter],largeEnough=Math.log2(this.diameter)+this.level>=Math.log2(goal.size);
-        const ready=largeEnough&&this.count>=goal.count&&(goal.type===null||this.capturedObjectives.has(this.chapter));
-        if(ready&&this.stageGoalReachedAt===null){
-          this.stageGoalReachedAt=this.elapsed-this.chapterStarted;
-          checkpoint='Goal reached! Keep rolling until the next stop.';
-        }
-        if(this.elapsed>=this.timeLimit){
-          const finished=this.chapter,seconds=STAGE_SECONDS,goalSeconds=this.stageGoalReachedAt;
-          if(goalSeconds!==null)this.score+=1500*(finished+1);
-          this.chapterStats.push({name:goal.name,seconds,goalSeconds,count:this.count,size:formatSize(this.diameter,this.level),medal:stageMedal(goalSeconds,finished),pickups:this.count-this.stageStartCount,combo:this.stageBestCombo,score:this.score-this.stageStartScore});
-          this.stageStartCount=this.count;this.stageStartScore=this.score;this.stageBestCombo=0;this.stageGoalReachedAt=null;this.chapter++;
-          if(this.chapter===this.chapters.length){this.won=true;this.mode='result';checkpoint='FOUR STOPS. ONE GLORIOUS HEAP!';}
-          else {
-            this.chapterStarted=this.chapter*STAGE_SECONDS;this.timeLimit=this.chapterStarted+STAGE_SECONDS;stageChanged=true;
-            checkpoint=`${this.chapter+1} / ${this.chapters.length} · ${this.chapterGoal().name} · 1:00`;
-          }
-        }
+      const meters=this.diameter*2**this.level;
+      while(this.chapter<this.chapters.length&&meters>=this.chapters[this.chapter].size&&(this.chapters[this.chapter].type===null||this.capturedObjectives.has(this.chapter))){
+        const finished=this.chapter,goal=this.chapters[finished],seconds=this.elapsed-this.chapterStarted;
+        this.score+=1500*(finished+1);
+        this.chapterStats.push({name:goal.name,goalMeters:goal.size,seconds,goalSeconds:seconds,count:this.count,size:formatSize(this.diameter,this.level),medal:stageMedal(seconds,finished),pickups:this.count-this.stageStartCount,combo:this.stageBestCombo,score:this.score-this.stageStartScore});
+        this.stageStartCount=this.count;this.stageStartScore=this.score;this.stageBestCombo=0;this.stageGoalReachedAt=null;this.chapter++;
+        this.chapterStarted=this.elapsed;
+        if(this.chapter===this.chapters.length){this.won=true;this.mode='result';stageChanged=false;checkpoint='ISLAND CLEARED! YOU WIN!';}
+        else{stageChanged=true;checkpoint=this.chapter===4?'400 m! Island sweep unlocked · collect the whole island!':`${goal.size} m! Next stop · race to ${this.chapterGoal().size} m`;}
       }
     }else if(this.nextGoal>0){this.won=true;this.mode='result';}
     if(this.runMode==='quick'&&this.mode==='playing'&&this.elapsed>=this.timeLimit){this.won=false;this.mode='result';}
@@ -535,16 +523,16 @@ export class Simulation{
   }
   scaleLabel(){return SCALE_STAGES[this.scaleStage].label;}
   chapterGoal(){return this.chapters[Math.min(this.chapter,this.chapters.length-1)];}
-  objective(){return this.world.legacy.find(item=>!item.collected&&item.objectiveIndex===this.chapter);}
+  objective(){if(this.chapter!==4)return null;return this.world.legacy.find(item=>!item.collected&&item.objectiveIndex===this.chapter);}
   prize(){
     const prize=this.engagement.prize;if(!prize)return null;
     const physical=2**this.level,ox=Number(this.world.originX)*CHUNK_SIZE,oz=Number(this.world.originZ)*CHUNK_SIZE;
     const live=this.items.find(i=>i.id===prize.id&&!i.collected);
     return {id:prize.id,type:prize.type,name:prize.name||TYPES[prize.type].name,x:live?.x??prize.x/physical-ox,z:live?.z??prize.z/physical-oz,size:prize.size/physical,ready:prize.size*1.08<=this.diameter*physical,neededMeters:Math.max(0,prize.size*1.08-this.diameter*physical)};
   }
-  progress(){if(this.mode==='result'&&this.won)return 1;const goal=this.runMode==='quick'?GOAL:this.chapterGoal().size,ratio=Math.max(0,Math.min(1,this.diameter*2**this.level/goal));if(this.runMode==='quick')return ratio;const chapter=this.chapterGoal(),values=[ratio,Math.min(1,this.count/chapter.count)];if(chapter.type!==null)values.push(this.capturedObjectives.has(this.chapter)?1:0);return values.reduce((sum,v)=>sum+v,0)/values.length;}
+  progress(){if(this.mode==='result'&&this.won)return 1;const goal=this.runMode==='quick'?GOAL:this.chapterGoal().size;return Math.max(0,Math.min(1,this.diameter*2**this.level/goal));}
   nextGoalSize(){return formatSize(this.runMode==='quick'?GOAL:this.chapterGoal().size);}
-  snapshot(){return{elevationMeters:surfaceHeight(this.world,this.x,this.z)*2**this.level,powerups:activePowers(this),mode:this.mode,runMode:this.runMode,islandId:this.islandId,map:this.world.layout.name,stageDurationSeconds:this.runMode==='campaign'?STAGE_SECONDS:ROUND_SECONDS,stageGoalReached:this.stageGoalReachedAt!==null,totalSeconds:this.runMode==='campaign'?this.chapters.length*STAGE_SECONDS:ROUND_SECONDS,chapter:Math.min(this.chapter+1,this.chapters.length),chapters:this.chapters.length,objective:this.chapterGoal().hint,size:formatSize(this.diameter,this.level),normalizedDiameter:this.diameter,scaleExponent:this.level,collected:this.count,attachedPieces:this.body.pieces.length,score:this.score,bestCombo:this.bestCombo,nearbyRemaining:this.items.filter(i=>!i.collected).length,loadedBlocks:this.world.chunks.size,seed:this.world.seed,secondsRemaining:Math.max(0,Math.ceil(this.timeLimit-this.elapsed)),freeRoll:false,goalMeters:this.runMode==='quick'?GOAL:this.chapterGoal().size};}
+  snapshot(){return{elevationMeters:surfaceHeight(this.world,this.x,this.z)*2**this.level,powerups:activePowers(this),mode:this.mode,runMode:this.runMode,islandId:this.islandId,map:this.world.layout.name,stageDurationSeconds:this.runMode==='campaign'?null:ROUND_SECONDS,stageGoalReached:this.stageGoalReachedAt!==null,totalSeconds:this.runMode==='campaign'?null:ROUND_SECONDS,elapsedSeconds:this.elapsed,finaleUnlocked:this.runMode==='campaign'&&this.chapter>=4,islandCollected:this.capturedObjectives.has(4),raceGoalMeters:this.runMode==='campaign'?RACE_GOAL_METERS:GOAL,finishGoalMeters:this.runMode==='campaign'?ISLAND_PICKUP_METERS:GOAL,chapter:Math.min(this.chapter+1,this.chapters.length),chapters:this.chapters.length,objective:this.chapterGoal().hint,size:formatSize(this.diameter,this.level),normalizedDiameter:this.diameter,scaleExponent:this.level,collected:this.count,attachedPieces:this.body.pieces.length,score:this.score,bestCombo:this.bestCombo,nearbyRemaining:this.items.filter(i=>!i.collected).length,loadedBlocks:this.world.chunks.size,seed:this.world.seed,secondsRemaining:this.runMode==='campaign'?null:Math.max(0,Math.ceil(this.timeLimit-this.elapsed)),freeRoll:false,goalMeters:this.runMode==='quick'?GOAL:this.chapterGoal().size};}
 }
 export function sizeParts(d,level=0){
   const exponent=Math.log10(d)+level*Math.log10(2);

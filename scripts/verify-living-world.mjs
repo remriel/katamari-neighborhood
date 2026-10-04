@@ -21,7 +21,7 @@ for(const island of ['oahu','lanai']){
   for(const actor of world.movers)counts[actor.motion.kind]++;
   for(const kind of Object.keys(counts))assert.ok(counts[kind]>0,`${island} lacks ${kind}`);
   assert.equal(world.legacy.filter(i=>i.id.startsWith('opening:')).length,74);
-  assert.equal(world.legacy.filter(i=>i.objectiveIndex!==undefined).length,3);
+  assert.equal(world.legacy.filter(i=>i.objectiveIndex!==undefined).length,0);
   // Sample complete routes, not just the initial placement.
   for(const item of world.movers)for(let step=0;step<128;step++){
     const p=actorPose(item.motion,step/128,island);

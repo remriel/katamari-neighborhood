@@ -8,7 +8,7 @@ async page => {
     await game.evaluate(id=>window.__katamariQa.endingFixture(id),island);
     await game.getByRole('button',{name:'Admire your finished monstrosity'}).waitFor({state:'visible'});
     const state=await game.evaluate(()=>window.__katamariQa.state());
-    if(state.mode!=='result'||state.chapters!==4||state.elapsed!==240||state.collected!==state.attachedPieces)throw new Error('The four-stage run did not end with its pieces retained');
+    if(state.mode!=='result'||state.chapters!==5||!state.islandCollected||state.collected!==state.attachedPieces)throw new Error('The island-clearing race did not end with its pieces retained');
     await game.screenshot({path:'outputs/playwright/'+island+'-ending-mobile.png'});
     await game.getByRole('button',{name:'Admire your finished monstrosity'}).click();
     await game.getByRole('button',{name:'Rotate camera 45 degrees'}).click();

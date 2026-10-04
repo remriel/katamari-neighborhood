@@ -1,12 +1,12 @@
 import {runGrade} from './campaign.js';
 const finite=(v,fallback=0)=>Number.isFinite(v)&&v>=0?v:fallback;
-const recordKey=(island,mode)=>'katamari:'+island+':'+(mode==='campaign'?'four-stage-tour':mode)+'-best';
+const recordKey=(island,mode)=>'katamari:'+island+':'+(mode==='campaign'?'island-race':mode)+'-best';
 export function readRecord(storage,island,mode){
   try{
     const raw=JSON.parse(storage.getItem(recordKey(island,mode))||(mode==='quick'&&island==='oahu'?storage.getItem('katamari:'+mode+'-best'):null)||'null');
     if(!raw||typeof raw!=='object')return null;
     return {score:finite(raw.score),combo:finite(raw.combo),count:finite(raw.count),seconds:finite(raw.seconds,null),
-      stages:Array.isArray(raw.stages)?raw.stages.slice(0,4).map(s=>({seconds:finite(s?.seconds,null),goalSeconds:finite(s?.goalSeconds,null),pickups:finite(s?.pickups),score:finite(s?.score),medal:['Gold','Silver','Bronze','Played'].includes(s?.medal)?s.medal:'Played'})):[],
+      stages:Array.isArray(raw.stages)?raw.stages.slice(0,5).map(s=>({seconds:finite(s?.seconds,null),goalSeconds:finite(s?.goalSeconds,null),pickups:finite(s?.pickups),score:finite(s?.score),medal:['Gold','Silver','Bronze','Played'].includes(s?.medal)?s.medal:'Played'})):[],
       splits:Array.isArray(raw.splits)?raw.splits.slice(0,45).filter(s=>Number.isFinite(s?.time)&&Number.isFinite(s?.score)):[],completed:Boolean(raw.completed||raw.seconds>0)};
   }catch{return null;}
 }
@@ -22,11 +22,11 @@ export function finishRecord(sim,previous,splits=[]){
   const labels=[],comparisons=[];
   if(sim.score>(previous?.score||0))labels.push('NEW SCORE BEST');
   if(sim.bestCombo>(previous?.combo||0))labels.push('NEW CHAIN BEST');
-  const seconds=Math.round(sim.elapsed),faster=sim.runMode==='quick'&&sim.won&&(!previous?.seconds||seconds<previous.seconds);
-  if(faster)labels.push('FASTEST FINISH');
+  const seconds=sim.elapsed,faster=sim.won&&(!previous?.seconds||seconds<previous.seconds);
+  if(faster)labels.unshift('FASTEST FINISH');
   if(previous?.score&&sim.score<previous.score)comparisons.push((previous.score-sim.score).toLocaleString()+' points from your best');
   if(previous?.combo&&sim.bestCombo<previous.combo)comparisons.push((previous.combo-sim.bestCombo)+' pickups from your best chain');
-  if(sim.runMode==='quick'&&sim.won&&previous?.seconds&&!faster)comparisons.push((seconds-previous.seconds)+' seconds from your fastest finish');
+  if(sim.won&&previous?.seconds&&!faster)comparisons.push((seconds-previous.seconds).toFixed(2)+' seconds from your fastest finish');
   const stages=Array.from({length:Math.max(previous?.stages?.length||0,sim.chapterStats.length)},(_,i)=>{
     const current=sim.chapterStats[i],old=previous?.stages?.[i];
     const fasterGoal=current?.goalSeconds!==null&&current?.goalSeconds!==undefined&&(old?.goalSeconds===null||old?.goalSeconds===undefined||current.goalSeconds<old.goalSeconds);

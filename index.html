@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1" />
   <meta name="theme-color" content="#5134a2" />
-  <meta name="description" content="Build a bumpy monstrosity of permanently stuck objects. Roll through four one-minute stages on the same Hawaiian island, collecting larger objects at each stop in this finite mobile-first Katamari-inspired game." />
+  <meta name="description" content="Build a bumpy monstrosity of permanently stuck objects. Roll through a race to 400 meters on the same Hawaiian island, collecting larger objects at each stop in this finite mobile-first Katamari-inspired game." />
   <title>Katamari Neighborhood — Roll a little, grow a lot</title>
   <link rel="icon" type="image/png" href="/assets/ball-icon.png" />
 </head>
@@ -18,7 +18,7 @@
         <button id="pause" class="icon-button" aria-label="Pause game" title="Pause">Ⅱ</button>
       </div>
     </header>
-    <div class="timer-dial" aria-label="Time remaining"><span id="timer">1:00</span><span class="timer-hand"></span><small>TIME</small></div>
+    <div class="timer-dial" aria-label="Elapsed race time"><span id="timer">0:00.0</span><span class="timer-hand"></span><small>TIME</small></div>
     <section class="hud" aria-label="Game status">
       <div class="size-flower" aria-hidden="true"></div>
       <div class="size-label">YOUR KATAMARI</div>
@@ -30,7 +30,7 @@
     <section class="mission-card" aria-label="Current objective">
       <div class="mission-header"><strong id="chapter-title">1 / 4 · Snack market</strong><span id="score">0 PTS</span></div>
       <div class="mission-content"><p id="chapter-hint">Collect 20 little things and reach 1 m.</p><div id="target-guide" class="target-guide hidden"><span id="target-arrow">↑</span><small id="target-distance"></small><small id="target-name"></small></div></div>
-      <div id="stage-track" class="stage-track" aria-label="Four stages on the same island, one minute each"><span title="Snack market · 1 min">🍬</span><span title="Beach party · 1 min">🏖️</span><span title="Neighborhood feast · 1 min">🏘️</span><span title="Highland haul · 1 min">🏰</span></div>
+      <div id="stage-track" class="stage-track" aria-label="100, 200, 300 and 400 meters, then collect the island"><span title="Snack market · 100 m">🍬</span><span title="Beach party · 200 m">🏖️</span><span title="Neighborhood feast · 300 m">🏘️</span><span title="Highland haul · 400 m">🏰</span><span title="Collect the island to win">🌴</span></div>
       <div id="next-prize" class="next-prize hidden"></div>
       <div id="combo" class="combo-label hidden"><span id="combo-text"></span><span class="chain-track" aria-hidden="true"><i id="chain-fill"></i></span></div>
       <div id="record-pace" class="record-pace hidden"></div>
@@ -49,9 +49,9 @@
     <div class="desktop-help">WASD / arrows to roll <b>·</b> Shift to dash <b>·</b> Q / E rotate <b>·</b> Esc pause</div>
     <section id="menu" class="menu-layer" aria-label="Start game">
       <div class="menu-card">
-        <span class="map-kicker">4 STAGES · 1 MINUTE EACH</span>
+        <span class="map-kicker">400 m · THEN CLEAR THE ISLAND</span>
         <h1>Build a<br><em>monstrosity!</em></h1>
-        <p class="menu-description">Four places. Larger pickups every minute. Keep your growing heap.</p>
+        <p class="menu-description">Race through 100, 200, 300 and 400 meters. Then grow big enough to collect the island and win.</p>
         <div class="island-selector" role="group" aria-label="Choose an island">
           <button id="island-oahu" class="island-choice selected" aria-pressed="true"><img src="/assets/oahu-overview.png" alt=""><span><strong>Oʻahu</strong><small>City, coast & ridges</small></span></button>
           <button id="island-lanai" class="island-choice" aria-pressed="false"><img src="/assets/lanai-overview.png" alt=""><span><strong>Lānaʻi</strong><small>Town & wild highlands</small></span></button>
@@ -59,7 +59,7 @@
         <p id="menu-record" class="menu-record"></p>
         <button id="start" class="primary-button" disabled>Preparing your neighborhood…</button>
         <button id="free" class="text-button" disabled>Try a single 4 minute challenge</button>
-        <p class="start-hint">Drag to roll · Hold GO! to dash · New place and bigger pickups every minute</p>
+        <p class="start-hint">Drag to roll · Hold GO! to dash · Grow fast · Beat your best time</p>
         <span class="fan-note">An independent Katamari-inspired fan game.</span>
       </div>
     </section>

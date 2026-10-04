@@ -29,7 +29,7 @@ for(const island of ['oahu','lanai']){
   const heights=[];
   for(let x=-120;x<=120;x+=4)heights.push(islandHeight(x,40,island));
   assert.ok(Math.max(...heights)-Math.min(...heights)>1,'Town terrain remains flat');
-  const ridge=islandConfig(island).ridges[0][1];assert.ok(islandHeight(...ridge,island)>70,'Island ridge is flat');
+  const ridge=islandConfig(island).ridges[0][1];assert.ok(islandHeight(...ridge,island)>300,'Island mountain relief was lost');
   near(islandHeight(12000,12000,island),0);
   const x=55,z=-27,before=surfaceHeight(world,x,z);world.originX=3n;world.originZ=-2n;
   near(surfaceHeight(world,x-54,z+36),before);
