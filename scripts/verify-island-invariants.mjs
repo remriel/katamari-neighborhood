@@ -64,7 +64,7 @@ for(const [name,meta] of Object.entries(manifest.models)){
 assert.equal(named.size,Object.keys(manifest.models).length);
 assert.equal(gltf.materials.length,1,'Palette was split into unique materials');
 assert.ok(!gltf.images?.length,'Model kit unexpectedly uses bitmap textures');
-assert.equal(PROP_ART_COUNT,54);assert.equal(TYPES.length,54);
+assert.equal(PROP_ART_COUNT,54);assert.equal(TYPES.length,71);
 for(let type=0;type<TYPES.length;type++)assert.ok(manifest.types[String(type)]?.models.length,'Missing collectible 3D family '+type);
 assert.ok(manifest.types.guide?.models.length,'Rolling guide has no 3D mesh');
 assert.equal(manifest.artRatios.length,54,'Original physical attachment proportions were lost');

@@ -1,3 +1,20 @@
+# Terrain, beaches, variety, HUD and three powers
+
+- [x] Replace grass and add sand artwork with smaller mobile texture payloads.
+- [x] Build beaches with surf/wet sand and 3D coastal collectibles.
+- [x] Add distinct market/garden/highland scenery on both islands without increasing population.
+- [x] Implement real up/down hill rolling, camera/prop elevation and slope effects.
+- [x] Restyle HUD around the first-game reference.
+- [x] Implement exactly three powers: magnet, turbo, lucky star.
+- [x] Verify terrain/powers, actors, navigation, finite campaigns, 170 models and density.
+- [x] Compile/render terrain offline and inspect Blender scenery preview.
+- [ ] Build, package, push exact source and publish the public Site.
+- [ ] Update GitHub review PR #2 and release evidence.
+
+Browser/mobile gameplay acceptance remains unverified; the linked original UI page is blocked by the cloud proxy. See PROJECT_STATE.md for precise evidence boundaries.
+
+Previous checkpoints follow below.
+
 # Living neighborhoods — cloud update
 
 - [x] Reconcile cloud checkout, GitHub main, and public Sites version 10.

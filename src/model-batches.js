@@ -9,6 +9,7 @@ export class WorldItemBatches{
     this.up=new THREE.Vector3(0,1,0);this.shadowRotation=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-Math.PI/2);
     this.visibleCount=0;this.modelCount=0;
     this.movers=[];
+    this.heightAt=()=>0;
   }
   page(group,index){
     if(group.pages[index])return group.pages[index];
@@ -30,15 +31,16 @@ export class WorldItemBatches{
     let group=this.groups.get(model.name);
     if(!group){group={model,pages:[],used:0};this.groups.set(model.name,group);}
     const slot=group.used++,index=slot%256,mesh=this.page(group,Math.floor(slot/256));mesh.count=index+1;
-    this.position.set(item.x,.006,item.z);this.rotation.setFromAxisAngle(this.up,item.visualYaw??(item.visualSeed>>>0)/4294967296*Math.PI*2);
+    const ground=this.heightAt(item.x,item.z);
+    this.position.set(item.x,ground+.006,item.z);this.rotation.setFromAxisAngle(this.up,item.visualYaw??(item.visualSeed>>>0)/4294967296*Math.PI*2);
     const variation=[12,16,31,50,51].includes(item.type)?.96+((item.visualSeed>>>24)/255)*.08:1;
     this.scale.setScalar(item.size*1.05*variation);this.matrix.compose(this.position,this.rotation,this.scale);
     mesh.setMatrixAt(index,this.matrix);mesh.instanceMatrix.needsUpdate=true;this.visibleCount++;this.modelCount++;
-    const moving=item.motion?{item,mesh,index,scale:item.size*1.05*variation}:null;
+    const moving={item,mesh,index,scale:item.size*1.05*variation};
     if(moving)this.movers.push(moving);
     if(item.size>.3){
       const slot=this.shadow.used++,index=slot%256,shadow=this.page(this.shadow,Math.floor(slot/256));shadow.count=index+1;
-      this.position.set(item.x,.012,item.z);this.scale.setScalar(item.size*.85);this.matrix.compose(this.position,this.shadowRotation,this.scale);
+      this.position.set(item.x,ground+.012,item.z);this.scale.setScalar(item.size*.85);this.matrix.compose(this.position,this.shadowRotation,this.scale);
       shadow.setMatrixAt(index,this.matrix);shadow.instanceMatrix.needsUpdate=true;
       if(moving){moving.shadow=shadow;moving.shadowIndex=index;}
     }
@@ -48,14 +50,21 @@ export class WorldItemBatches{
       const mesh=group.pages[page];mesh.count=Math.min(256,Math.max(0,group.used-page*256));mesh.visible=mesh.count>0;
     }
   }
-  updateMotion(){
+  updateMotion(time=0,animate=true){
     for(const entry of this.movers){
       const {item,mesh,index}=entry;
-      this.position.set(item.x,.006+(item.visualBob||0),item.z);this.rotation.setFromAxisAngle(this.up,item.visualYaw);
+      if(!item.motion&&!item.magnetized&&!item.powerup)continue;
+      const ground=this.heightAt(item.x,item.z);
+      this.position.set(item.x,ground+.006+(item.visualBob||0),item.z);this.rotation.setFromAxisAngle(this.up,item.visualYaw);
+      if(item.powerup){
+        this.position.y=ground+item.size*(.55+(animate?Math.sin(time*3)*.1:0));
+        this.rotation.setFromAxisAngle(this.up,(item.visualYaw||0)+(animate?time*.8:0));
+        this.rotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/3));
+      }
       this.scale.setScalar(item.collected?0:entry.scale);this.matrix.compose(this.position,this.rotation,this.scale);
       mesh.setMatrixAt(index,this.matrix);mesh.instanceMatrix.needsUpdate=true;
       if(entry.shadow){
-        this.position.set(item.x,.012,item.z);this.scale.setScalar(item.collected?0:item.size*.85);
+        this.position.set(item.x,ground+.012,item.z);this.scale.setScalar(item.collected?0:item.size*.85);
         this.matrix.compose(this.position,this.shadowRotation,this.scale);entry.shadow.setMatrixAt(entry.shadowIndex,this.matrix);entry.shadow.instanceMatrix.needsUpdate=true;
       }
     }

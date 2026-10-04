@@ -3,6 +3,9 @@ import {navigationRadius,slidePastObstacles} from './navigation.js';
 import {CHAPTERS,chaptersForIsland,CAMPAIGN_START_SECONDS,CHAPTER_BONUS_SECONDS,CAMPAIGN_MAX_SECONDS} from './campaign.js';
 import {islandConfig,islandFields,islandDistance,islandDistrict,nearestStreet,constrainToIsland} from './island-layout.js';
 import {populateActors,updateActors} from './living-world.js';
+import {surfaceHeight} from './terrain-height.js';
+import {dressRegion} from './map-variety.js';
+import {POWERUPS,activePowers,attractPickups} from './powerups.js';
 export const CHUNK_SIZE = 18;
 export const GOAL = 6;
 export const ROUND_SECONDS = 240;
@@ -53,6 +56,23 @@ export const TYPES = [
   {name:'Coconut palm',size:5.5,art:53,footprint:.24,fitSize:true},
   {name:'Island neighbor',size:1.7,art:54,footprint:.22,fitSize:true},
   {name:'Island chicken',size:.65,art:55,footprint:.3,fitSize:true},
+  {name:'Beach umbrella',size:2.3,art:56,footprint:.40,fitSize:true},
+  {name:'Sun lounger',size:1.9,art:57,footprint:.35,fitSize:true},
+  {name:'Surfboard',size:1.8,art:58,footprint:.30,fitSize:true},
+  {name:'Lifeguard hut',size:5.7,art:59,footprint:.34,fitSize:true},
+  {name:'Outrigger canoe',size:4.6,art:60,footprint:.34,fitSize:true},
+  {name:'Seashell',size:.18,art:61,footprint:.30,fitSize:true},
+  {name:'Shore crab',size:.28,art:62,footprint:.30,fitSize:true},
+  {name:'Sandcastle',size:.8,art:63,footprint:.38,fitSize:true},
+  {name:'Fruit crate',size:.8,art:64,footprint:.38,fitSize:true},
+  {name:'Market stall',size:3,art:65,footprint:.38,fitSize:true},
+  {name:'Flower garden',size:1.7,art:66,footprint:.35,fitSize:true},
+  {name:'Lava rocks',size:2.7,art:67,footprint:.4,fitSize:true},
+  {name:'Garden fence',size:3.2,art:68,footprint:.28,fitSize:true},
+  {name:'Fishing boat',size:6,art:69,footprint:.38,fitSize:true},
+  {name:'Magnet',size:.4,art:70,footprint:.35,fitSize:true},
+  {name:'Turbo',size:.4,art:71,footprint:.35,fitSize:true},
+  {name:'Lucky star',size:.4,art:72,footprint:.35,fitSize:true},
 ];
 export const PROP_ART_COUNT=54;
 function seededRandom(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -82,7 +102,7 @@ const floorHalf=n=>n>=0n?n/2n:(n-1n)/2n;
 function newSeed(){const values=new Uint32Array(1);if(globalThis.crypto?.getRandomValues){globalThis.crypto.getRandomValues(values);return values[0];}return(Math.random()*4294967296)>>>0;}
 
 class ProceduralWorld{
-  constructor(seed,islandId='oahu'){this.seed=seed;this.islandId=islandConfig(islandId).id;this.layout=islandConfig(this.islandId);this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.preloaded=new Map();this.prefetchQueue=[];this.prefetchStamp='';this.prefetchToken=0;this.history=new Map();this.collectedIds=new Set();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.movers=[];this.actorDelays=new Map();this.motionClock=0;this.generated=0;this.syncHits=0;this.syncMisses=0;this.lastSyncMs=0;this.opening();}
+  constructor(seed,islandId='oahu'){this.seed=seed;this.islandId=islandConfig(islandId).id;this.layout=islandConfig(this.islandId);this.level=0;this.originX=0n;this.originZ=0n;this.chunks=new Map();this.preloaded=new Map();this.prefetchQueue=[];this.prefetchStamp='';this.prefetchToken=0;this.history=new Map();this.collectedIds=new Set();this.legacy=[];this.guards=[];this.items=[];this.stamp='';this.magnetPositions=new Map();this.movers=[];this.actorDelays=new Map();this.motionClock=0;this.generated=0;this.syncHits=0;this.syncMisses=0;this.lastSyncMs=0;this.opening();}
   opening(){
     const random=seededRandom(this.seed);
     for(let i=0;i<92;i++){const angle=random()*Math.PI*2,r=.65+Math.sqrt(random())*5.8,type=i%6;
@@ -198,6 +218,8 @@ class ProceduralWorld{
     for(let slot=80;slot<96;slot++){const x=cx*CHUNK_SIZE+1.8+random()*14.4,z=cz*CHUNK_SIZE+1.8+random()*14.4;add(select(medium),x,z,slot);}
     chunk.items=reducePopulation(chunk.items);
     populateActors(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level},TYPES,hash);
+    dressRegion(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level},TYPES,hash);
+    for(const item of chunk.items){const pulled=this.magnetPositions.get(item.id);if(pulled){item.x=pulled.x/physical-originX;item.z=pulled.z/physical-originZ;item.magnetized=true;}}
     return chunk;
   }
   sync(player,radius){
@@ -318,7 +340,7 @@ export class Simulation{
     this.runMode=runMode==='quick'||runMode===false?'quick':'campaign';this.free=false;this.world=new ProceduralWorld(newSeed(),this.islandId);this.body=new CompoundBall();
     if(this.runMode==='campaign')this.world.installObjectives(this.chapters);
     this.world.installLandmarks();
-    this.x=0;this.z=0;this.vx=0;this.vz=0;this.navSide=hash(this.world.seed,'steering')%2?1:-1;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.bestCombo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;
+    this.x=0;this.z=0;this.vx=0;this.vz=0;this.navSide=hash(this.world.seed,'steering')%2?1:-1;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.powerUntil={magnet:0,turbo:0,star:0};this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.bestCombo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;
     this.chapter=0;this.capturedObjectives=new Set();this.score=0;this.chapterStarted=0;this.chapterStats=[];this.boostEnergy=100;this.boostExhausted=false;this.timeLimit=this.runMode==='campaign'?CAMPAIGN_START_SECONDS:ROUND_SECONDS;this.world.sync(this,this.viewRadius);
   }
   setArtRatios(ratios){this.artRatios=ratios;}
@@ -332,12 +354,19 @@ export class Simulation{
     if(this.boostEnergy<2)this.boostExhausted=true;if(this.boostEnergy>=30)this.boostExhausted=false;
     const boosting=Boolean(input.boost)&&!this.boostExhausted;
     this.boostEnergy=Math.max(0,Math.min(100,this.boostEnergy+dt*(boosting?-24:17)));
-    const speed=(1.7+Math.sqrt(this.diameter)*1.5)*(boosting?1.7:1)*(1-this.body.impact*.24);
+    const probe=Math.max(.5/2**this.level,this.diameter*.3),ground=surfaceHeight(this.world,this.x,this.z);
+    const slope=(surfaceHeight(this.world,this.x+input.x*probe,this.z+input.z*probe)-ground)/probe;
+    const slopeSpeed=Math.max(.65,Math.min(1.3,1-slope*.65));
+    const speed=(1.7+Math.sqrt(this.diameter)*1.5)*(boosting?1.7:1)*(1-this.body.impact*.24)*slopeSpeed*((this.powerUntil.turbo||0)>this.elapsed?1.4:1);
     const smoothing=1-Math.exp(-dt*9);
+    const gx=(surfaceHeight(this.world,this.x+probe,this.z)-surfaceHeight(this.world,this.x-probe,this.z))/(probe*2),gz=(surfaceHeight(this.world,this.x,this.z+probe)-surfaceHeight(this.world,this.x,this.z-probe))/(probe*2);
     this.vx+=(input.x*speed-this.vx)*smoothing;this.vz+=(input.z*speed-this.vz)*smoothing;
+    this.vx-=gx*dt*2.2;this.vz-=gz*dt*2.2;
+    this.body.slope=[gx,gz];
     const oldX=this.x,oldZ=this.z;
     this.world.sync(this,this.viewRadius);
     updateActors(this.world,this.elapsed,dt,this);
+    attractPickups(this,dt);
     const pickups=[],pickupRadius=Math.max(this.body.coreRadius,this.diameter*.62);
     const nearby=this.world.nearby(this.x,this.z,pickupRadius+Math.hypot(this.vx,this.vz)*dt).filter(item=>!item.collected&&Math.hypot(item.x-this.x,item.z-this.z)<pickupRadius+item.size*footprint(item.type)+Math.hypot(this.vx,this.vz)*dt);
     const substeps=Math.min(10,Math.max(1,Math.ceil(Math.hypot(this.vx,this.vz)*dt/Math.max(.06,this.diameter*.16))));
@@ -349,13 +378,18 @@ export class Simulation{
         // a dense patch from consuming an entire progression in one frame.
         if(item.collected)continue;
         const dx=this.x-item.x,dz=this.z-item.z,dist=Math.hypot(dx,dz),itemRadius=item.size*footprint(item.type);
-        if(item.size*1.08>this.diameter||pickups.length>=3)continue;
+        if((!item.powerup&&item.size*1.08>this.diameter)||pickups.length>=3)continue;
         if(dist>=pickupRadius+itemRadius)continue;
         const reach=Math.min(pickupRadius,this.body.supportWorld(dist>.00001?-dx/dist:-1,0,dist>.00001?-dz/dist:0))+itemRadius;
         if(dist>=reach)continue;
+        if(item.powerup){
+          this.world.collect(item);this.powerUntil[item.powerup]=this.elapsed+POWERUPS[item.powerup].seconds;
+          if(item.powerup==='turbo'){this.boostEnergy=100;this.boostExhausted=false;}
+          pickups.push({...item,owner:null,sizeLevel:this.level});continue;
+        }
         if(item.size*1.08<=this.diameter){
           this.world.collect(item);this.count++;this.volume+=item.size**3*.82;this.boostEnergy=Math.min(100,this.boostEnergy+7);
-          this.body.attach(item,TYPES[item.type],this.artRatios[TYPES[item.type].art]||1,this.x,this.z,this.diameter,this.modelBounds?.(item.type,item.visualSeed));
+          this.body.attach({...item,groundOffset:surfaceHeight(this.world,item.x,item.z)-surfaceHeight(this.world,this.x,this.z)},TYPES[item.type],this.artRatios[TYPES[item.type].art]||1,this.x,this.z,this.diameter,this.modelBounds?.(item.type,item.visualSeed));
           // Progression is mass based. The visible heap can protrude and bump,
           // while pickup eligibility advances one material band at a time.
           const materialDiameter=Math.max(.32,Math.cbrt(this.volume));
@@ -367,14 +401,14 @@ export class Simulation{
           pickups.push({...item,owner:null,sizeLevel:this.level});
           this.combo=this.elapsed-this.lastPickup<1.5?this.combo+1:1;this.lastPickup=this.elapsed;
           this.bestCombo=Math.max(this.bestCombo,this.combo);const multiplier=Math.min(5,1+Math.floor(this.combo/4));
-          this.score+=Math.round((10+Math.min(2500,item.size*2**this.level)*8)*multiplier);
+          this.score+=Math.round((10+Math.min(2500,item.size*2**this.level)*8)*multiplier)*((this.powerUntil.star||0)>this.elapsed?2:1);
           if(item.objectiveIndex!==undefined)this.capturedObjectives.add(item.objectiveIndex);
         }
       }
-      const obstacles=nearby.filter(item=>!item.collected&&item.size*1.08>this.diameter).map(item=>({...item,radius:item.size*footprint(item.type)*.78}));
+      const obstacles=nearby.filter(item=>!item.collected&&!item.powerup&&item.size*1.08>this.diameter).map(item=>({...item,radius:item.size*footprint(item.type)*.78}));
       const pose=slidePastObstacles(this.x,this.z,this.vx,this.vz,navigationRadius(this.diameter,this.body.coreRadius),obstacles,dt/substeps,{fromX:beforeX,fromZ:beforeZ,intentX:input.x,intentZ:input.z,side:this.navSide});
       this.x=pose.x;this.z=pose.z;this.vx=pose.vx;this.vz=pose.vz;
-      this.body.advance(this.x-beforeX,this.z-beforeZ,dt/substeps);
+      this.body.advance(this.x-beforeX,this.z-beforeZ,dt/substeps,surfaceHeight(this.world,this.x,this.z)-surfaceHeight(this.world,beforeX,beforeZ));
     }
     let dx=this.x-oldX,dz=this.z-oldZ;
     const transform={scale:1,x:0,z:0};
@@ -419,7 +453,7 @@ export class Simulation{
   objective(){return this.world.legacy.find(item=>!item.collected&&item.objectiveIndex===this.chapter);}
   progress(){if(this.mode==='result'&&this.won)return 1;const goal=this.runMode==='quick'?GOAL:this.chapterGoal().size,ratio=Math.max(0,Math.min(1,this.diameter*2**this.level/goal));if(this.runMode==='quick')return ratio;const chapter=this.chapterGoal(),values=[ratio,Math.min(1,this.count/chapter.count)];if(chapter.type!==null)values.push(this.capturedObjectives.has(this.chapter)?1:0);return values.reduce((sum,v)=>sum+v,0)/values.length;}
   nextGoalSize(){return formatSize(this.runMode==='quick'?GOAL:this.chapterGoal().size);}
-  snapshot(){return{mode:this.mode,runMode:this.runMode,islandId:this.islandId,map:this.world.layout.name,chapter:Math.min(this.chapter+1,this.chapters.length),chapters:this.chapters.length,objective:this.chapterGoal().hint,size:formatSize(this.diameter,this.level),normalizedDiameter:this.diameter,scaleExponent:this.level,collected:this.count,attachedPieces:this.body.pieces.length,score:this.score,bestCombo:this.bestCombo,nearbyRemaining:this.items.filter(i=>!i.collected).length,loadedBlocks:this.world.chunks.size,seed:this.world.seed,secondsRemaining:Math.max(0,Math.ceil(this.timeLimit-this.elapsed)),freeRoll:false,goalMeters:this.runMode==='quick'?GOAL:this.chapterGoal().size};}
+  snapshot(){return{elevationMeters:surfaceHeight(this.world,this.x,this.z)*2**this.level,powerups:activePowers(this),mode:this.mode,runMode:this.runMode,islandId:this.islandId,map:this.world.layout.name,chapter:Math.min(this.chapter+1,this.chapters.length),chapters:this.chapters.length,objective:this.chapterGoal().hint,size:formatSize(this.diameter,this.level),normalizedDiameter:this.diameter,scaleExponent:this.level,collected:this.count,attachedPieces:this.body.pieces.length,score:this.score,bestCombo:this.bestCombo,nearbyRemaining:this.items.filter(i=>!i.collected).length,loadedBlocks:this.world.chunks.size,seed:this.world.seed,secondsRemaining:Math.max(0,Math.ceil(this.timeLimit-this.elapsed)),freeRoll:false,goalMeters:this.runMode==='quick'?GOAL:this.chapterGoal().size};}
 }
 export function sizeParts(d,level=0){
   const exponent=Math.log10(d)+level*Math.log10(2);

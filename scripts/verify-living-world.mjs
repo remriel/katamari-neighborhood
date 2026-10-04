@@ -79,7 +79,7 @@ GLTFLoader.prototype.loadAsync=function(path){
 };
 const models=await new ToyModelLibrary().load();
 globalThis.fetch=originalFetch;GLTFLoader.prototype.loadAsync=originalLoad;
-assert.ok(models.pick('guide',0));assert.equal(models.models.size,139);
+assert.ok(models.pick('guide',0));assert.equal(models.models.size,170);
 for(const type of [52,53])for(let seed=0;seed<4;seed++){
   const model=models.pick(type,seed);assert.ok(model);
   assert.ok(model.geometry.getAttribute('color'));
@@ -107,4 +107,4 @@ for(const type of [52,53]){
 pile.sync(fixture.body,100,false);assert.equal(pile.slots.length,2);
 fixture.body.rescale(.5);pile.sync(fixture.body,200,false);assert.equal(pile.slots.length,2);
 pile.dispose();models.dispose();
-console.log(JSON.stringify({islands:evidence,models:139,actorInstances:'pass',browserQA:'unavailable'},null,2));
+console.log(JSON.stringify({islands:evidence,models:170,actorInstances:'pass',browserQA:'unavailable'},null,2));

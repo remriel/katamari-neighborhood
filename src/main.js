@@ -3,14 +3,18 @@ import './style.css';
 import './performance-hud.css';
 import './island-menu.css';
 import './notifications.css';
+import './original-hud.css';
 import {Simulation,TYPES,CHUNK_SIZE,GOAL,ROUND_SECONDS,formatSize,sizeParts} from './simulation.js';
 import {createTerrain} from './terrain.js';
 import {CompoundView} from './compound-view.js';
 import {WorldItemBatches} from './model-batches.js';
 import {ToyModelLibrary} from './toy-model-library.js';
 import {ISLANDS,islandConfig} from './island-layout.js';
+import {activePowers} from './powerups.js';
+import {surfaceHeight} from './terrain-height.js';
 
 const $=id=>document.getElementById(id);
+for(let i=0;i<12;i++){const petal=document.createElement('i');petal.style.setProperty('--angle',(i*30)+'deg');document.querySelector('.size-flower').append(petal);}
 const sim=new Simulation();
 let selectedIsland='oahu',qaOverview=false,lastRenderedItems=[];
 const performanceSamples=[];
@@ -71,11 +75,12 @@ async function init(){
     scene.add(new THREE.HemisphereLight('#fffbe4','#73935c',1.35));
     const sun=new THREE.DirectionalLight('#fff1bf',1.85);sun.position.set(-10,22,12);scene.add(sun);
     modelLibrary=new ToyModelLibrary();
-    const [textures]=await Promise.all([Promise.all([loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp'),loadTexture('/assets/oahu-field.png',THREE.NoColorSpace),loadTexture('/assets/lanai-field.png',THREE.NoColorSpace)]),modelLibrary.load()]);
+    const [textures]=await Promise.all([Promise.all([loadTexture('/assets/grass.webp'),loadTexture('/assets/paving.webp'),loadTexture('/assets/ball.webp'),loadTexture('/assets/ocean.webp'),loadTexture('/assets/oahu-field.png',THREE.NoColorSpace),loadTexture('/assets/lanai-field.png',THREE.NoColorSpace),loadTexture('/assets/sand.webp')]),modelLibrary.load()]);
     shadowMap=shadowTexture();sim.setArtRatios(modelLibrary.manifest.artRatios);
     sim.setModelBounds((type,seed)=>modelLibrary.pick(type,seed)?.bounds.toArray());
-    terrain=createTerrain(textures[0],textures[1],renderer,textures[3],{oahu:textures[4],lanai:textures[5]});scene.add(terrain.mesh);
+    terrain=createTerrain(textures[0],textures[1],renderer,textures[3],{oahu:textures[4],lanai:textures[5]},textures[6]);scene.add(terrain.mesh);
     compoundView=new CompoundView(scene,modelLibrary);itemBatches=new WorldItemBatches(scene,modelLibrary,shadowMap);
+    itemBatches.heightAt=(x,z)=>surfaceHeight(sim.world,x,z);
     // The original seed stays small; retained objects form the entire growing heap.
     ball=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),new THREE.MeshStandardMaterial({map:textures[2],roughness:.82,metalness:0}));compoundView.root.add(ball);
     ballShadow=shadow(.48);scene.add(ballShadow);
@@ -153,6 +158,8 @@ function finish(){
 }
 function inspectResult(){hideMenus();hintUntil=performance.now()+12000;$('hint').textContent='Finished. Rotate the camera to admire your heap. Tap Ⅱ for results.';}
 function updateHud(){
+  const powers=activePowers(sim);$('power-status').innerHTML=powers.map(p=>'<div class="power-pill '+p.id+'"><b>'+(p.id==='magnet'?'∩':p.id==='turbo'?'ϟ':'★')+'</b><span>'+p.name+'<small>'+p.seconds+'s</small></span></div>').join('');
+  document.querySelector('.timer-dial').style.setProperty('--clock-turn',(sim.elapsed/Math.max(1,sim.timeLimit)*360)+'deg');
   const parts=sizeParts(sim.diameter,sim.level);ui.size.textContent=parts.value;ui.unit.textContent=parts.unit;ui.size.style.fontSize=parts.value.length>5?'30px':'';
   ui.count.textContent=`${sim.count} stuck object${sim.count===1?'':'s'}`;
   $('boost').style.setProperty('--boost-energy',sim.boostEnergy+'%');$('boost').classList.toggle('depleted',sim.boostExhausted);$('boost').querySelector('small').textContent=sim.boostExhausted?'RECHARGE':'HOLD';
@@ -174,7 +181,7 @@ function emitSparks(item){
   const points=[];for(let i=0;i<9;i++)points.push((Math.random()-.5)*item.size*2,Math.random()*item.size,(Math.random()-.5)*item.size*2);
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
   const mesh=new THREE.Points(g,new THREE.PointsMaterial({color:['#fff8b5','#ff7793','#b7ffff'][item.visualSeed%3],size:Math.max(.025,sim.diameter*.055),transparent:true,depthWrite:false}));
-  mesh.position.set(item.x,sim.diameter*.25,item.z);scene.add(mesh);sparks.push({mesh,life:.65});
+  mesh.position.set(item.x,surfaceHeight(sim.world,item.x,item.z)+sim.diameter*.25,item.z);scene.add(mesh);sparks.push({mesh,life:.65});
   if(sparks.length>12){const old=sparks.shift();scene.remove(old.mesh);old.mesh.geometry.dispose();old.mesh.material.dispose();}
 }
 function input(){
@@ -233,17 +240,19 @@ function tick(now){
   const renderDiameter=inMenu ? .55 : Math.max(sim.diameter,Math.min(sim.body.boundRadius*2,sim.diameter*2.4));
   const radiusTarget=inMenu ? .55 : renderDiameter*.5;
   visualRadius+=(radiusTarget-visualRadius)*(1-Math.exp(-dt*8));
-  compoundView.sync(sim.body,now,!reducedMotion,viewportHeight/viewSpan);compoundView.pose(sim.x,inMenu ? .55 : sim.body.height,sim.z,sim.body.orientation);
+  const groundHeight=surfaceHeight(sim.world,sim.x,sim.z);
+  compoundView.sync(sim.body,now,!reducedMotion,viewportHeight/viewSpan);compoundView.pose(sim.x,groundHeight+(inMenu ? .55 : sim.body.height),sim.z,sim.body.orientation);
   ball.scale.setScalar(inMenu ? .55 : sim.body.coreRadius);ball.position.set(0,0,0);
   if(inMenu&&!reducedMotion)compoundView.root.rotateY(now*.0002);
-  ballShadow.position.set(sim.x,.018,sim.z);ballShadow.scale.setScalar(visualRadius*2.7);
+  ballShadow.position.set(sim.x,groundHeight+.018,sim.z);ballShadow.scale.setScalar(visualRadius*2.7);
   ballShadow.material.opacity=.72/(1+Math.max(0,sim.body.height-sim.body.lastGround)/Math.max(.1,visualRadius));
   // Prince follows behind the rolling direction and remains readable at every size.
   const moveAngle=Math.hypot(sim.vx,sim.vz)>.1?Math.atan2(sim.vx,sim.vz):yaw+Math.PI;
   const ph=Math.max(.29,visualRadius*.63);
   prince.scale.setScalar(ph);prince.rotation.y=moveAngle;
-  prince.position.set(sim.x-Math.sin(moveAngle)*(visualRadius+ph*.9),.015+(!reducedMotion&&result.distance>.002?Math.abs(Math.sin(now*.015))*ph*.09:0),sim.z-Math.cos(moveAngle)*(visualRadius+ph*.9));
-  follow.lerp(qaOverview?new THREE.Vector3(-Number(sim.world.originX)*CHUNK_SIZE,0,-Number(sim.world.originZ)*CHUNK_SIZE+(sim.islandId==='oahu'?-1500:0)*2**(-sim.level)):new THREE.Vector3(sim.x,visualRadius*.25,sim.z),1-Math.exp(-dt*5));
+  const guideX=sim.x-Math.sin(moveAngle)*(visualRadius+ph*.9),guideZ=sim.z-Math.cos(moveAngle)*(visualRadius+ph*.9);
+  prince.position.set(guideX,surfaceHeight(sim.world,guideX,guideZ)+.015+(!reducedMotion&&result.distance>.002?Math.abs(Math.sin(now*.015))*ph*.09:0),guideZ);
+  follow.lerp(qaOverview?new THREE.Vector3(-Number(sim.world.originX)*CHUNK_SIZE,0,-Number(sim.world.originZ)*CHUNK_SIZE+(sim.islandId==='oahu'?-1500:0)*2**(-sim.level)):new THREE.Vector3(sim.x,groundHeight+visualRadius*.25,sim.z),1-Math.exp(-dt*5));
   yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*5));
   const desiredSpan=qaOverview?sim.world.layout.half*2.1*Math.max(1,1/aspect)*2**(-sim.level):inMenu?16:Math.max(6*2**(-Math.min(sim.level,32))+renderDiameter*4.1,renderDiameter*2.6/Math.max(.3,aspect));
   viewSpan+=(desiredSpan-viewSpan)*(1-Math.exp(-dt*4));
@@ -253,7 +262,7 @@ function tick(now){
   scene.fog.near=cameraDistance+viewSpan*.65;scene.fog.far=cameraDistance+viewSpan*2;
   terrain.update(sim.x,sim.z,viewSpan,aspect,cameraDistance,sim.world);
   const missionTarget=sim.runMode==='campaign'&&sim.mode==='playing'?sim.objective():null;
-  targetMarker.visible=Boolean(missionTarget);if(missionTarget){targetMarker.position.set(missionTarget.x,Math.max(.03,sim.diameter*.002),missionTarget.z);targetMarker.scale.setScalar(missionTarget.size*1.25);}
+  targetMarker.visible=Boolean(missionTarget);if(missionTarget){targetMarker.position.set(missionTarget.x,surfaceHeight(sim.world,missionTarget.x,missionTarget.z)+Math.max(.03,sim.diameter*.002),missionTarget.z);targetMarker.scale.setScalar(missionTarget.size*1.25);}
   const moved=Math.hypot(sim.x-lastCullX,sim.z-lastCullZ)>Math.max(.35,viewSpan*.035);
   const turned=Math.abs(yaw-lastCullYaw)>.045,zoomed=Math.abs(viewSpan-lastCullSpan)>Math.max(.25,viewSpan*.035);
   if(now-lastCullAt>95||moved||turned||zoomed||lastVisibleItems===null){
@@ -265,7 +274,7 @@ function tick(now){
     for(const item of nearby){
       if(item.collected||item.size*pixelsPerUnit<1.2)continue;
       const bounds=modelLibrary.pick(item.type,item.visualSeed).bounds;
-      sphere.center.set(item.x,item.size*1.05*bounds.y*.5,item.z);
+      sphere.center.set(item.x,surfaceHeight(sim.world,item.x,item.z)+item.size*1.05*bounds.y*.5,item.z);
       sphere.radius=item.size*1.12*bounds.length()*.5+viewSpan*.08;
       if(frustum.intersectsSphere(sphere))candidates.push(item);
     }
@@ -276,7 +285,7 @@ function tick(now){
     lastVisibleItems=sim.items;lastCullAt=now;lastCullX=sim.x;lastCullZ=sim.z;lastCullSpan=viewSpan;lastCullYaw=yaw;
   }
   for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.life-=dt;s.mesh.position.y+=dt*.7;s.mesh.material.opacity=Math.max(0,s.life/.65);if(s.life<=0){scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();sparks.splice(i,1);}}
-  itemBatches.updateMotion();
+  itemBatches.updateMotion(sim.elapsed,!reducedMotion);
   const milestoneActive=now<milestoneUntil&&sim.mode==='playing';
   const pickupActive=!milestoneActive&&now<pickupUntil&&sim.mode==='playing';
   $('milestone').classList.toggle('show',milestoneActive);$('pickup').classList.toggle('show',pickupActive);
