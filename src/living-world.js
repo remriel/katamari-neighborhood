@@ -29,6 +29,9 @@ export function populateActors(items,{islandId,physical,originX,originZ,level},t
     const physicalSize=types[type].size;
     // Skip replacements whose entire route is not on land or crosses a prop.
     const safe=Array.from({length:16},(_,i)=>actorPose(route,i/16,islandId)).every(p=>{
+      // Keep the short opening sweep approachable from every seed. Road loops
+      // used to bring full-sized cars across the 32 cm spawn and its snacks.
+      if(Math.hypot(p.x,p.z)<14+physicalSize*.55)return false;
       if(islandDistance(p.x,p.z,islandId)<physicalSize*.5+.3)return false;
       if(route.kind!=='car'&&nearestStreet(p.x,p.z,islandId).distance<.6)return false;
       return !items.some(other=>other!==item&&other.size*physical>.8&&

@@ -52,7 +52,7 @@ export class CompoundView{
       if(!model)throw new Error('Missing attached 3D model '+piece.type);
       const slot=this.allocateModel(model);
       slot.batch.piece??=piece;
-      slot.born=animate?now:now-180;this.slots.push(slot);this.write(piece,slot,animate?0:1);
+      slot.duration=piece.importance>=2?300:140;slot.born=animate?now:now-slot.duration;this.slots.push(slot);this.write(piece,slot,animate?0:1);
     }
     // A family's physical size is fixed, so every instance in a variant batch
     // shares the projected size. Change cached geometry without reallocating
@@ -63,7 +63,7 @@ export class CompoundView{
       const geometry=(!detailed&&batch.model.lod?batch.model.lod:batch.model).geometry;
       batch.detailed=detailed;for(const mesh of batch.pages)if(mesh.geometry!==geometry)mesh.geometry=geometry;
     }
-    for(let i=0;i<body.pieces.length;i++){const slot=this.slots[i],progress=Math.min(1,(now-slot.born)/180);if(rescaled||progress<1||slot.animating)this.write(body.pieces[i],slot,progress);slot.animating=progress<1;}
+    for(let i=0;i<body.pieces.length;i++){const slot=this.slots[i],progress=Math.min(1,(now-slot.born)/slot.duration);if(rescaled||progress<1||slot.animating)this.write(body.pieces[i],slot,progress);slot.animating=progress<1;}
     this.scaleRevision=body.scaleRevision;
   }
   pose(x,y,z,orientation){this.root.position.set(x,y,z);this.root.quaternion.fromArray(orientation);}

@@ -2,6 +2,7 @@ import {islandFields,nearestStreet,islandDistance} from './island-layout.js';
 
 export function dressRegion(items,world,types,hash){
   const {physical,originX,originZ,islandId}=world;
+  const allowPowerup=hash(world.chunkId,islandId,'powerup-frequency')%100<30;
   const candidates=items.filter(i=>!i.motion&&types[i.type].size<=12&&i.type<52)
     .sort((a,b)=>hash(a.id,'region')-hash(b.id,'region'));
   let dressed=0,powered=false;
@@ -15,7 +16,7 @@ export function dressRegion(items,world,types,hash){
     // shells and crabs rather than bulky furniture.
     if(types[item.type].size<.65){if(!beach)continue;pool=[59,60];}
     let type=pool[seed%pool.length];
-    if(!powered&&seed%11===0){type=68+(seed>>>8)%3;powered=true;}
+    if(allowPowerup&&!powered&&seed%11===0){type=68+(seed>>>8)%3;powered=true;}
     else if(dressed>=6)continue;
     const size=types[type].size;
     if(islandDistance(x,z,islandId)<size*.55+.3)continue;

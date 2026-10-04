@@ -1,11 +1,13 @@
 import {CompoundBall} from './compound-ball.js';
 import {navigationRadius,slidePastObstacles} from './navigation.js';
-import {CHAPTERS,chaptersForIsland,CAMPAIGN_START_SECONDS,CHAPTER_BONUS_SECONDS,CAMPAIGN_MAX_SECONDS} from './campaign.js';
+import {CHAPTERS,chaptersForIsland,stageMedal,CAMPAIGN_START_SECONDS,CHAPTER_BONUS_SECONDS,CAMPAIGN_MAX_SECONDS} from './campaign.js';
 import {islandConfig,islandFields,islandDistance,islandDistrict,nearestStreet,constrainToIsland} from './island-layout.js';
 import {populateActors,updateActors} from './living-world.js';
 import {surfaceHeight} from './terrain-height.js';
 import {dressRegion} from './map-variety.js';
 import {POWERUPS,activePowers,attractPickups} from './powerups.js';
+import {RollEngagement} from './roll-engagement.js';
+import {arrangeOpening,arrangeChunkRoute} from './pickup-routes.js';
 export const CHUNK_SIZE = 18;
 export const GOAL = 6;
 export const ROUND_SECONDS = 240;
@@ -108,6 +110,7 @@ class ProceduralWorld{
     for(let i=0;i<92;i++){const angle=random()*Math.PI*2,r=.65+Math.sqrt(random())*5.8,type=i%6;
       this.legacy.push({id:`opening:${i}`,type,x:Math.cos(angle)*r,z:Math.sin(angle)*r,size:TYPES[type].size,collected:false,visualSeed:hash(this.seed,i),owner:null});}
     this.legacy=reducePopulation(this.legacy);
+    arrangeOpening(this.legacy,TYPES,this.seed,this.islandId,hash);
   }
   installObjectives(chapters=CHAPTERS){
     const positions=this.layout.objectives;
@@ -218,7 +221,8 @@ class ProceduralWorld{
     for(let slot=80;slot<96;slot++){const x=cx*CHUNK_SIZE+1.8+random()*14.4,z=cz*CHUNK_SIZE+1.8+random()*14.4;add(select(medium),x,z,slot);}
     chunk.items=reducePopulation(chunk.items);
     populateActors(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level},TYPES,hash);
-    dressRegion(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level},TYPES,hash);
+    dressRegion(chunk.items,{islandId:this.islandId,physical,originX,originZ,level:this.level,chunkId:chunk.id},TYPES,hash);
+    arrangeChunkRoute(chunk.items,{islandId:this.islandId,physical,originX,originZ,cx,cz},TYPES,hash,this.guards,legacyNearby);
     for(const item of chunk.items){const pulled=this.magnetPositions.get(item.id);if(pulled){item.x=pulled.x/physical-originX;item.z=pulled.z/physical-originZ;item.magnetized=true;}}
     return chunk;
   }
@@ -334,15 +338,17 @@ export class Simulation{
   constructor(){this.artRatios=[];this.reset('campaign');this.mode='menu';}
   get items(){return this.world.items;}
   get level(){return this.world.level;}
-  reset(runMode='campaign',islandId=this.islandId||'oahu'){
+  reset(runMode='campaign',islandId=this.islandId||'oahu',seed){
     this.world?.invalidatePrefetch();
     this.islandId=islandConfig(islandId).id;this.chapters=chaptersForIsland(this.islandId);
-    this.runMode=runMode==='quick'||runMode===false?'quick':'campaign';this.free=false;this.world=new ProceduralWorld(newSeed(),this.islandId);this.body=new CompoundBall();
+    this.runMode=runMode==='quick'||runMode===false?'quick':'campaign';this.free=false;this.world=new ProceduralWorld(Number.isFinite(seed)?seed>>>0:newSeed(),this.islandId);this.body=new CompoundBall();
     if(this.runMode==='campaign')this.world.installObjectives(this.chapters);
     this.world.installLandmarks();
     this.x=0;this.z=0;this.vx=0;this.vz=0;this.navSide=hash(this.world.seed,'steering')%2?1:-1;this.diameter=.32;this.volume=.32**3;this.elapsed=0;this.count=0;this.powerUntil={magnet:0,turbo:0,star:0};this.mode='playing';this.milestone=0;this.scaleStage=0;this.won=false;this.combo=0;this.bestCombo=0;this.lastPickup=-100;this.nextGoal=0;this.viewRadius=2;this.visibleRadius=18;
     this.chapter=0;this.capturedObjectives=new Set();this.score=0;this.chapterStarted=0;this.chapterStats=[];this.boostEnergy=100;this.boostExhausted=false;this.timeLimit=this.runMode==='campaign'?CAMPAIGN_START_SECONDS:ROUND_SECONDS;this.world.sync(this,this.viewRadius);
+    this.engagement=new RollEngagement(this.diagnosticsEnabled);this.stageStartCount=0;this.stageStartScore=0;this.stageBestCombo=0;this.boostPickupSecond=-1;this.boostPickupAwarded=0;this.boosting=false;
   }
+  setDiagnostics(enabled){this.diagnosticsEnabled=Boolean(enabled);this.engagement.diagnostics=this.diagnosticsEnabled;}
   setArtRatios(ratios){this.artRatios=ratios;}
   setModelBounds(resolver){this.modelBounds=resolver;}
   setViewRadius(radius){this.viewRadius=Math.max(2,Number.isFinite(radius)?Math.ceil(radius):2);}
@@ -350,9 +356,11 @@ export class Simulation{
   step(dt,input){
     if(this.mode!=='playing')return {pickups:[],distance:0,transform:{scale:1,x:0,z:0}};
     this.elapsed+=dt;
+    this.engagement.chain.step(dt);this.combo=this.engagement.chain.count;
     this.world.motionClock=this.elapsed;
     if(this.boostEnergy<2)this.boostExhausted=true;if(this.boostEnergy>=30)this.boostExhausted=false;
     const boosting=Boolean(input.boost)&&!this.boostExhausted;
+    this.boosting=boosting;
     this.boostEnergy=Math.max(0,Math.min(100,this.boostEnergy+dt*(boosting?-24:17)));
     const probe=Math.max(.5/2**this.level,this.diameter*.3),ground=surfaceHeight(this.world,this.x,this.z);
     const slope=(surfaceHeight(this.world,this.x+input.x*probe,this.z+input.z*probe)-ground)/probe;
@@ -385,27 +393,39 @@ export class Simulation{
         if(item.powerup){
           this.world.collect(item);this.powerUntil[item.powerup]=this.elapsed+POWERUPS[item.powerup].seconds;
           if(item.powerup==='turbo'){this.boostEnergy=100;this.boostExhausted=false;}
-          pickups.push({...item,owner:null,sizeLevel:this.level});continue;
+          this.engagement.chain.remaining=Math.min(4.2,this.engagement.chain.remaining+.8);
+          pickups.push({...item,importance:2,owner:null,sizeLevel:this.level});continue;
         }
         if(item.size*1.08<=this.diameter){
-          this.world.collect(item);this.count++;this.volume+=item.size**3*.82;this.boostEnergy=Math.min(100,this.boostEnergy+7);
-          this.body.attach({...item,groundOffset:surfaceHeight(this.world,item.x,item.z)-surfaceHeight(this.world,this.x,this.z)},TYPES[item.type],this.artRatios[TYPES[item.type].art]||1,this.x,this.z,this.diameter,this.modelBounds?.(item.type,item.visualSeed));
+          const importance=item.objectiveIndex!==undefined?3:item.size/this.diameter>=.65?2:1;
+          this.world.collect(item);this.count++;this.volume+=item.size**3*.82;
+          this.body.attach({...item,importance,groundOffset:surfaceHeight(this.world,item.x,item.z)-surfaceHeight(this.world,this.x,this.z)},TYPES[item.type],this.artRatios[TYPES[item.type].art]||1,this.x,this.z,this.diameter,this.modelBounds?.(item.type,item.visualSeed));
           // Progression is mass based. The visible heap can protrude and bump,
           // while pickup eligibility advances one material band at a time.
           const materialDiameter=Math.max(.32,Math.cbrt(this.volume));
           // Early growth is deliberately legible. A single pickup can add
           // mass, but it cannot skip an entire size band or reveal a landmark
           // before the player has earned the intervening trail.
-          const growthStep=this.diameter<1?.035:this.diameter<4?.09:this.diameter<12?.18:this.diameter*.1;
+          const physical=2**this.level,meters=this.diameter*physical;
+          // The early material bands stay legible. Beyond 12 physical meters,
+          // a major pickup can grow the pile proportionally. Testing showed
+          // that reapplying the tiny normalized cap at every rescale stalled
+          // the town and mountain stages despite enough collected material.
+          const growthStep=meters<1?.035/physical:meters<4?.09/physical:meters<12?.18/physical:this.diameter*.075;
           this.diameter=Math.max(this.diameter,Math.min(materialDiameter,this.diameter+growthStep));
-          pickups.push({...item,owner:null,sizeLevel:this.level});
-          this.combo=this.elapsed-this.lastPickup<1.5?this.combo+1:1;this.lastPickup=this.elapsed;
-          this.bestCombo=Math.max(this.bestCombo,this.combo);const multiplier=Math.min(5,1+Math.floor(this.combo/4));
-          this.score+=Math.round((10+Math.min(2500,item.size*2**this.level)*8)*multiplier)*((this.powerUntil.star||0)>this.elapsed?2:1);
+          pickups.push({...item,importance,owner:null,sizeLevel:this.level});
+          this.engagement.collect(item,this);this.combo=this.engagement.chain.count;this.lastPickup=this.elapsed;
+          this.bestCombo=this.engagement.chain.best;this.stageBestCombo=Math.max(this.stageBestCombo,this.combo);const multiplier=this.engagement.chain.multiplier;
+          // Chains help fuel a sweep, but collection can never sustain a held
+          // dash forever: pickup recharge is capped at 12 energy per second.
+          const second=Math.floor(this.elapsed);if(second!==this.boostPickupSecond){this.boostPickupSecond=second;this.boostPickupAwarded=0;}
+          const recharge=Math.min(12-this.boostPickupAwarded,3+Math.min(3,this.combo*.06));this.boostPickupAwarded+=recharge;this.boostEnergy=Math.min(100,this.boostEnergy+recharge);
+          const points=Math.round((10+Math.min(2500,item.size*2**this.level)*8)*multiplier)*((this.powerUntil.star||0)>this.elapsed?2:1);this.score+=points;pickups[pickups.length-1].points=points;
           if(item.objectiveIndex!==undefined)this.capturedObjectives.add(item.objectiveIndex);
         }
       }
       const obstacles=nearby.filter(item=>!item.collected&&!item.powerup&&item.size*1.08>this.diameter).map(item=>({...item,radius:item.size*footprint(item.type)*.78}));
+      for(const item of obstacles)if(Math.hypot(this.x-item.x,this.z-item.z)<navigationRadius(this.diameter,this.body.coreRadius)+item.radius+.04&&(item.x-this.x)*input.x+(item.z-this.z)*input.z>0)this.engagement.failedContact(item,this.elapsed);
       const pose=slidePastObstacles(this.x,this.z,this.vx,this.vz,navigationRadius(this.diameter,this.body.coreRadius),obstacles,dt/substeps,{fromX:beforeX,fromZ:beforeZ,intentX:input.x,intentZ:input.z,side:this.navSide});
       this.x=pose.x;this.z=pose.z;this.vx=pose.vx;this.vz=pose.vz;
       this.body.advance(this.x-beforeX,this.z-beforeZ,dt/substeps,surfaceHeight(this.world,this.x,this.z)-surfaceHeight(this.world,beforeX,beforeZ));
@@ -424,7 +444,10 @@ export class Simulation{
         const goal=this.chapters[this.chapter],largeEnough=Math.log2(this.diameter)+this.level>=Math.log2(goal.size);
         const ready=largeEnough&&this.count>=goal.count&&(goal.type===null||this.capturedObjectives.has(this.chapter));
         if(ready){
-          const finished=this.chapter;this.chapterStats.push({name:goal.name,seconds:Math.round(this.elapsed-this.chapterStarted),count:this.count,size:formatSize(this.diameter,this.level)});this.chapterStarted=this.elapsed;this.chapter++;this.score+=1500*this.chapter;
+          const finished=this.chapter,seconds=Math.round(this.elapsed-this.chapterStarted);
+          this.score+=1500*(this.chapter+1);
+          this.chapterStats.push({name:goal.name,seconds,count:this.count,size:formatSize(this.diameter,this.level),medal:stageMedal(seconds,finished),pickups:this.count-this.stageStartCount,combo:this.stageBestCombo,score:this.score-this.stageStartScore});
+          this.stageStartCount=this.count;this.stageStartScore=this.score;this.stageBestCombo=0;this.chapterStarted=this.elapsed;this.chapter++;
           if(this.chapter===this.chapters.length){this.won=true;this.mode='result';this.score+=Math.max(0,Math.ceil(this.timeLimit-this.elapsed))*50;checkpoint='THE WHOLE ISLAND. WHAT A MONSTROSITY!';}
           else {this.timeLimit=Math.min(CAMPAIGN_MAX_SECONDS,this.timeLimit+CHAPTER_BONUS_SECONDS);checkpoint=`${this.chapters[finished].name} complete! +60 seconds`;}
         }
@@ -446,11 +469,19 @@ export class Simulation{
       const shift=this.world.rebase(Math.floor(this.x/CHUNK_SIZE),Math.floor(this.z/CHUNK_SIZE));this.x-=shift.dx;this.z-=shift.dz;transform.x-=shift.dx;transform.z-=shift.dz;
     }
     this.world.sync(this,this.viewRadius);
-    return{pickups,distance:Math.hypot(dx,dz),dx,dz,milestone,unlock,checkpoint,transform};
+    this.engagement.step(this,dt,boosting,Math.hypot(dx,dz)*2**this.level);
+    const celebration=this.engagement.notice(this.elapsed);
+    return{pickups,distance:Math.hypot(dx,dz),dx,dz,milestone,unlock,checkpoint,celebration,transform};
   }
   scaleLabel(){return SCALE_STAGES[this.scaleStage].label;}
   chapterGoal(){return this.chapters[Math.min(this.chapter,this.chapters.length-1)];}
   objective(){return this.world.legacy.find(item=>!item.collected&&item.objectiveIndex===this.chapter);}
+  prize(){
+    const prize=this.engagement.prize;if(!prize)return null;
+    const physical=2**this.level,ox=Number(this.world.originX)*CHUNK_SIZE,oz=Number(this.world.originZ)*CHUNK_SIZE;
+    const live=this.items.find(i=>i.id===prize.id&&!i.collected);
+    return {id:prize.id,type:prize.type,name:prize.name||TYPES[prize.type].name,x:live?.x??prize.x/physical-ox,z:live?.z??prize.z/physical-oz,size:prize.size/physical,ready:prize.size*1.08<=this.diameter*physical,neededMeters:Math.max(0,prize.size*1.08-this.diameter*physical)};
+  }
   progress(){if(this.mode==='result'&&this.won)return 1;const goal=this.runMode==='quick'?GOAL:this.chapterGoal().size,ratio=Math.max(0,Math.min(1,this.diameter*2**this.level/goal));if(this.runMode==='quick')return ratio;const chapter=this.chapterGoal(),values=[ratio,Math.min(1,this.count/chapter.count)];if(chapter.type!==null)values.push(this.capturedObjectives.has(this.chapter)?1:0);return values.reduce((sum,v)=>sum+v,0)/values.length;}
   nextGoalSize(){return formatSize(this.runMode==='quick'?GOAL:this.chapterGoal().size);}
   snapshot(){return{elevationMeters:surfaceHeight(this.world,this.x,this.z)*2**this.level,powerups:activePowers(this),mode:this.mode,runMode:this.runMode,islandId:this.islandId,map:this.world.layout.name,chapter:Math.min(this.chapter+1,this.chapters.length),chapters:this.chapters.length,objective:this.chapterGoal().hint,size:formatSize(this.diameter,this.level),normalizedDiameter:this.diameter,scaleExponent:this.level,collected:this.count,attachedPieces:this.body.pieces.length,score:this.score,bestCombo:this.bestCombo,nearbyRemaining:this.items.filter(i=>!i.collected).length,loadedBlocks:this.world.chunks.size,seed:this.world.seed,secondsRemaining:Math.max(0,Math.ceil(this.timeLimit-this.elapsed)),freeRoll:false,goalMeters:this.runMode==='quick'?GOAL:this.chapterGoal().size};}

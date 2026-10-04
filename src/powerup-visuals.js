@@ -11,7 +11,7 @@ export function powerupVisual(item){return POWERUP_VISUALS[item.powerup]||byType
 // Display size is independent of physical size and pickup/obstacle rules.
 // The pixel floor keeps powers readable after world rescaling and camera zoom.
 export function itemDisplaySize(item,pixelsPerUnit){
-  return powerupVisual(item)?Math.max(item.size*1.05*3,38/Math.max(pixelsPerUnit,1e-6)):item.size*1.05;
+  return powerupVisual(item)?Math.max(item.size*1.05*1.8,22.8/Math.max(pixelsPerUnit,1e-6)):item.size*1.05;
 }
 export function powerupLift(size,time=0,animate=true){return size*(.65+(animate?Math.sin(time*3)*.08:0));}
 export function itemVisibilitySphere(item,bounds,pixelsPerUnit,ground,padding,sphere){
