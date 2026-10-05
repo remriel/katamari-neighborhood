@@ -96,6 +96,17 @@ const entry=batches.movers[0],matrix=new THREE.Matrix4();entry.mesh.getMatrixAt(
 near(matrix.elements[12],5);near(matrix.elements[14],6);near(matrix.elements[13],.036);
 item.collected=true;batches.updateMotion();entry.mesh.getMatrixAt(entry.index,matrix);
 near(new THREE.Vector3().setFromMatrixScale(matrix).length(),0,'Collected actor stayed visible');
+// Opening snacks have no authored yaw. Magnet motion must preserve their
+// seeded orientation and finite matrices, including stationary pulled items.
+const snack={id:'opening:magnet',type:0,visualSeed:123,size:.12,x:1,z:2};
+let heightQueries=0;batches.heightAt=()=>{heightQueries++;return .2;};
+batches.begin();batches.put(snack,100);batches.end();
+const snackEntry=batches.movers[0];snackEntry.mesh.getMatrixAt(snackEntry.index,matrix);const rotation=new THREE.Quaternion().setFromRotationMatrix(matrix.clone().scale(new THREE.Vector3().setScalar(1/(snack.size*1.05))));
+snack.magnetized=true;snack.x+=.2;batches.updateMotion();snackEntry.mesh.getMatrixAt(snackEntry.index,matrix);
+assert.ok(matrix.elements.every(Number.isFinite),'Magnetized opening snack disappeared');
+const afterRotation=new THREE.Quaternion().setFromRotationMatrix(matrix.clone().scale(new THREE.Vector3().setScalar(1/(snack.size*1.05))));
+assert.ok(rotation.angleTo(afterRotation)<.001,'Magnet changed pickup orientation');
+const queried=heightQueries;for(let i=0;i<60;i++)batches.updateMotion();assert.equal(heightQueries,queried,'Stationary magnetized item resampled terrain every frame');
 batches.dispose();
 // Real power meshes must stay readable through growth, face the camera, and
 // take every glow instance with them when consumed or reset.

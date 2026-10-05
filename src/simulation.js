@@ -319,7 +319,7 @@ class ProceduralWorld{
     const reach=radius+8,result=[];
     for(const chunk of this.chunks.values()){
       if(x+reach<chunk.cx*CHUNK_SIZE||x-reach>(chunk.cx+1)*CHUNK_SIZE||z+reach<chunk.cz*CHUNK_SIZE||z-reach>(chunk.cz+1)*CHUNK_SIZE)continue;
-      result.push(...chunk.items.filter(item=>!item.motion));
+      for(const item of chunk.items)if(!item.motion)result.push(item);
     }
     for(const item of this.legacy){const itemReach=radius+item.size;if(!item.motion&&Math.abs(item.x-x)<itemReach&&Math.abs(item.z-z)<itemReach)result.push(item);}
     // A moving actor can cross its source chunk boundary. Query its current
@@ -524,8 +524,21 @@ export class Simulation{
   scaleLabel(){return SCALE_STAGES[this.scaleStage].label;}
   chapterGoal(){return this.chapters[Math.min(this.chapter,this.chapters.length-1)];}
   objective(){if(this.chapter!==4)return null;return this.world.legacy.find(item=>!item.collected&&item.objectiveIndex===this.chapter);}
+  guidanceTarget(){
+    const objective=this.objective();if(objective&&this.canCollect(objective))return objective;
+    let target=null,best=Infinity;
+    for(const item of this.items){
+      if(item.collected||item.powerup||!this.canCollect(item)||item.size<this.diameter*.12)continue;
+      const onTrail=item.route==='opening'&&this.chapter===0||item.route==='stage-trail'&&item.stageIndex===this.chapter;
+      const distance=Math.hypot(item.x-this.x,item.z-this.z);
+      if(!onTrail&&distance>this.visibleRadius)continue;
+      const cost=distance/Math.max(.1,item.size/this.diameter)*(onTrail?1:2);
+      if(cost<best){best=cost;target=item;}
+    }
+    return target||objective;
+  }
   prize(){
-    const prize=this.engagement.prize;if(!prize)return null;
+    const prize=this.engagement.prize;if(!prize||this.world.collectedIds.has(prize.id))return null;
     const physical=2**this.level,ox=Number(this.world.originX)*CHUNK_SIZE,oz=Number(this.world.originZ)*CHUNK_SIZE;
     const live=this.items.find(i=>i.id===prize.id&&!i.collected);
     return {id:prize.id,type:prize.type,name:prize.name||TYPES[prize.type].name,x:live?.x??prize.x/physical-ox,z:live?.z??prize.z/physical-oz,size:prize.size/physical,ready:prize.size*1.08<=this.diameter*physical,neededMeters:Math.max(0,prize.size*1.08-this.diameter*physical)};

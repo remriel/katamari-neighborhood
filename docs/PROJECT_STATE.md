@@ -1,3 +1,13 @@
+# Runtime fixes and growth guidance release (2026-10-05)
+
+Fixed magnetized opening pickups producing invalid rotation matrices, immediately clear collected prize markers, and keep HUD size based on physical meters through normalization. A fixed 60 Hz simulation clock makes pickup cadence and movement independent of display refresh rate; long stalls are bounded to 250 ms per rendered frame. Added a compact collectible-target guide outside the hidden score panel, a legible race timer and an SVG pause icon.
+
+Reduced repeated HUD markup replacement and element lookup, reused camera/culling scratch objects, skipped hidden-tab rendering, removed temporary per-chunk query arrays, and cached terrain height for stationary animated/pulled items. Existing islands, physical sizes, persistent heap, checkpoints and island-only win remain.
+
+Validation: all simulation/asset/terrain/navigation regression scripts passed; new tests confirm identical 3-second play at 20/30/60/120/144 FPS, finite magnet transforms and cached terrain sampling. Chromium mobile boot and screenshot succeeded. Extended browser movement/endings were stopped at the user's request to publish immediately; an earlier movement attempt was inconclusive on the slow software renderer and the harness now waits for active simulation time. Physical-device performance and full browser acceptance remain unverified. The production build is the final release gate.
+
+Publish the same commit to GitHub feature/living-neighborhoods and the existing public Sites project. Store deployment receipts locally in outputs/katamari-runtime-release.json. The user will conduct further gameplay testing after publication.
+
 # Size checkpoint race and island-clearing finale (2026-10-04)
 
 The latest user selected 100 → 200 → 300 → 400 m checkpoints and a race to grow as fast as possible. Stage travel happens immediately on reaching each physical size, retaining the same island, seed, attachments, collection ledger, powers and elapsed clock. There is no campaign deadline or timed stage advancement. At 400 m a fifth island-sweep stage unlocks. Reaching 400 m does not win: the player must grow enough to collect the 2,200 m island pickup (2,376 m eligibility under the ordinary 1.08 rule). Only that actual pickup completes the run. Paused time is excluded, the HUD counts upward, and fastest island-clear times use a new record key with fractional seconds and five stage splits. The separate four-minute quick challenge is retained.

@@ -54,7 +54,7 @@ export class WorldItemBatches{
     const variation=[12,16,31,50,51].includes(item.type)?.96+((item.visualSeed>>>24)/255)*.08:1;
     this.scale.setScalar(displaySize*variation);this.matrix.compose(this.position,this.rotation,this.scale);
     mesh.setMatrixAt(index,this.matrix);mesh.instanceMatrix.needsUpdate=true;this.visibleCount++;this.modelCount++;
-    const moving={item,mesh,index,scale:displaySize*variation,power};this.movers.push(moving);
+    const moving={item,mesh,index,scale:displaySize*variation,power,ground,groundX:item.x,groundZ:item.z};this.movers.push(moving);
     if(power){
       moving.effects=['halo','ring','beacon'].map(kind=>{
         const group=this.effects.get(power.id+':'+kind),slot=group.used++,index=slot%256,mesh=this.page(group,Math.floor(slot/256));mesh.count=index+1;
@@ -100,8 +100,9 @@ export class WorldItemBatches{
     for(const entry of this.movers){
       const {item,mesh,index}=entry;
       if(!item.motion&&!item.magnetized&&!entry.power)continue;
-      const ground=this.heightAt(item.x,item.z);
-      this.position.set(item.x,ground+.006+(item.visualBob||0),item.z);this.rotation.setFromAxisAngle(this.up,item.visualYaw);
+      if(entry.groundX!==item.x||entry.groundZ!==item.z){entry.ground=this.heightAt(item.x,item.z);entry.groundX=item.x;entry.groundZ=item.z;}
+      const ground=entry.ground;
+      this.position.set(item.x,ground+.006+(item.visualBob||0),item.z);this.rotation.setFromAxisAngle(this.up,item.visualYaw??(item.visualSeed>>>0)/4294967296*Math.PI*2);
       if(entry.power){this.updatePower(entry,ground,time,animate);}else{
         this.scale.setScalar(item.collected?0:entry.scale);this.matrix.compose(this.position,this.rotation,this.scale);
         mesh.setMatrixAt(index,this.matrix);mesh.instanceMatrix.needsUpdate=true;

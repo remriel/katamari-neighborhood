@@ -12,11 +12,18 @@ import {itemDisplaySize,itemVisibilitySphere} from './powerup-visuals.js';
 import {PickupFeedback} from './pickup-feedback.js';
 import {RollAudio} from './roll-audio.js';
 import {readRecord,saveRecord,finishRecord,scorePace} from './run-records.js';
+import {FrameClock} from './frame-clock.js';
 import {RoutePilot} from './diagnostics/route-pilot.js';
 
-const $=id=>document.getElementById(id);
+const elements=new Map();
+const $=id=>{if(!elements.has(id))elements.set(id,document.getElementById(id));return elements.get(id);};
+const frameClock=new FrameClock();
+const hudElement=document.querySelector('.hud'),timerDial=document.querySelector('.timer-dial'),sizeSticker=document.querySelector('.size-sticker');
+let lastHudAt=0;
+function setHtml(element,html){if(element.innerHTML!==html)element.innerHTML=html;}
 for(let i=0;i<12;i++){const petal=document.createElement('i');petal.style.setProperty('--angle',(i*30)+'deg');document.querySelector('.size-flower').append(petal);}
 const sim=new Simulation();
+const followTarget=new THREE.Vector3(),cullFrustum=new THREE.Frustum(),cullMatrix=new THREE.Matrix4(),cullSphere=new THREE.Sphere();
 let selectedIsland='oahu',qaOverview=false,lastRenderedItems=[];
 const performanceSamples=[];
 const ui={size:$('size'),unit:$('unit'),timer:$('timer'),growth:$('growth'),count:$('count'),district:$('district')};
@@ -142,7 +149,7 @@ function start(runMode='campaign',islandId=selectedIsland,seed){
   hideMenus();updateHud();initAudio();world.focus({preventScroll:true});
 }
 function hideMenus(){for(const id of ['menu','pause-menu','result-menu'])$(id).classList.add('hidden');document.body.classList.remove('menu-open');}
-function resetInput(){keys.clear();joystick.x=joystick.z=0;joystick.pointer=null;boostHeld=false;$('boost').classList.remove('held');$('stick').style.transform='translate(0,0)';}
+function resetInput(){frameClock.reset();keys.clear();joystick.x=joystick.z=0;joystick.pointer=null;boostHeld=false;$('boost').classList.remove('held');$('stick').style.transform='translate(0,0)';}
 function pause(){if(sim.mode!=='playing')return;sim.mode='paused';resetInput();$('pause-menu').classList.remove('hidden');document.body.classList.add('menu-open');}
 function resume(){if(sim.mode!=='paused'||!loaded)return;sim.mode='playing';hideMenus();lastTime=performance.now();world.focus({preventScroll:true});}
 function finish(){
@@ -169,24 +176,24 @@ function finish(){
 }
 function inspectResult(){hideMenus();hintUntil=performance.now()+12000;$('hint').textContent='Finished. Rotate the camera to admire your heap. Tap Ⅱ for results.';}
 function updateHud(){
-  const powers=activePowers(sim);$('power-status').innerHTML=powers.map(p=>'<div class="power-pill '+p.id+'"><b>'+(p.id==='magnet'?'∩':p.id==='turbo'?'ϟ':'★')+'</b><span>'+p.name+'<small>'+p.seconds+'s</small></span></div>').join('');
-  document.querySelector('.timer-dial').style.setProperty('--clock-turn',(sim.runMode==='campaign'?sim.elapsed%60/60*360:sim.elapsed/sim.timeLimit*360)+'deg');
+  const powers=activePowers(sim);setHtml($('power-status'),powers.map(p=>'<div class="power-pill '+p.id+'"><b>'+(p.id==='magnet'?'∩':p.id==='turbo'?'ϟ':'★')+'</b><span>'+p.name+'<small>'+p.seconds+'s</small></span></div>').join(''));
+  timerDial.style.setProperty('--clock-turn',(sim.runMode==='campaign'?sim.elapsed%60/60*360:sim.elapsed/sim.timeLimit*360)+'deg');
   const parts=sizeParts(sim.diameter,sim.level);ui.size.textContent=parts.value;ui.unit.textContent=parts.unit;ui.size.style.fontSize=parts.value.length>5?'30px':'';
-  document.querySelector('.hud').style.setProperty('--hud-scale',Math.min(1.15,.58+Math.max(0,Math.log2(Math.max(.32,sim.diameter)/.32))*.085));
+  hudElement.style.setProperty('--hud-scale',Math.min(1.15,.58+Math.max(0,Math.log2(Math.max(.32,sim.diameter*2**sim.level)/.32))*.085));
   ui.count.textContent=`${sim.count} stuck object${sim.count===1?'':'s'}`;
   $('boost').style.setProperty('--boost-energy',sim.boostEnergy+'%');$('boost').classList.toggle('depleted',sim.boostExhausted);$('boost').querySelector('small').textContent=sim.boostExhausted?'RECHARGE':'HOLD';
   ui.growth.style.width=`${Math.min(100,sim.progress()*100)}%`;
   $('goal-label').textContent=sim.runMode==='campaign'&&sim.chapter===4?'COLLECT THE ISLAND':`GOAL · ${sim.nextGoalSize()}`;
-  const race=sim.runMode==='campaign',t=race?sim.elapsed:Math.max(0,Math.ceil(sim.timeLimit-sim.elapsed));ui.timer.textContent=`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`+(race?'.'+Math.floor(t%1*10):'');ui.timer.style.color=!race&&t<=30?'#d65374':'';document.querySelector('.timer-dial').setAttribute('aria-label',race?'Elapsed race time':'Time remaining');
+  const race=sim.runMode==='campaign';timerDial.classList.toggle('race',race);const t=race?sim.elapsed:Math.max(0,Math.ceil(sim.timeLimit-sim.elapsed));ui.timer.textContent=`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`+(race?'.'+Math.floor(t%1*10):'');ui.timer.style.color=!race&&t<=30?'#d65374':'';timerDial.setAttribute('aria-label',race?'Elapsed race time':'Time remaining');
   ui.district.textContent=sim.world.layout.name+' · '+sim.world.district(sim.x,sim.z);
-  document.querySelector('.size-sticker').innerHTML=sim.scaleLabel().replace(' ','<br>');
+  setHtml(sizeSticker,sim.scaleLabel().replace(' ','<br>'));
   const goal=sim.chapterGoal();$('chapter-title').textContent=sim.runMode==='quick'?'QUICK CHALLENGE':`${Math.min(sim.chapter+1,sim.chapters.length)} / ${sim.chapters.length} · ${goal.name}`;
   const stageTrack=$('stage-track'),quick=sim.runMode==='quick';stageTrack.classList.toggle('quick',quick);stageTrack.setAttribute('aria-label',quick?'Four minute heap challenge':'100, 200, 300 and 400 meters, then collect the island');
   for(const [i,stamp] of [...stageTrack.children].entries()){
     stamp.classList.toggle('done',!quick&&i<sim.chapter);stamp.classList.toggle('current',!quick&&i===sim.chapter);
     stamp.title=sim.chapters[i].name+' · '+(i===4?'collect the island':sim.chapters[i].size+' m');stamp.textContent=sim.chapters[i].icon;
   }
-  $('chapter-hint').textContent=quick?'4 min · 6 m heap':(sim.stageGoalReachedAt!==null?'Goal reached · keep rolling':'1 min · '+goal.count+' pickups');
+  $('chapter-hint').textContent=quick?'4 min · 6 m heap':goal.hint;
   const chain=sim.engagement.chain;$('score').textContent=sim.score.toLocaleString()+' PTS';$('score').style.setProperty('--score-pulse',reducedMotion?1:1+feedback.pulse*.08);
   $('combo').style.setProperty('--chain-scale',1+Math.min(chain.count,30)/75);
   $('combo').classList.toggle('hidden',chain.count<2);$('combo').classList.toggle('fading',chain.remaining<0);$('combo-text').textContent=chain.count+' CHAIN · ×'+chain.multiplier;$('chain-fill').style.width=chain.charge*100+'%';
@@ -194,9 +201,9 @@ function updateHud(){
   if(prize)$('next-prize').textContent=prize.ready?'NOW · '+prize.name:prize.name+' · '+formatSize(prize.neededMeters)+' to go';
   const pace=scorePace(previousRecord,sim);$('record-pace').classList.toggle('hidden',pace===null);$('record-pace').classList.toggle('ahead',pace>0);if(pace!==null)$('record-pace').textContent=(pace>=0?'+':'−')+Math.abs(pace).toLocaleString()+' vs your score best';
   if(sim.mode==='playing'&&sim.elapsed>=(recordSplits.length+1)*15)recordSplits.push({time:sim.elapsed,score:sim.score});
-  const target=sim.runMode==='campaign'?sim.objective():null;
+  const target=sim.mode==='playing'?sim.guidanceTarget():null;
   $('target-guide').classList.toggle('hidden',!target||sim.mode!=='playing');
-  if(target){const dx=target.x-sim.x,dz=target.z-sim.z,sx=dx*Math.cos(yaw)-dz*Math.sin(yaw),sy=dx*Math.sin(yaw)+dz*Math.cos(yaw);$('target-arrow').style.transform=`rotate(${Math.atan2(sx,-sy)*180/Math.PI}deg)`;$('target-distance').textContent=formatSize(Math.hypot(dx,dz),sim.level);$('target-name').textContent=target.name||TYPES[target.type].name;}
+  if(target){const dx=target.x-sim.x,dz=target.z-sim.z,sx=dx*Math.cos(yaw)-dz*Math.sin(yaw),sy=dx*Math.sin(yaw)+dz*Math.cos(yaw);$('target-arrow').style.transform=`rotate(${Math.atan2(sx,-sy)*180/Math.PI}deg)`;$('target-distance').textContent=formatSize(Math.hypot(dx,dz),sim.level);$('target-name').textContent=(sim.canCollect(target)?'Roll up ':'Grow to '+formatSize(target.size*1.08,sim.level)+' · ')+(target.name||TYPES[target.type].name);}
 }
 function emitSparks(item){
   if(reducedMotion)return;
@@ -243,6 +250,7 @@ function handleRollResult(result,now){
   if(sim.mode==='result'&&!resultShown)finish();
 }
 function tick(now){
+  if(document.hidden){lastTime=now;frameClock.reset();requestAnimationFrame(tick);return;}
   const cpuStartedAt=performance.now();
   const rawFrameMs=Math.max(0,now-lastTime),dt=Math.min(.05,rawFrameMs/1000);lastTime=now;frame++;
   averageFrameMs+=(rawFrameMs-averageFrameMs)*.06;
@@ -262,9 +270,12 @@ function tick(now){
   sim.setVisibleRadius(coverage);
   // Paused inspection and island-overview cameras still need a complete world.
   if(sim.mode!=='playing')sim.world.sync(sim,sim.viewRadius);
-  const result=sim.step(dt,input());
+  let distance=0;
+  if(sim.mode==='playing')frameClock.advance(rawFrameMs/1000,step=>{
+    const result=sim.step(step,input());distance+=result.distance;handleRollResult(result,now);return sim.mode==='playing';
+  });else frameClock.reset();
   const simulationFinishedAt=performance.now();
-  handleRollResult(result,now);feedback.update(dt,sim.diameter,!reducedMotion);
+  feedback.update(dt,sim.diameter,!reducedMotion);
   const inMenu=sim.mode==='menu';
   const renderDiameter=inMenu ? .55 : Math.max(sim.diameter,Math.min(sim.body.boundRadius*2,sim.diameter*2.4));
   const radiusTarget=inMenu ? .55 : renderDiameter*.5;
@@ -280,8 +291,8 @@ function tick(now){
   const ph=Math.max(.29,visualRadius*.63);
   prince.scale.setScalar(ph);prince.rotation.y=moveAngle;
   const guideX=sim.x-Math.sin(moveAngle)*(visualRadius+ph*.9),guideZ=sim.z-Math.cos(moveAngle)*(visualRadius+ph*.9);
-  prince.position.set(guideX,surfaceHeight(sim.world,guideX,guideZ)+.015+(!reducedMotion&&result.distance>.002?Math.abs(Math.sin(now*.015))*ph*.09:0),guideZ);
-  follow.lerp(qaOverview?new THREE.Vector3(-Number(sim.world.originX)*CHUNK_SIZE,0,-Number(sim.world.originZ)*CHUNK_SIZE+(sim.islandId==='oahu'?-1500:0)*2**(-sim.level)):new THREE.Vector3(sim.x,groundHeight+visualRadius*.25,sim.z),1-Math.exp(-dt*5));
+  prince.position.set(guideX,surfaceHeight(sim.world,guideX,guideZ)+.015+(!reducedMotion&&distance>.002?Math.abs(Math.sin(now*.015))*ph*.09:0),guideZ);
+  follow.lerp(qaOverview?followTarget.set(-Number(sim.world.originX)*CHUNK_SIZE,0,-Number(sim.world.originZ)*CHUNK_SIZE+(sim.islandId==='oahu'?-1500:0)*2**(-sim.level)):followTarget.set(sim.x,groundHeight+visualRadius*.25,sim.z),1-Math.exp(-dt*5));
   yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*5));
   const desiredSpan=qaOverview?sim.world.layout.half*2.1*Math.max(1,1/aspect)*2**(-sim.level):inMenu?16:Math.max(6*2**(-Math.min(sim.level,32))+renderDiameter*4.1,renderDiameter*2.6/Math.max(.3,aspect));
   viewSpan+=(desiredSpan*(1-feedback.pulse*.018)-viewSpan)*(1-Math.exp(-dt*4));
@@ -301,8 +312,8 @@ function tick(now){
   if(now-lastCullAt>95||moved||turned||zoomed||lastVisibleItems===null){
     const radius=viewSpan*Math.hypot(aspect,1.5)*.65+sim.body.boundRadius+4;
     const nearby=sim.world.nearby(sim.x,sim.z,radius),candidates=[];
-    const frustum=new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
-    const sphere=new THREE.Sphere();
+    const frustum=cullFrustum.setFromProjectionMatrix(cullMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
+    const sphere=cullSphere;
     for(const item of nearby){
       if(item.collected||item.islandFinale&&!sim.canCollect(item)||itemDisplaySize(item,pixelsPerUnit)*pixelsPerUnit<1.2)continue;
       const bounds=modelLibrary.pick(item.type,item.visualSeed).bounds;
@@ -320,7 +331,7 @@ function tick(now){
   const pickupActive=!milestoneActive&&now<pickupUntil&&sim.mode==='playing';
   $('milestone').classList.toggle('show',milestoneActive);$('pickup').classList.toggle('show',pickupActive);
   $('hint').style.opacity=!milestoneActive&&!pickupActive&&now<hintUntil&&sim.mode==='playing'?'1':'0';
-  if(frame%5===0)updateHud();
+  if(now-lastHudAt>=100){lastHudAt=now;updateHud();}
   const drawStartedAt=performance.now();
   const gpuQuery=beginGpuTimer();renderer.render(scene,camera);finishGpuTimer(gpuQuery);pollGpuTimer();
   const cpuMs=performance.now()-cpuStartedAt;averageCpuFrameMs+=(cpuMs-averageCpuFrameMs)*.12;
