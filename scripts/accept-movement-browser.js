@@ -10,9 +10,10 @@ async page => {
     const joy=await game.locator('#joystick').boundingBox(),x=joy.x+joy.width/2,y=joy.y+joy.height/2;
     await game.mouse.move(x,y);await game.mouse.down();await game.mouse.move(x,y+joy.width*.3);
     await game.keyboard.down('Shift');
-    await game.waitForTimeout(kind==='cadence'?250:kind==='corner'?6000:4000);
+    // Wait for active game time: software-rendered CI may render below 4 FPS.
+    await game.waitForFunction(end=>window.__katamariQa.state().elapsed>=end,before.elapsed+(kind==='cadence'?.25:kind==='corner'?6:4),{timeout:90000});
     const atTurn=kind==='reverse'?await game.evaluate(()=>window.__katamariQa.state()):null;
-    if(kind==='reverse'){await game.mouse.move(x,y-joy.width*.3);await game.waitForTimeout(2000);}
+    if(kind==='reverse'){await game.mouse.move(x,y-joy.width*.3);await game.waitForFunction(end=>window.__katamariQa.state().elapsed>=end,atTurn.elapsed+2,{timeout:90000});}
     await game.keyboard.up('Shift');await game.mouse.up();
     const after=await game.evaluate(()=>window.__katamariQa.state());
     movement.push({kind,before,atTurn,after});
@@ -25,10 +26,10 @@ async page => {
   const transitions=[];
   for(let level=0;level<=9;level++){
     const before=await game.evaluate(level=>{const qa=window.__katamariQa;qa.normalizationFixture(level);qa.resume();return qa.state();},level);
-    await game.waitForTimeout(150);
+    await game.waitForFunction(level=>window.__katamariQa.state().scaleExponent>level,before.scaleExponent,{timeout:30000});
     const after=await game.evaluate(()=>{window.__katamariQa.pause();return window.__katamariQa.state();});
     if(after.scaleExponent<=before.scaleExponent||after.coreDiameterMeters!==.32||after.attachedPieces<1)throw new Error('Runtime normalization failed at '+level);
     transitions.push({level,before,after});
   }
-  await context.close();return{movement,transitions,errors};
+  await context.close();if(errors.length)throw new Error(errors.join('\n'));return{movement,transitions,errors};
 }

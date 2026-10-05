@@ -4,8 +4,8 @@ import {writeFileSync} from 'node:fs';
 const evidence=[];
 for(const island of ['oahu','lanai']){
  const sim=new Simulation();sim.reset('campaign',island,Number(process.env.PACING_SEED)||123456);sim.setDiagnostics(true);const pilot=new RoutePilot(sim),checkpoints=[];
- for(let frame=0;frame<30*600&&sim.mode==='playing';frame++){
-  const chapter=sim.chapter;sim.step(1/30,pilot.input(1/30));
+ for(let frame=0;frame<60*600&&sim.mode==='playing';frame++){
+  const chapter=sim.chapter;sim.step(1/60,pilot.input(1/60));
   if(sim.chapter!==chapter)checkpoints.push({chapter:sim.chapter,seconds:sim.elapsed,size:sim.diameter*2**sim.level,count:sim.count});
  }
  const remaining=sim.items.filter(i=>!i.collected),eligible=remaining.filter(i=>i.size*1.08<=sim.diameter);

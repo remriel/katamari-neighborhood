@@ -15,7 +15,7 @@
       <div class="brand"><span class="brand-top">KATAMARI!</span><span class="brand-bottom">ROLL CLUB</span></div>
       <div class="top-buttons">
         <button id="sound" class="icon-button" aria-label="Turn sound on" title="Sound off">♪<span class="sound-slash">/</span></button>
-        <button id="pause" class="icon-button" aria-label="Pause game" title="Pause">Ⅱ</button>
+        <button id="pause" class="icon-button" aria-label="Pause game" title="Pause"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M4 3h4v14H4zm8 0h4v14h-4z"/></svg></button>
       </div>
     </header>
     <div class="timer-dial" aria-label="Elapsed race time"><span id="timer">0:00.0</span><span class="timer-hand"></span><small>TIME</small></div>
@@ -23,18 +23,19 @@
       <div class="size-flower" aria-hidden="true"></div>
       <div class="size-label">YOUR KATAMARI</div>
       <div class="size-row"><strong id="size">32</strong><span id="unit">cm</span><span class="size-sticker">KEEP<br>ROLLING!</span></div>
-      <div class="goal-row"><span id="goal-label">GOAL · 1 m</span></div>
+      <div class="goal-row"><span id="goal-label">GOAL · 100 m</span></div>
       <div class="progress-track"><div id="growth"></div></div>
       <div class="hud-bottom"><span id="count">0 things</span><span id="district">Pocket Park</span></div>
     </section>
     <section class="mission-card" aria-label="Current objective">
-      <div class="mission-header"><strong id="chapter-title">1 / 4 · Snack market</strong><span id="score">0 PTS</span></div>
-      <div class="mission-content"><p id="chapter-hint">Collect 20 little things and reach 1 m.</p><div id="target-guide" class="target-guide hidden"><span id="target-arrow">↑</span><small id="target-distance"></small><small id="target-name"></small></div></div>
+      <div class="mission-header"><strong id="chapter-title">1 / 5 · Snack market</strong><span id="score">0 PTS</span></div>
+      <div class="mission-content"><p id="chapter-hint">Treats and toys · race to 100 m.</p></div>
       <div id="stage-track" class="stage-track" aria-label="100, 200, 300 and 400 meters, then collect the island"><span title="Snack market · 100 m">🍬</span><span title="Beach party · 200 m">🏖️</span><span title="Neighborhood feast · 300 m">🏘️</span><span title="Highland haul · 400 m">🏰</span><span title="Collect the island to win">🌴</span></div>
       <div id="next-prize" class="next-prize hidden"></div>
       <div id="combo" class="combo-label hidden"><span id="combo-text"></span><span class="chain-track" aria-hidden="true"><i id="chain-fill"></i></span></div>
       <div id="record-pace" class="record-pace hidden"></div>
     </section>
+    <div id="target-guide" class="target-guide hidden"><span id="target-arrow">↑</span><small id="target-distance"></small><small id="target-name"></small></div>
     <section id="power-status" class="power-status" aria-label="Active power-ups" aria-live="polite"></section>
     <div id="pickup" class="pickup-message" aria-live="polite"></div>
     <div id="milestone" class="milestone" aria-live="polite"></div>

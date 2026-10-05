@@ -326,3 +326,11 @@ body.menu-open .topbar,body.menu-open .hud,body.menu-open .timer-dial,body.menu-
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* Keep useful navigation outside the intentionally collapsed score panel. */
+#target-guide{position:absolute;z-index:3;top:max(96px,calc(env(safe-area-inset-top) + 86px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;max-width:calc(100% - 30px);padding:5px 10px;border:2px solid var(--ink);border-radius:16px;background:var(--paper);color:var(--ink);pointer-events:none;font-size:10px;box-shadow:2px 2px 0 var(--shadow)}
+#target-guide #target-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#target-guide #target-distance{white-space:nowrap}
+body.menu-open #target-guide{display:none}
+.timer-dial.race #timer{font-size:clamp(12px,3.2vw,20px)}
+@media(max-height:480px) and (orientation:landscape){#target-guide{top:75px;padding:3px 8px}}
