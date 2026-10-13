@@ -1,6 +1,8 @@
 # Katamari Neighborhood
 
-https://katamari-neighborhood.remriel.chatgpt.site/
+<p align="center"><img src="outputs/playwright/oahu-island-mobile.png" width="360" alt="Katamari Neighborhood island gameplay on mobile" /></p>
+
+**[Play Katamari Neighborhood](https://katamari-neighborhood.remriel.chatgpt.site/)**
 
 A mobile-first Katamari-inspired fan game with original artwork and Blender-authored 3D objects. Choose Oʻahu or Lānaʻi and race through size checkpoints at 100, 200, 300 and 400 meters. Each checkpoint immediately moves you to a new area on the same island. At 400 m the island sweep unlocks: grow through giant landmarks until you can collect the island itself, which wins the run. The island is a 2,200 m final pickup requiring a 2,376 m ball under the ordinary size rule.
 
