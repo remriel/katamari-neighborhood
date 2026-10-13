@@ -14,6 +14,7 @@ import {RollAudio} from './roll-audio.js';
 import {readRecord,saveRecord,finishRecord,scorePace} from './run-records.js';
 import {FrameClock} from './frame-clock.js';
 import {RoutePilot} from './diagnostics/route-pilot.js';
+import {inject} from '@vercel/analytics';
 
 const elements=new Map();
 const $=id=>{if(!elements.has(id))elements.set(id,document.getElementById(id));return elements.get(id);};
@@ -470,4 +471,8 @@ function registerTools(){
   register({name:'start_neighborhood_roll',description:'Race through 100, 200, 300 and 400 meters on Oahu or Lanai, then collect the island to win, or the separate four-minute quick challenge. Resets the heap and collection.',inputSchema:{type:'object',properties:{runMode:{type:'string',enum:['campaign','quick']},island:{type:'string',enum:['oahu','lanai']}},required:['runMode'],additionalProperties:false},annotations:{readOnlyHint:false},execute:input=>{if(!['campaign','quick'].includes(input?.runMode))throw new Error('runMode must be campaign or quick');if(input.island&&!ISLANDS[input.island])throw new Error('Unknown island');start(input.runMode,input.island||selectedIsland);return sim.snapshot();}});
   window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
 }
+
+// Initialize Vercel Web Analytics
+inject();
+
 init();
