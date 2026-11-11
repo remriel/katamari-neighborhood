@@ -51,6 +51,4 @@ This is an independently made fan project inspired by the object-collecting genr
 - [Apex Type](https://github.com/remriel/apex-type): race classic cars by typing on a real 3D circuit.
 - [Riftborne](https://github.com/remriel/riftborne): elemental arena combat in a playable browser alpha.
 
-[![Buy me a coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://buymeacoffee.com/remriel)
-
-<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="remriel" data-color="#FFDD00" data-emoji="☕" data-font="Comic" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>
+<a href="https://buymeacoffee.com/remriel"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" width="110"></a>
