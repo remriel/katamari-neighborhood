@@ -50,3 +50,5 @@ This is an independently made fan project inspired by the object-collecting genr
 
 - [Apex Type](https://github.com/remriel/apex-type): race classic cars by typing on a real 3D circuit.
 - [Riftborne](https://github.com/remriel/riftborne): elemental arena combat in a playable browser alpha.
+
+If you find this project useful, you can [buy me a coffee](https://buymeacoffee.com/remriel).
